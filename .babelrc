@@ -1,0 +1,22 @@
+{
+  "presets": [
+    ["@babel/preset-env", { "modules": false, "loose": true }],
+    "@babel/preset-react"
+  ],
+  "plugins": [
+    ["@babel/plugin-proposal-class-properties", { "loose": true }],
+  ],
+  "env": {
+    "test": {
+      "plugins": [
+        "@babel/plugin-transform-proto-to-assign",
+        "@babel/transform-modules-commonjs"
+      ]
+    },
+    "rollup": {
+      "plugins": [
+        "babel-plugin-dev-expression"
+      ]
+    }
+  }
+}
