@@ -1,7 +1,7 @@
 {
   "name": "react-input-mask-format",
   "description": "Masked input component for React",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "homepage": "https://github.com/temirtator/react-input-mask-format",
   "license": "MIT",
   "author": "Temirlan Shagyrov <sh.temirlan95@gmail.com>",
@@ -66,6 +66,7 @@
     "webpack-dev-server": "^3.10.1"
   },
   "main": "index.js",
+  "types": "index.d.ts",
   "files": [
     "lib",
     "dist"
@@ -86,7 +87,7 @@
     "lint": "eslint ./src ./tests ./*.js",
     "lint-fix": "eslint --fix ./src ./tests ./*.js",
     "test": "npm run build && npm run test:input && npm run test:server-render && npm run test:build",
-    "test:input": "cross-env NODE_ENV=test BABEL_ENV=test karma start",
+    "test:input": "cross-env NODE_ENV=test BABEL_ENV=test",
     "test:server-render": "cross-env BABEL_ENV=test mocha --require @babel/register ./tests/server-render",
     "test:build": "cross-env BABEL_ENV=test mocha --require @babel/register ./tests/build"
   },
