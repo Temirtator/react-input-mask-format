@@ -2,7 +2,9 @@
 
 [![Build Status](https://img.shields.io/travis/sanniassin/react-input-mask/master.svg?style=flat)](https://travis-ci.org/sanniassin/react-input-mask) [![npm version](https://img.shields.io/npm/v/react-input-mask.svg?style=flat)](https://www.npmjs.com/package/react-input-mask) [![npm downloads](https://img.shields.io/npm/dm/react-input-mask.svg?style=flat)](https://www.npmjs.com/package/react-input-mask)
 
-Input masking component for React. Made with attention to UX.
+Input masking component for React. Made with attention to UX. 
+
+This project is fork from basic library react-input-mask by sanniassin
 
 **This is a development branch for version 3.0. For the latest stable version [see v2 branch](https://github.com/sanniassin/react-input-mask/tree/v2).**
 
@@ -15,9 +17,9 @@ Input masking component for React. Made with attention to UX.
 * [Known Issues](#known-issues)
 
 # Installation
-```npm install react-input-mask@next --save```
+```npm install react-input-mask-format@next --save```
 
-react-input-mask requires **React 16.8.0 or later.** If you need support for older versions, use [version 2](https://github.com/sanniassin/react-input-mask/tree/v2).
+react-input-mask-format requires **React 16.8.0 or later.
 
 # Usage
 ```jsx
