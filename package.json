@@ -1,7 +1,7 @@
 {
   "name": "react-input-mask-format",
   "description": "Masked input component for React",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "homepage": "https://github.com/temirtator/react-input-mask-format",
   "license": "MIT",
   "author": "Temirlan Shagyrov <sh.temirlan95@gmail.com>",
@@ -26,6 +26,7 @@
     "@babel/preset-env": "^7.8.3",
     "@babel/preset-react": "^7.8.3",
     "@babel/register": "^7.8.3",
+    "@rollup/plugin-typescript": "^8.2.1",
     "@types/react": "^17.0.3",
     "babel-eslint": "^10.0.3",
     "babel-loader": "^8.0.6",
@@ -67,7 +68,7 @@
     "webpack-dev-server": "^3.10.1"
   },
   "main": "index.js",
-  "types": "index.d.ts",
+  "types": "./dist/index.d.ts",
   "files": [
     "lib",
     "dist"
@@ -82,7 +83,7 @@
   },
   "scripts": {
     "clean": "rimraf lib dist",
-    "build": "cross-env BABEL_ENV=rollup rollup -c",
+    "build": "cross-env BABEL_ENV=rollup rollup -c && npm run moveDeclarationFile",
     "start": "cross-env BABEL_ENV=test NODE_ENV=development webpack-dev-server",
     "prepare": "npm run lint && npm test && npm run clean && npm run build",
     "lint": "eslint ./src ./tests ./*.js",
@@ -90,7 +91,8 @@
     "test": "npm run build && npm run test:input && npm run test:server-render && npm run test:build",
     "test:input": "cross-env NODE_ENV=test BABEL_ENV=test",
     "test:server-render": "cross-env BABEL_ENV=test mocha --require @babel/register ./tests/server-render",
-    "test:build": "cross-env BABEL_ENV=test mocha --require @babel/register ./tests/build"
+    "test:build": "cross-env BABEL_ENV=test mocha --require @babel/register ./tests/build",
+    "moveDeclarationFile": "cp -i ./index.d.ts ./dist/"
   },
   "repository": {
     "type": "git",
