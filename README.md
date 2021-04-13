@@ -1,6 +1,6 @@
 # react-input-mask-format
 
-[![Build Status](https://img.shields.io/travis/temirtator/react-input-mask-format/master.svg?style=flat)](https://travis-ci.org/temirtator/react-input-mask-format) [![npm version](https://img.shields.io/npm/v/react-input-mask-format.svg?style=flat)](https://www.npmjs.com/package/react-input-mask-format) [![npm downloads](https://img.shields.io/npm/dm/react-input-mask-format.svg?style=flat)](https://www.npmjs.com/package/react-input-mask-format)
+[![npm downloads](https://img.shields.io/npm/dm/react-input-mask-format.svg?style=flat)](https://www.npmjs.com/package/react-input-mask-format)
 
 Input masking component for React. Made with attention to UX. 
 
