@@ -3,3 +3,7 @@ lib
 dist
 npm-debug.log
 browserStack.json
+test-results
+playwright-report
+blob-report
+playwright/.cache
