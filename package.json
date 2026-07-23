@@ -1,7 +1,8 @@
 {
   "name": "react-input-mask-format",
   "description": "Masked input component for React",
-  "version": "1.0.5",
+  "version": "2.0.0",
+  "type": "module",
   "homepage": "https://github.com/temirtator/react-input-mask-format",
   "license": "MIT",
   "author": "Temirlan Shagyrov <sh.temirlan95@gmail.com>",
@@ -13,8 +14,7 @@
     "react-component"
   ],
   "peerDependencies": {
-    "react": ">=16.8",
-    "react-dom": ">=16.8"
+    "react": ">=16.8.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -42,11 +42,22 @@
     "vite": "^6.0.0",
     "vitest": "^3.0.0"
   },
-  "main": "index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
   "files": [
-    "lib",
     "dist"
+  ],
+  "size-limit": [
+    { "path": "dist/index.js", "limit": "6 KB" }
   ],
   "scripts": {
     "build": "tsup",
