@@ -27,14 +27,16 @@ test("click into empty phone puts caret after prefix", async ({ page }) => {
   expect(await caret(input)).toBe(4); // "+7 (" — первая редактируемая позиция
 });
 
-test("backspace over permanent char moves caret left", async ({ page }) => {
+test("backspace after auto-inserted permanent char jumps caret over it", async ({ page }) => {
   await page.goto("/");
   const input = page.getByTestId("date");
   await input.click();
-  await input.pressSequentially("123");
-  await expect(input).toHaveValue("12/3_/____");
-  await input.press("Backspace");
+  await input.pressSequentially("12");
   await expect(input).toHaveValue("12/__/____");
+  expect(await caret(input)).toBe(3); // caret sits right after the auto-inserted "/"
+  await input.press("Backspace");
+  await expect(input).toHaveValue("1_/__/____");
+  expect(await caret(input)).toBe(1); // caret jumped left over the permanent "/"
 });
 
 test("legacy maskChar renders custom placeholder", async ({ page }) => {
