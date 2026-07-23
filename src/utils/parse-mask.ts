@@ -1,5 +1,5 @@
 import { defaultFormatChars } from "../constants";
-import type { Mask } from "../types";
+import type { FormatChars, Mask } from "../types";
 
 export interface ParsedMaskOptions {
   maskPlaceholder: string | null;
@@ -11,10 +11,12 @@ export interface ParsedMaskOptions {
 
 export default function parseMask({
   mask,
-  maskPlaceholder
+  maskPlaceholder,
+  formatChars = defaultFormatChars
 }: {
   mask?: Mask | null;
   maskPlaceholder?: string | null;
+  formatChars?: FormatChars;
 }): ParsedMaskOptions {
   const permanents: number[] = [];
 
@@ -37,7 +39,7 @@ export default function parseMask({
       if (!isPermanent && character === "\\") {
         isPermanent = true;
       } else {
-        if (isPermanent || !defaultFormatChars[character]) {
+        if (isPermanent || !formatChars[character]) {
           permanents.push(parsedMaskString.length);
         }
         parsedMaskString += character;
@@ -47,7 +49,7 @@ export default function parseMask({
 
     parsedMask = parsedMaskString.split("").map((character, index) => {
       if (permanents.indexOf(index) === -1) {
-        return defaultFormatChars[character];
+        return formatChars[character];
       }
       return character;
     });

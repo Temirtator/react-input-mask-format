@@ -21,6 +21,26 @@ export type BeforeMaskedStateChangeFn = (states: {
   nextState: InputState;
 }) => InputState;
 
+/**
+ * Legacy (react-input-mask v2) signature for the before-change hook.
+ * @deprecated Use BeforeMaskedStateChangeFn with beforeMaskedStateChange.
+ */
+export type BeforeMaskedValueChangeFn = (
+  newState: InputState,
+  oldState: InputState | null,
+  userInput: string | null,
+  maskOptions: V2MaskOptions
+) => InputState;
+
+/** Mask options shape passed to the legacy beforeMaskedValueChange callback. */
+export interface V2MaskOptions {
+  mask?: Mask;
+  maskChar: string | null;
+  alwaysShowMask: boolean;
+  formatChars: Record<string, string>;
+  permanents: number[];
+}
+
 export interface InputMaskProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "children"> {
   /**
@@ -36,4 +56,10 @@ export interface InputMaskProps
   beforeMaskedStateChange?: BeforeMaskedStateChangeFn;
   /** Custom input component. */
   children?: React.ReactElement;
+  /** @deprecated Use maskPlaceholder. */
+  maskChar?: string | null;
+  /** @deprecated Use an array mask or keep for legacy. */
+  formatChars?: Record<string, string>;
+  /** @deprecated Use beforeMaskedStateChange. */
+  beforeMaskedValueChange?: BeforeMaskedValueChangeFn;
 }

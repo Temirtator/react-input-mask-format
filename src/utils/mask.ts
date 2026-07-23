@@ -1,11 +1,15 @@
 import { findLastIndex, repeat } from "./helpers";
 import parseMask, { ParsedMaskOptions } from "./parse-mask";
-import type { InputState, Selection } from "../types";
+import type { FormatChars, InputState, Selection } from "../types";
 
 export default class MaskUtils {
   maskOptions: ParsedMaskOptions;
 
-  constructor(options: { mask?: string | Array<string | RegExp> | null; maskPlaceholder?: string | null }) {
+  constructor(options: {
+    mask?: string | Array<string | RegExp> | null;
+    maskPlaceholder?: string | null;
+    formatChars?: FormatChars;
+  }) {
     this.maskOptions = parseMask(options);
   }
 
