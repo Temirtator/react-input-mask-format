@@ -1,0 +1,45 @@
+name: CI
+on:
+  push:
+    branches: [master, v2]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npx publint
+      - run: npm run size
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        react: ["17", "18", "19"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - if: matrix.react == '17'
+        run: npm i --no-save react@17 react-dom@17 @testing-library/react@12
+      - if: matrix.react == '18'
+        run: npm i --no-save react@18 react-dom@18
+      - run: npm run test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
