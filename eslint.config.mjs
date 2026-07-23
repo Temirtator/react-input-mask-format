@@ -6,9 +6,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist", "lib", "node_modules", "test-results", "playwright-report",
-      // legacy JS — удаляется по мере портирования (Tasks 2–11)
-      "src/**/*.js", "tests/input", "tests/server-render", "tests/build",
-      "dev", "index.js", "*.config.js", "eslint.config.mjs"
+      "*.config.js", "eslint.config.mjs"
     ]
   },
   js.configs.recommended,
