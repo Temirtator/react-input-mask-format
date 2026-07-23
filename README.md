@@ -166,10 +166,10 @@ function InvalidInput(props) {
 
 > **Note:** `InputMask` clones the child element and injects its own `ref`
 > callback into it, so a `ref` placed directly on the child element will be
-> replaced and won't receive the DOM node. If you need a ref to the
-> underlying input, attach it to `<InputMask>` itself — it's forwarded
-> through to the child (or, when the child forwards to a wrapper element,
-> to the `<input>` found inside it).
+> replaced. Attach your ref to `<InputMask>` itself instead. The ref you attach
+> to `<InputMask>` receives whatever node the child component forwards its ref to;
+> if the child forwards to a wrapper element rather than the actual `<input>`,
+> you get that wrapper (the library still finds the inner input internally for masking).
 
 ## Known Issues
 
