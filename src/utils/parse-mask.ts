@@ -1,7 +1,22 @@
 import { defaultFormatChars } from "../constants";
+import type { Mask } from "../types";
 
-export default function({ mask, maskPlaceholder }) {
-  const permanents = [];
+export interface ParsedMaskOptions {
+  maskPlaceholder: string | null;
+  mask: Array<string | RegExp> | null;
+  prefix: string | null;
+  lastEditablePosition: number | null;
+  permanents: number[];
+}
+
+export default function parseMask({
+  mask,
+  maskPlaceholder
+}: {
+  mask?: Mask | null;
+  maskPlaceholder?: string | null;
+}): ParsedMaskOptions {
+  const permanents: number[] = [];
 
   if (!mask) {
     return {
@@ -12,6 +27,8 @@ export default function({ mask, maskPlaceholder }) {
       permanents: []
     };
   }
+
+  let parsedMask: Array<string | RegExp>;
 
   if (typeof mask === "string") {
     let isPermanent = false;
@@ -28,7 +45,7 @@ export default function({ mask, maskPlaceholder }) {
       }
     });
 
-    mask = parsedMaskString.split("").map((character, index) => {
+    parsedMask = parsedMaskString.split("").map((character, index) => {
       if (permanents.indexOf(index) === -1) {
         return defaultFormatChars[character];
       }
@@ -40,41 +57,46 @@ export default function({ mask, maskPlaceholder }) {
         permanents.push(index);
       }
     });
+    parsedMask = mask;
   }
 
-  if (maskPlaceholder) {
-    if (maskPlaceholder.length === 1) {
-      maskPlaceholder = mask.map((character, index) => {
+  let parsedPlaceholder: string | null = maskPlaceholder ?? null;
+
+  if (parsedPlaceholder) {
+    let placeholderChars: Array<string | RegExp>;
+
+    if (parsedPlaceholder.length === 1) {
+      placeholderChars = parsedMask.map((character, index) => {
         if (permanents.indexOf(index) !== -1) {
           return character;
         }
-        return maskPlaceholder;
+        return parsedPlaceholder as string;
       });
     } else {
-      maskPlaceholder = maskPlaceholder.split("");
+      placeholderChars = parsedPlaceholder.split("");
     }
 
     permanents.forEach(position => {
-      maskPlaceholder[position] = mask[position];
+      placeholderChars[position] = parsedMask[position];
     });
 
-    maskPlaceholder = maskPlaceholder.join("");
+    parsedPlaceholder = placeholderChars.join("");
   }
 
   const prefix = permanents
     .filter((position, index) => position === index)
-    .map(position => mask[position])
+    .map(position => parsedMask[position])
     .join("");
 
-  let lastEditablePosition = mask.length - 1;
+  let lastEditablePosition = parsedMask.length - 1;
   while (permanents.indexOf(lastEditablePosition) !== -1) {
     lastEditablePosition--;
   }
 
   return {
-    maskPlaceholder,
+    maskPlaceholder: parsedPlaceholder,
     prefix,
-    mask,
+    mask: parsedMask,
     lastEditablePosition,
     permanents
   };
