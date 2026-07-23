@@ -185,11 +185,13 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     }
   }
 
-  // For controlled inputs we want to provide properly formatted
-  // value prop
+  // For controlled inputs we want to provide properly formatted value
+  // prop. Computed purely during render; refs/DOM are synced in a layout
+  // effect so render stays side-effect free (StrictMode / concurrent).
+  let renderValue = props.value as string | undefined;
   if (isMasked && isControlled) {
     const input = getInputElement();
-    const isFocused = input && isInputFocused(input);
+    const isFocused = !!input && isInputFocused(input);
     let newValue =
       isFocused || alwaysShowMask || props.value
         ? maskUtils.formatValue(props.value as string)
@@ -201,15 +203,19 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
       }).value;
     }
 
-    setInputState({
-      ...getLastInputState(),
-      value: newValue
-    });
+    renderValue = newValue;
   }
 
-  const lastState = getLastInputState();
-  const lastSelection = lastState.selection;
-  const lastValue = lastState.value;
+  const lastSelection = getLastInputState().selection;
+
+  useLayoutEffect(() => {
+    if (isMasked && isControlled) {
+      setInputState({
+        ...getLastInputState(),
+        value: renderValue as string
+      });
+    }
+  });
 
   useLayoutEffect(() => {
     if (!isMasked) {
@@ -276,7 +282,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
         (forwardedRef as React.MutableRefObject<unknown>).current = ref;
       }
     },
-    value: isMasked && isControlled ? lastValue : props.value
+    value: isMasked && isControlled ? renderValue : props.value
   };
 
   if (children) {
