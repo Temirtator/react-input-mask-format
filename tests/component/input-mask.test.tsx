@@ -79,33 +79,48 @@ describe("InputMask basics", () => {
     expect(ref.current).toBe(screen.getByTestId("in"));
   });
 
-  // NOTE (test-fix, not a port fix): masked InputMask + custom `children`
-  // crashes in this exact same way in the pre-port JS too — verified by
-  // running the untouched src/index.js (as of commit 4271994, before this
-  // task) through this identical scenario. Since commit 8aad2af ("Remove
-  // findDOMNode"), `ref: ref => { inputRef.current = ref; ... }` stores
-  // whatever `<ChildrenWrapper ref={...}>` receives directly — and React
-  // always hands a `ref` on a plain class component the component
-  // *instance*, never the rendered DOM node (that's what `findDOMNode`
-  // used to resolve). So `inputRef.current` ends up being the
-  // ChildrenWrapper instance, `isDOMElement()` rejects it, and
-  // `getInputElement()` returns null — which the masked layout effect
-  // dereferences unconditionally via `isInputFocused(input)`. This is a
-  // pre-existing upstream bug, not something introduced by the TS port;
-  // fixing it is out of scope for a verbatim port (tracked for a later
-  // task). This test documents the current (buggy) behavior instead of
-  // asserting the originally-intended masked-children rendering.
   it("renders custom children and masks them", () => {
     const CustomInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
       (props, ref) => <input ref={ref} {...props} />
     );
-    expect(() =>
-      render(
-        <InputMask mask="99/99" value="12" onChange={() => {}}>
-          <CustomInput data-testid="in" />
-        </InputMask>
+    render(
+      <InputMask mask="99/99" value="12" onChange={() => {}}>
+        <CustomInput data-testid="in" />
+      </InputMask>
+    );
+    expect(screen.getByTestId("in")).toHaveValue("12/__");
+  });
+
+  it("finds the inner input when child forwards ref to a container (MUI-like)", () => {
+    const MuiLike = React.forwardRef<HTMLDivElement, React.InputHTMLAttributes<HTMLInputElement>>(
+      (props, ref) => (
+        <div ref={ref}>
+          <input {...props} />
+        </div>
       )
-    ).toThrow(/ownerDocument/);
+    );
+    render(
+      <InputMask mask="99/99" value="12" onChange={() => {}}>
+        <MuiLike data-testid="in" />
+      </InputMask>
+    );
+    expect(screen.getByTestId("in")).toHaveValue("12/__");
+  });
+
+  it("typing works inside custom children", async () => {
+    const user = userEvent.setup();
+    const CustomInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+      (props, ref) => <input ref={ref} {...props} />
+    );
+    render(
+      <InputMask mask="99/99/9999">
+        <CustomInput data-testid="in" />
+      </InputMask>
+    );
+    const input = screen.getByTestId("in");
+    await user.click(input);
+    await user.keyboard("12345678");
+    expect(input).toHaveValue("12/34/5678");
   });
 
   it("clears value on blur when empty and not alwaysShowMask", async () => {

@@ -6,7 +6,6 @@ import { defer } from "./utils/defer";
 import { isInputFocused } from "./utils/input";
 import { isFunction, toString, getElementDocument } from "./utils/helpers";
 import MaskUtils from "./utils/mask";
-import ChildrenWrapper from "./children-wrapper";
 import {
   resolveMaskPlaceholder,
   toRegExpFormatChars,
@@ -312,8 +311,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     onChange: isMasked && isEditable ? onChange : props.onChange,
     onMouseDown: isMasked && isEditable ? onMouseDown : props.onMouseDown,
     // `ref` may target either the plain <input> DOM node or, when custom
-    // children are used, the ChildrenWrapper class instance (React strips
-    // `ref` from props regardless of the target type) — matches old JS.
+    // children are used, whatever node the child's own ref forwards to.
     ref: (ref: unknown) => {
       inputRef.current = ref as HTMLInputElement | null;
 
@@ -329,9 +327,10 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   if (children) {
     validateChildren(props, children);
 
-    // We wrap children into a class component to be able to find
-    // their input element using findDOMNode
-    return <ChildrenWrapper {...inputProps}>{children}</ChildrenWrapper>;
+    // Clone the child injecting our props and callback ref directly.
+    // If the child forwards its ref to a non-input node, useInputElement
+    // falls back to querySelector("input") to find the real input.
+    return React.cloneElement(children, inputProps);
   }
 
   return <input {...inputProps} />;

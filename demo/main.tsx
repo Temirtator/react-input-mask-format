@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import InputMask from "react-input-mask-format";
 
+const FancyInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  (props, ref) => <input ref={ref} {...props} style={{ borderColor: "rebeccapurple" }} />
+);
+
 function App() {
   const [phone, setPhone] = useState("");
   return (
@@ -23,6 +27,12 @@ function App() {
       <label>
         Legacy v2 props (maskChar) <br />
         <InputMask mask="99-99" maskChar="•" alwaysShowMask data-testid="legacy" />
+      </label>
+      <label>
+        Custom child component <br />
+        <InputMask mask="99/99/9999">
+          <FancyInput data-testid="children" />
+        </InputMask>
       </label>
     </main>
   );

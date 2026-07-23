@@ -43,3 +43,11 @@ test("legacy maskChar renders custom placeholder", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByTestId("legacy")).toHaveValue("••-••");
 });
+
+test("custom child component gets masked", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("children");
+  await input.click();
+  await input.pressSequentially("0102");
+  await expect(input).toHaveValue("01/02/____");
+});
