@@ -1,31 +1,29 @@
 import React, { useLayoutEffect, forwardRef } from "react";
-import PropTypes from "prop-types";
 
 import { useInputState, useInputElement, usePrevious } from "./hooks";
-import {
-  validateMaxLength,
-  validateChildren,
-  validateMaskPlaceholder
-} from "./validate-props";
-
+import { validateMaxLength, validateChildren, validateMaskPlaceholder } from "./validate-props";
 import { defer } from "./utils/defer";
 import { isInputFocused } from "./utils/input";
 import { isFunction, toString, getElementDocument } from "./utils/helpers";
 import MaskUtils from "./utils/mask";
 import ChildrenWrapper from "./children-wrapper";
+import type { InputMaskProps, InputState } from "./types";
 
-const InputMask = forwardRef(function InputMask(props, forwardedRef) {
+const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMask(
+  props,
+  forwardedRef
+) {
   const {
-    alwaysShowMask,
+    alwaysShowMask = false,
     children,
     mask,
-    maskPlaceholder,
+    maskPlaceholder = "_",
     beforeMaskedStateChange,
     ...restProps
   } = props;
 
   validateMaxLength(props);
-  validateMaskPlaceholder(props);
+  validateMaskPlaceholder({ ...props, maskPlaceholder });
 
   const maskUtils = new MaskUtils({ mask, maskPlaceholder });
 
@@ -45,10 +43,10 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
   } = useInputState(initialValue, isMasked);
   const getInputElement = useInputElement(inputRef);
 
-  function onChange(event) {
+  function onChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const currentState = getInputState();
     const previousState = getLastInputState();
-    let newInputState = maskUtils.processChange(currentState, previousState);
+    let newInputState: InputState = maskUtils.processChange(currentState, previousState);
 
     if (beforeMaskedStateChange) {
       newInputState = beforeMaskedStateChange({
@@ -65,7 +63,7 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
     }
   }
 
-  function onFocus(event) {
+  function onFocus(event: React.FocusEvent<HTMLInputElement>): void {
     // If autoFocus property is set, focus event fires before the ref handler gets called
     inputRef.current = event.target;
 
@@ -74,7 +72,7 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
     if (isMasked && !maskUtils.isValueFilled(currentValue)) {
       let newValue = maskUtils.formatValue(currentValue);
       let newSelection = maskUtils.getDefaultSelectionForValue(newValue);
-      let newInputState = {
+      let newInputState: InputState = {
         value: newValue,
         selection: newSelection
       };
@@ -91,7 +89,7 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
       setInputState(newInputState);
 
       if (newValue !== currentValue && props.onChange) {
-        props.onChange(event);
+        props.onChange(event as unknown as React.ChangeEvent<HTMLInputElement>);
       }
 
       // Chrome resets selection after focus event,
@@ -106,13 +104,13 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
     }
   }
 
-  function onBlur(event) {
+  function onBlur(event: React.FocusEvent<HTMLInputElement>): void {
     const currentValue = getInputState().value;
     const lastValue = getLastInputState().value;
 
     if (isMasked && !alwaysShowMask && maskUtils.isValueEmpty(lastValue)) {
       let newValue = "";
-      let newInputState = {
+      let newInputState: InputState = {
         value: newValue,
         selection: { start: null, end: null }
       };
@@ -128,7 +126,7 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
       setInputState(newInputState);
 
       if (newValue !== currentValue && props.onChange) {
-        props.onChange(event);
+        props.onChange(event as unknown as React.ChangeEvent<HTMLInputElement>);
       }
     }
 
@@ -141,20 +139,20 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
   // position on focus, so we have to restore it in that case
   //
   // https://github.com/sanniassin/react-input-mask/issues/108
-  function onMouseDown(event) {
+  function onMouseDown(event: React.MouseEvent<HTMLInputElement>): void {
     const input = getInputElement();
     const { value } = getInputState();
     const inputDocument = getElementDocument(input);
 
-    if (!isInputFocused(input) && !maskUtils.isValueFilled(value)) {
+    if (!isInputFocused(input as HTMLInputElement) && !maskUtils.isValueFilled(value)) {
       const mouseDownX = event.clientX;
       const mouseDownY = event.clientY;
       const mouseDownTime = new Date().getTime();
 
-      const mouseUpHandler = mouseUpEvent => {
-        inputDocument.removeEventListener("mouseup", mouseUpHandler);
+      const mouseUpHandler = (mouseUpEvent: MouseEvent): void => {
+        inputDocument!.removeEventListener("mouseup", mouseUpHandler);
 
-        if (!isInputFocused(input)) {
+        if (!isInputFocused(input as HTMLInputElement)) {
           return;
         }
 
@@ -179,7 +177,7 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
         }
       };
 
-      inputDocument.addEventListener("mouseup", mouseUpHandler);
+      inputDocument!.addEventListener("mouseup", mouseUpHandler);
     }
 
     if (props.onMouseDown) {
@@ -194,8 +192,8 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
     const isFocused = input && isInputFocused(input);
     let newValue =
       isFocused || alwaysShowMask || props.value
-        ? maskUtils.formatValue(props.value)
-        : props.value;
+        ? maskUtils.formatValue(props.value as string)
+        : (props.value as string);
 
     if (beforeMaskedStateChange) {
       newValue = beforeMaskedStateChange({
@@ -219,10 +217,10 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
     }
 
     const input = getInputElement();
-    const isFocused = isInputFocused(input);
+    const isFocused = isInputFocused(input as HTMLInputElement);
     const previousSelection = lastSelection;
     const currentState = getInputState();
-    let newInputState = { ...currentState };
+    let newInputState: InputState = { ...currentState };
 
     // Update value for uncontrolled inputs to make sure
     // it's always in sync with mask props
@@ -266,13 +264,16 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
     onBlur,
     onChange: isMasked && isEditable ? onChange : props.onChange,
     onMouseDown: isMasked && isEditable ? onMouseDown : props.onMouseDown,
-    ref: ref => {
-      inputRef.current = ref;
+    // `ref` may target either the plain <input> DOM node or, when custom
+    // children are used, the ChildrenWrapper class instance (React strips
+    // `ref` from props regardless of the target type) — matches old JS.
+    ref: (ref: unknown) => {
+      inputRef.current = ref as HTMLInputElement | null;
 
       if (isFunction(forwardedRef)) {
-        forwardedRef(ref);
+        (forwardedRef as (instance: unknown) => void)(ref);
       } else if (forwardedRef !== null && typeof forwardedRef === "object") {
-        forwardedRef.current = ref;
+        (forwardedRef as React.MutableRefObject<unknown>).current = ref;
       }
     },
     value: isMasked && isControlled ? lastValue : props.value
@@ -291,26 +292,5 @@ const InputMask = forwardRef(function InputMask(props, forwardedRef) {
 
 InputMask.displayName = "InputMask";
 
-InputMask.defaultProps = {
-  alwaysShowMask: false,
-  maskPlaceholder: "_"
-};
-
-InputMask.propTypes = {
-  alwaysShowMask: PropTypes.bool,
-  beforeMaskedStateChange: PropTypes.func,
-  children: PropTypes.element,
-  mask: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.arrayOf(
-      PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(RegExp)])
-    )
-  ]),
-  maskPlaceholder: PropTypes.string,
-  onFocus: PropTypes.func,
-  onBlur: PropTypes.func,
-  onChange: PropTypes.func,
-  onMouseDown: PropTypes.func
-};
-
+export type { InputMaskProps, InputState, Selection, BeforeMaskedStateChangeFn, Mask } from "./types";
 export default InputMask;
