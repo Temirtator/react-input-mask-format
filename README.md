@@ -1,52 +1,63 @@
 # react-input-mask-format
 
-[![npm downloads](https://img.shields.io/npm/dm/react-input-mask-format.svg?style=flat)](https://www.npmjs.com/package/react-input-mask-format)
+[![npm version](https://img.shields.io/npm/v/react-input-mask-format.svg)](https://www.npmjs.com/package/react-input-mask-format)
+[![npm downloads](https://img.shields.io/npm/dm/react-input-mask-format.svg)](https://www.npmjs.com/package/react-input-mask-format)
+[![CI](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml/badge.svg)](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml)
 
-Input masking component for React. Made with attention to UX. 
+Input masking component for React. Made with attention to UX.
 
-This project is fork from basic library react-input-mask by sanniassin
+A maintained fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
-#### [Demo](http://sanniassin.github.io/react-input-mask/demo.html)
+## Why this fork
 
-# Table of Contents
-* [Installation](#installation)
-* [Usage](#usage)
-* [Properties](#properties)
-* [Known Issues](#known-issues)
+The original `react-input-mask` has been unmaintained since 2021. This fork is:
 
-# Installation
-```npm install react-input-mask-format@next --save```
+- **React 16.8 – 19 compatible** — no `defaultProps`, no `findDOMNode`, StrictMode-safe
+- **TypeScript-first** — types generated from source
+- **Modern packaging** — ESM + CJS, `exports` map, tree-shakable
+- **Zero runtime dependencies**
+- **Custom `children` support restored** — passing a component as children
+  (e.g. to reuse another UI library's input) was broken in every release
+  since v1.0.x; it works again here
+- **Drop-in compatible** with both `react-input-mask` v2 (`maskChar`, `formatChars`,
+  `beforeMaskedValueChange`) and v3-alpha (`maskPlaceholder`, `beforeMaskedStateChange`) APIs
 
-react-input-mask-format requires **React 16.8.0 or later.
+## Installation
 
-# Usage
+```
+npm install react-input-mask-format
+```
+
+Requires React 16.8.0 or later.
+
+## Usage
+
 ```jsx
-import React from "react"
-import InputMask from "react-input-mask";
+import InputMask from "react-input-mask-format";
 
 function DateInput(props) {
   return <InputMask mask="99/99/9999" onChange={props.onChange} value={props.value} />;
 }
 ```
 
-# Properties
-|                           Name                            |               Type                | Default | Description |
-|        :-----------------------------------------:        |    :-------------------------:    | :-----: | :--------------------------------------------------------------------- |
-|                    **[`mask`](#mask)**                    | `{String\|Array<String, RegExp>}` |         | Mask format |
-|         **[`maskPlaceholder`](#maskplaceholder)**         |            `{String}`             |   `_`   | Placeholder to cover unfilled parts of the mask |
-|          **[`alwaysShowMask`](#alwaysshowmask)**          |            `{Boolean}`            | `false` | Whether mask prefix and placeholder should be displayed when input is empty and has no focus |
-| **[`beforeMaskedStateChange`](#beforemaskedstatechange)** |            `{Function}`           |         | Function to modify value and selection before applying mask |
-|                **[`children`](#children)**                |          `{ReactElement}`         |         | Custom render function for integration with other input components |
+## Properties
 
+|                            Name                            |                Type                | Default | Description |
+| :---------------------------------------------------------: | :--------------------------------: | :-----: | :--- |
+|                    **[`mask`](#mask)**                     | `{String\|Array<String, RegExp>}`  |         | Mask format |
+|          **[`maskPlaceholder`](#maskplaceholder)**          |             `{String}`             |   `_`   | Placeholder to cover unfilled parts of the mask |
+|           **[`alwaysShowMask`](#alwaysshowmask)**           |            `{Boolean}`             | `false` | Whether mask prefix and placeholder should be displayed when input is empty and has no focus |
+| **[`beforeMaskedStateChange`](#beforemaskedstatechange)** |            `{Function}`            |         | Function to modify value and selection before applying mask |
+|                **[`children`](#children)**                 |          `{ReactElement}`          |         | Custom render function for integration with other input components |
 
 ### `mask`
 
-Mask format. Can be either a string or array of characters and regular expressions.<br /><br />
-
+Mask format. Can be either a string or array of characters and regular expressions.
 
 ```jsx
 <InputMask mask="99/99/99" />
 ```
+
 Simple masks can be defined as strings. The following characters will define mask format:
 
 | Character | Allowed input |
@@ -55,10 +66,10 @@ Simple masks can be defined as strings. The following characters will define mas
 |     a     |    a-z, A-Z   |
 |     *     | 0-9, a-z, A-Z |
 
-Any format character can be escaped with a backslash.<br /><br />
-
+Any format character can be escaped with a backslash.
 
 More complex masks can be defined as an array of regular expressions and constant characters.
+
 ```jsx
 // Canadian postal code mask
 const firstLetter = /(?!.*[DFIOQU])[A-VXY]/i;
@@ -68,8 +79,8 @@ const mask = [firstLetter, digit, letter, " ", digit, letter, digit];
 return <InputMask mask={mask} />;
 ```
 
-
 ### `maskPlaceholder`
+
 ```jsx
 // Will be rendered as 12/--/--
 <InputMask mask="99/99/99" maskPlaceholder="-" value="12" />
@@ -80,18 +91,19 @@ return <InputMask mask={mask} />;
 // Will be rendered as 12/
 <InputMask mask="99/99/99" maskPlaceholder={null} value="12" />
 ```
-Character or string to cover unfilled parts of the mask. Default character is "\_". If set to `null` or empty string, unfilled parts will be empty as in a regular input.
 
+Character or string to cover unfilled parts of the mask. Default character is "\_". If set to `null` or empty string, unfilled parts will be empty as in a regular input.
 
 ### `alwaysShowMask`
 
 If enabled, mask prefix and placeholder will be displayed even when input is empty and has no focus.
 
-
 ### `beforeMaskedStateChange`
+
 In case you need to customize masking behavior, you can provide `beforeMaskedStateChange` function to change masked value and cursor position before it's applied to the input.
 
-It receieves an object with `previousState`, `currentState` and `nextState` properties. Each state is an object with `value` and `selection` properites where `value` is a string and selection is an object containing `start` and `end` positions of the selection.
+It receives an object with `previousState`, `currentState` and `nextState` properties. Each state is an object with `value` and `selection` properties where `value` is a string and `selection` is an object containing `start` and `end` positions of the selection.
+
 1. **previousState:** Input state before change. Only defined on `change` event.
 2. **currentState:** Current raw input state. Not defined during component render.
 3. **nextState:** Input state with applied mask. Contains `value` and `selection` fields.
@@ -119,19 +131,25 @@ return <InputMask mask="99/99/99" maskPlaceholder={null} beforeMaskedStateChange
 
 Please note that `beforeMaskedStateChange` executes more often than `onChange` and must be pure.
 
-
 ### `children`
-To use another component instead of regular `<input />` provide it as children. The following properties, if used, should always be defined on the `InputMask` component itself: `onChange`, `onMouseDown`, `onFocus`, `onBlur`, `value`, `disabled`, `readOnly`.
+
+To use another component instead of a regular `<input />`, provide it as children. The following properties, if used, should always be defined on the `InputMask` component itself: `onChange`, `onMouseDown`, `onFocus`, `onBlur`, `value`, `disabled`, `readOnly`.
+
+The child component must forward its ref to the underlying `<input>` DOM node (or to a wrapper element that contains one, e.g. a Material-style input with an internal `<input>`) so `InputMask` can read and control its value and selection.
+
 ```jsx
-import React from 'react';
-import InputMask from 'react-input-mask';
-import MaterialInput from '@material-ui/core/Input';
+import React from "react";
+import InputMask from "react-input-mask-format";
+
+const CustomInput = React.forwardRef((props, ref) => (
+  <input ref={ref} {...props} style={{ borderColor: "rebeccapurple" }} />
+));
 
 // Will work fine
 function Input(props) {
   return (
     <InputMask mask="99/99/9999" value={props.value} onChange={props.onChange}>
-      <MaterialInput type="tel" disableUnderline />
+      <CustomInput />
     </InputMask>
   );
 }
@@ -140,33 +158,46 @@ function Input(props) {
 function InvalidInput(props) {
   return (
     <InputMask mask="99/99/9999" value={props.value}>
-      <MaterialInput type="tel" disableUnderline onChange={props.onChange} />
+      <CustomInput onChange={props.onChange} />
     </InputMask>
   );
 }
 ```
 
-# Known Issues
+> **Note:** `InputMask` clones the child element and injects its own `ref`
+> callback into it, so a `ref` placed directly on the child element will be
+> replaced and won't receive the DOM node. If you need a ref to the
+> underlying input, attach it to `<InputMask>` itself — it's forwarded
+> through to the child (or, when the child forwards to a wrapper element,
+> to the `<input>` found inside it).
+
+## Known Issues
+
 ### Autofill
+
 Browser's autofill requires either empty value in input or value which exactly matches beginning of the autofilled value. I.e. autofilled value "+1 (555) 123-4567" will work with "+1" or "+1 (5", but won't work with "+1 (\_\_\_) \_\_\_-\_\_\_\_" or "1 (555)". There are several possible solutions:
-1. Set `maskChar` to null and trim space after "+1" with `beforeMaskedStateChange` if no more digits are entered.
+
+1. Set `maskPlaceholder` to null and trim space after "+1" with `beforeMaskedStateChange` if no more digits are entered.
 2. Apply mask only if value is not empty. In general, this is the most reliable solution because we can't be sure about formatting in autofilled value.
 3. Use less formatting in the mask.
 
 Please note that it might lead to worse user experience (should I enter +1 if input is empty?). You should choose what's more important to your users — smooth typing experience or autofill. Phone and ZIP code inputs are very likely to be autofilled and it's a good idea to care about it, while security confirmation code in two-factor authorization shouldn't care about autofill at all.
 
 ### Cypress tests
+
 The following sequence could fail
+
 ```js
 cy.get("input")
   .focus()
   .type("12345")
   .should("have.value", "12/34/5___"); // expected <input> to have value 12/34/5___, but the value was 23/45/____
-````
+```
 
 Since [focus is not an action command](https://docs.cypress.io/api/commands/focus.html#Focus-is-not-an-action-command), it behaves differently than the real user interaction and, therefore, less reliable.
 
 There is a few possible workarounds
+
 ```js
 // Start typing without calling focus() explicitly.
 // type() is an action command and focuses input anyway
@@ -186,7 +217,26 @@ cy.get("input")
   .wait(50)
   .type("12345")
   .should("have.value", "12/34/5___");
-````
+```
 
-# Thanks
-Thanks to [BrowserStack](https://www.browserstack.com/) for the help with testing on real devices
+## Migrating from react-input-mask
+
+### From v2 (2.0.4 and earlier)
+
+Your code keeps working as is — `maskChar`, `formatChars` and
+`beforeMaskedValueChange` are supported as deprecated aliases (a one-time
+console warning is emitted in development). Recommended renames:
+
+| v2 | v2.x of this package |
+| --- | --- |
+| `maskChar="-"` | `maskPlaceholder="-"` |
+| `maskChar={null}` | `maskPlaceholder={null}` |
+| `formatChars={{ "#": "[0-9]" }}` | array mask: `mask={[/[0-9]/, …]}` (or keep `formatChars`) |
+| `beforeMaskedValueChange={(newState, oldState, userInput, options) => …}` | `beforeMaskedStateChange={({ previousState, currentState, nextState }) => …}` |
+| `inputRef={el => …}` | `ref` (standard forwarded ref) |
+| `alwaysShowMask` | unchanged |
+| custom `children` (e.g. wrapping another input library) | unchanged — works as in upstream v2 |
+
+### From v3-alpha
+
+API is identical — change the import to `react-input-mask-format` and you are done.
