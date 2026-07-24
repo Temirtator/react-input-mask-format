@@ -235,7 +235,7 @@ console warning is emitted in development). Recommended renames:
 | `beforeMaskedValueChange={(newState, oldState, userInput, options) => …}` | `beforeMaskedStateChange={({ previousState, currentState, nextState }) => …}` |
 | `inputRef={el => …}` | `ref` (standard forwarded ref) |
 | `alwaysShowMask` | unchanged |
-| custom `children` (e.g. wrapping another input library) | unchanged — works as in upstream v2 |
+| custom `children` (e.g. wrapping another input library) | works if the child forwards its ref to the input (or a wrapper containing one) — see [children](#children); upstream v2 accepted any child via findDOMNode |
 
 ### From v3-alpha
 

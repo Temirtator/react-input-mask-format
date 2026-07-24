@@ -31,13 +31,13 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   } = props;
 
   if (maskChar !== undefined) {
-    warnDeprecatedOnce("maskChar", "maskChar is deprecated, use maskPlaceholder instead. See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask-v2");
+    warnDeprecatedOnce("maskChar", "maskChar is deprecated, use maskPlaceholder instead. See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask");
   }
   if (formatChars !== undefined) {
-    warnDeprecatedOnce("formatChars", "formatChars is deprecated, prefer an array mask with RegExps. See migration guide.");
+    warnDeprecatedOnce("formatChars", "formatChars is deprecated, prefer an array mask with RegExps. See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask");
   }
   if (beforeMaskedValueChange !== undefined) {
-    warnDeprecatedOnce("beforeMaskedValueChange", "beforeMaskedValueChange is deprecated, use beforeMaskedStateChange. See migration guide.");
+    warnDeprecatedOnce("beforeMaskedValueChange", "beforeMaskedValueChange is deprecated, use beforeMaskedStateChange. See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask");
   }
 
   const resolvedPlaceholder = resolveMaskPlaceholder(maskPlaceholderProp, maskChar);
