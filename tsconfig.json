@@ -10,7 +10,10 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "lib": ["ES2019", "DOM", "DOM.Iterable"],
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "react-input-mask-format": ["./src/index.tsx"]
+    }
   },
   "include": [
     "src/**/*.ts", "src/**/*.tsx",
