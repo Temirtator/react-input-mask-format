@@ -3,7 +3,7 @@
   "description": "Masked input component for React",
   "version": "2.0.0",
   "type": "module",
-  "homepage": "https://github.com/temirtator/react-input-mask-format",
+  "homepage": "https://github.com/Temirtator/react-input-mask-format",
   "license": "MIT",
   "author": "Temirlan Shagyrov <sh.temirlan95@gmail.com>",
   "keywords": [
@@ -72,6 +72,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/temirtator/react-input-mask-format.git"
+    "url": "git+https://github.com/Temirtator/react-input-mask-format.git"
   }
 }
