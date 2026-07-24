@@ -59,6 +59,8 @@ export interface InputMaskProps
   alwaysShowMask?: boolean;
   /** Modify masked value and cursor position before they are applied. */
   beforeMaskedStateChange?: BeforeMaskedStateChangeFn;
+  /** Normalize each entered character. "uppercase" | "lowercase" | (char, position) => char. Must be pure. */
+  transform?: Transform;
   /** Custom input component. */
   children?: React.ReactElement;
   /** @deprecated Use maskPlaceholder. */

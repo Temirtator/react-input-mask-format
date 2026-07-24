@@ -12,6 +12,7 @@ import {
   createBeforeMaskedStateChangeAdapter,
   warnDeprecatedOnce
 } from "./v2-compat";
+import { resolveTransform } from "./utils/transform";
 import type { InputMaskProps, InputState, V2MaskOptions } from "./types";
 
 const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMask(
@@ -24,6 +25,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     mask,
     maskPlaceholder: maskPlaceholderProp,
     beforeMaskedStateChange: beforeMaskedStateChangeProp,
+    transform,
     maskChar,
     formatChars,
     beforeMaskedValueChange,
@@ -49,7 +51,8 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   const maskUtils = new MaskUtils({
     mask,
     maskPlaceholder,
-    formatChars: toRegExpFormatChars(formatChars)
+    formatChars: toRegExpFormatChars(formatChars),
+    transform: resolveTransform(transform)
   });
 
   let beforeMaskedStateChange = beforeMaskedStateChangeProp;

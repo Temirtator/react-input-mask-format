@@ -145,3 +145,19 @@ describe("InputMask basics", () => {
     spy.mockRestore();
   });
 });
+
+describe("transform prop", () => {
+  it("uppercases typed input", async () => {
+    const user = userEvent.setup();
+    render(<InputMask mask="aaaa" transform="uppercase" data-testid="t" />);
+    const input = screen.getByTestId("t") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("abcd");
+    expect(input.value).toBe("ABCD");
+  });
+
+  it("does not forward transform to the DOM node", () => {
+    render(<InputMask mask="9999" transform="uppercase" data-testid="t2" />);
+    expect(screen.getByTestId("t2").getAttribute("transform")).toBeNull();
+  });
+});
