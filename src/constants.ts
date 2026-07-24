@@ -15,3 +15,10 @@ export const defaultFormatChars: FormatChars = {
   a: /[A-Za-z]/,
   "*": /[A-Za-z0-9]/
 };
+
+export const extendedFormatChars: FormatChars = {
+  ...defaultFormatChars,
+  A: /[A-Z]/,
+  "Я": /[А-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]/,
+  "#": /[0-9A-Fa-f]/
+};

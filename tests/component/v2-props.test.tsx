@@ -1,7 +1,8 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import InputMask from "../../src/index";
+import userEvent from "@testing-library/user-event";
+import InputMask, { extendedFormatChars } from "../../src/index";
 import type { BeforeMaskedValueChangeFn } from "../../src/types";
 
 describe("v2 compatibility props", () => {
@@ -38,6 +39,24 @@ describe("v2 compatibility props", () => {
     render(<InputMask mask="99" maskChar="-" alwaysShowMask data-testid="b" />);
     const calls = spy.mock.calls.filter(args => String(args[0]).includes("maskChar"));
     expect(calls.length).toBeLessThanOrEqual(1);
+    spy.mockRestore();
+  });
+});
+
+describe("RegExp formatChars + extendedFormatChars", () => {
+  it("accepts hex via the '#' token and rejects non-hex", async () => {
+    const user = userEvent.setup();
+    render(<InputMask mask="###" formatChars={extendedFormatChars} data-testid="hex" />);
+    const input = screen.getByTestId("hex") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("1a2");
+    expect(input.value).toBe("1a2");
+  });
+
+  it("does NOT warn when formatChars values are RegExp", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<InputMask mask="##" formatChars={extendedFormatChars} data-testid="hex2" />);
+    expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
 });

@@ -8,7 +8,7 @@ import { isFunction, toString, getElementDocument } from "./utils/helpers";
 import MaskUtils from "./utils/mask";
 import {
   resolveMaskPlaceholder,
-  toRegExpFormatChars,
+  normalizeFormatChars,
   createBeforeMaskedStateChangeAdapter,
   warnDeprecatedOnce
 } from "./v2-compat";
@@ -35,9 +35,6 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   if (maskChar !== undefined) {
     warnDeprecatedOnce("maskChar", "maskChar is deprecated, use maskPlaceholder instead. See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask");
   }
-  if (formatChars !== undefined) {
-    warnDeprecatedOnce("formatChars", "formatChars is deprecated, prefer an array mask with RegExps. See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask");
-  }
   if (beforeMaskedValueChange !== undefined) {
     warnDeprecatedOnce("beforeMaskedValueChange", "beforeMaskedValueChange is deprecated, use beforeMaskedStateChange. See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask");
   }
@@ -48,10 +45,19 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   validateMaxLength(props);
   validateMaskPlaceholder({ ...props, maskPlaceholder });
 
+  const { formatChars: normalizedFormatChars, hasLegacyString } =
+    normalizeFormatChars(formatChars);
+  if (hasLegacyString) {
+    warnDeprecatedOnce(
+      "formatChars",
+      "string values in formatChars are deprecated, pass RegExp values instead (e.g. { \"#\": /[0-9]/ }). See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask"
+    );
+  }
+
   const maskUtils = new MaskUtils({
     mask,
     maskPlaceholder,
-    formatChars: toRegExpFormatChars(formatChars),
+    formatChars: normalizedFormatChars,
     transform: resolveTransform(transform)
   });
 
@@ -341,5 +347,15 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
 
 InputMask.displayName = "InputMask";
 
-export type { InputMaskProps, InputState, Selection, BeforeMaskedStateChangeFn, Mask } from "./types";
+export { defaultFormatChars, extendedFormatChars } from "./constants";
+export type {
+  InputMaskProps,
+  InputState,
+  Selection,
+  BeforeMaskedStateChangeFn,
+  BeforeMaskedValueChangeFn,
+  Mask,
+  Transform,
+  FormatChars
+} from "./types";
 export default InputMask;
