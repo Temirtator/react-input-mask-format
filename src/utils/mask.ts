@@ -4,13 +4,16 @@ import type { FormatChars, InputState, Selection } from "../types";
 
 export default class MaskUtils {
   maskOptions: ParsedMaskOptions;
+  transform?: (char: string, position: number) => string;
 
   constructor(options: {
     mask?: string | Array<string | RegExp> | null;
     maskPlaceholder?: string | null;
     formatChars?: FormatChars;
+    transform?: (char: string, position: number) => string;
   }) {
     this.maskOptions = parseMask(options);
+    this.transform = options.transform;
   }
 
   isCharacterAllowedAtPosition = (character: string, position: number): boolean => {
@@ -164,17 +167,22 @@ export default class MaskUtils {
       return value;
     }
 
-    const isAllowed = this.isCharacterAllowedAtPosition(character, position);
+    const transformedCharacter =
+      this.transform && this.isPositionEditable(position)
+        ? this.transform(character, position)
+        : character;
+
+    const isAllowed = this.isCharacterAllowedAtPosition(transformedCharacter, position);
     const isEditable = this.isPositionEditable(position);
     const nextEditablePosition = this.getRightEditablePosition(position);
     const isNextPlaceholder =
       maskPlaceholder && nextEditablePosition
-        ? character === maskPlaceholder[nextEditablePosition]
+        ? transformedCharacter === maskPlaceholder[nextEditablePosition]
         : null;
     const valueBefore = value.slice(0, position);
 
     if (isAllowed || !isEditable) {
-      const insertedCharacter = isAllowed ? character : mask![position];
+      const insertedCharacter = isAllowed ? transformedCharacter : mask![position];
       value = valueBefore + insertedCharacter;
     }
 

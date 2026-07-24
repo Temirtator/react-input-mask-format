@@ -2,6 +2,11 @@ import type * as React from "react";
 
 export type Mask = string | Array<string | RegExp>;
 
+export type Transform =
+  | "uppercase"
+  | "lowercase"
+  | ((char: string, position: number) => string);
+
 export type FormatChars = Record<string, RegExp>;
 
 export interface Selection {

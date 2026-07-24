@@ -71,3 +71,27 @@ describe("MaskUtils.processChange", () => {
     expect(result.value).toBe("12/34/5678");
   });
 });
+
+describe("MaskUtils transform", () => {
+  const upper = (c: string) => c.toUpperCase();
+
+  it("uppercases entered characters at editable positions", () => {
+    const utils = new MaskUtils({ mask: "aaa", maskPlaceholder: "_", transform: upper });
+    expect(utils.formatValue("abc")).toBe("ABC");
+  });
+
+  it("does not transform permanent (literal) characters", () => {
+    const utils = new MaskUtils({ mask: "aa-aa", maskPlaceholder: "_", transform: upper });
+    expect(utils.formatValue("abcd")).toBe("AB-CD");
+  });
+
+  it("lets lowercase input fill an uppercase-only class via uppercase transform", () => {
+    const utils = new MaskUtils({ mask: [/[A-Z]/, /[A-Z]/], maskPlaceholder: "_", transform: upper });
+    expect(utils.formatValue("ab")).toBe("AB");
+  });
+
+  it("is identity when no transform is given", () => {
+    const utils = new MaskUtils({ mask: "aaa", maskPlaceholder: "_" });
+    expect(utils.formatValue("abc")).toBe("abc");
+  });
+});
