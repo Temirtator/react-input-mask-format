@@ -50,6 +50,14 @@
       "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
       "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
     },
+    "./presets": {
+      "import": { "types": "./dist/presets.d.ts", "default": "./dist/presets.js" },
+      "require": { "types": "./dist/presets.d.cts", "default": "./dist/presets.cjs" }
+    },
+    "./validators": {
+      "import": { "types": "./dist/validators.d.ts", "default": "./dist/validators.js" },
+      "require": { "types": "./dist/validators.d.cts", "default": "./dist/validators.cjs" }
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -57,7 +65,9 @@
     "dist"
   ],
   "size-limit": [
-    { "path": "dist/index.js", "limit": "6 KB" }
+    { "path": "dist/index.js", "limit": "6 KB" },
+    { "path": "dist/presets.js", "limit": "2 KB" },
+    { "path": "dist/validators.js", "limit": "2 KB" }
   ],
   "scripts": {
     "build": "tsup",
