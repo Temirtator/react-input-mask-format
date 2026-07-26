@@ -21,5 +21,5 @@ test("hex token accepts hex digits only", async ({ page }) => {
   const input = page.getByTestId("hex");
   await input.click();
   await input.pressSequentially("1ag2");
-  await expect(input).toHaveValue("1a2"); // 'g' rejected
+  await expect(input).toHaveValue("1a2___"); // 'g' rejected; remaining positions filled with placeholder
 });
