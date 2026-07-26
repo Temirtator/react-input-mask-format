@@ -42,7 +42,7 @@ export interface V2MaskOptions {
   mask?: Mask;
   maskChar: string | null;
   alwaysShowMask: boolean;
-  formatChars: Record<string, string>;
+  formatChars: Record<string, RegExp | string>;
   permanents: number[];
 }
 
