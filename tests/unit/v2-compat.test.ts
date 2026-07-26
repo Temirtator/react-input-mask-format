@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   resolveMaskPlaceholder,
   toRegExpFormatChars,
+  normalizeFormatChars,
   createBeforeMaskedStateChangeAdapter,
   warnDeprecatedOnce,
   __resetDeprecationWarnings
@@ -54,5 +55,23 @@ describe("warnDeprecatedOnce", () => {
     warnDeprecatedOnce("maskChar", "msg");
     expect(spy).toHaveBeenCalledTimes(1);
     spy.mockRestore();
+  });
+});
+
+describe("normalizeFormatChars", () => {
+  it("passes RegExp values through and reports no legacy string", () => {
+    const { formatChars, hasLegacyString } = normalizeFormatChars({ "#": /[0-9]/ });
+    expect(formatChars!["#"]).toBeInstanceOf(RegExp);
+    expect(formatChars!["#"].test("7")).toBe(true);
+    expect(hasLegacyString).toBe(false);
+  });
+  it("converts string values and flags legacy string", () => {
+    const { formatChars, hasLegacyString } = normalizeFormatChars({ "#": "[0-9]" });
+    expect(formatChars!["#"].test("7")).toBe(true);
+    expect(hasLegacyString).toBe(true);
+  });
+  it("returns undefined for undefined", () => {
+    expect(normalizeFormatChars(undefined).formatChars).toBeUndefined();
+    expect(normalizeFormatChars(undefined).hasLegacyString).toBe(false);
   });
 });

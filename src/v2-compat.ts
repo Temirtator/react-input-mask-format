@@ -29,17 +29,30 @@ export function resolveMaskPlaceholder(
   return maskChar;
 }
 
-export function toRegExpFormatChars(
-  formatChars: Record<string, string> | undefined
-): FormatChars | undefined {
+export function normalizeFormatChars(
+  formatChars: Record<string, RegExp | string> | undefined
+): { formatChars: FormatChars | undefined; hasLegacyString: boolean } {
   if (!formatChars) {
-    return undefined;
+    return { formatChars: undefined, hasLegacyString: false };
   }
   const result: FormatChars = {};
+  let hasLegacyString = false;
   for (const key of Object.keys(formatChars)) {
-    result[key] = new RegExp(formatChars[key]);
+    const value = formatChars[key];
+    if (typeof value === "string") {
+      hasLegacyString = true;
+      result[key] = new RegExp(value);
+    } else {
+      result[key] = value;
+    }
   }
-  return result;
+  return { formatChars: result, hasLegacyString };
+}
+
+export function toRegExpFormatChars(
+  formatChars: Record<string, RegExp | string> | undefined
+): FormatChars | undefined {
+  return normalizeFormatChars(formatChars).formatChars;
 }
 
 export function createBeforeMaskedStateChangeAdapter(

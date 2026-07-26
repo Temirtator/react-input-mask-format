@@ -4,9 +4,20 @@
 [![npm downloads](https://img.shields.io/npm/dm/react-input-mask-format.svg)](https://www.npmjs.com/package/react-input-mask-format)
 [![CI](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml/badge.svg)](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml)
 
-Input masking component for React. Made with attention to UX.
+General-purpose input masking for React — dates, phone numbers, cards, custom
+tokens, and a growing set of ready-made country packs (Kazakhstan ships first).
+Made with attention to UX.
 
 A maintained fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
+
+## What's new in 2.1
+
+- `transform` prop (`uppercase` / `lowercase` / custom) — see [transform](#transform)
+- Custom tokens via RegExp `formatChars` + shipped `extendedFormatChars` (`A`, `Я`, `#`)
+- `react-input-mask-format/presets` — `card` + Kazakhstan pack (phone, IIN, BIN, IBAN, plate, postal)
+- `react-input-mask-format/validators` — `isValidIin`, `isValidBin`, `isValidKzIban`, `luhn`
+
+All additive — no migration needed.
 
 ## Why this fork
 
@@ -45,6 +56,8 @@ function DateInput(props) {
 |                            Name                            |                Type                | Default | Description |
 | :---------------------------------------------------------: | :--------------------------------: | :-----: | :--- |
 |                    **[`mask`](#mask)**                     | `{String\|Array<String, RegExp>}`  |         | Mask format |
+|                    **[`transform`](#transform)**                    | `{"uppercase"\|"lowercase"\|Function}` |         | Normalize each entered character before it's tested against the mask |
+| **[`formatChars`](#custom-tokens-formatchars-and-extendedformatchars)** | `{Object<String, RegExp>}` |         | Custom mask tokens beyond the default `9`, `a`, `*` |
 |          **[`maskPlaceholder`](#maskplaceholder)**          |             `{String}`             |   `_`   | Placeholder to cover unfilled parts of the mask |
 |           **[`alwaysShowMask`](#alwaysshowmask)**           |            `{Boolean}`             | `false` | Whether mask prefix and placeholder should be displayed when input is empty and has no focus |
 | **[`beforeMaskedStateChange`](#beforemaskedstatechange)** |            `{Function}`            |         | Function to modify value and selection before applying mask |
@@ -77,6 +90,75 @@ const letter = /(?!.*[DFIOQU])[A-Z]/i;
 const digit = /[0-9]/;
 const mask = [firstLetter, digit, letter, " ", digit, letter, digit];
 return <InputMask mask={mask} />;
+```
+
+### `transform`
+
+Normalize every entered character. Runs before the mask test, so an uppercase-only
+class accepts lowercase typing; runs before `beforeMaskedStateChange`.
+
+```jsx
+<InputMask mask="aaaaaa" transform="uppercase" />           // "abc" → "ABC"
+<InputMask mask={[/[A-Z]/, /[A-Z]/]} transform="uppercase" />
+<InputMask mask="9a9a" transform={(char, position) => char} />
+```
+
+Values: `"uppercase"`, `"lowercase"`, or `(char, position) => char` (must be pure).
+
+### Custom tokens (`formatChars`) and `extendedFormatChars`
+
+Define your own mask tokens by mapping a character to a `RegExp`:
+
+```jsx
+import InputMask, { extendedFormatChars } from "react-input-mask-format";
+
+// roll your own
+<InputMask mask="ww-ww" formatChars={{ w: /[a-z]/ }} />
+
+// or use the shipped extended set: A (uppercase), Я (Cyrillic incl. Kazakh), # (hex)
+<InputMask mask="AAA-###" formatChars={extendedFormatChars} />
+```
+
+The default tokens (`9`, `a`, `*`) are unchanged. Passing string values (`{ w: "[a-z]" }`)
+still works but is deprecated — pass `RegExp` values.
+
+## Presets
+
+Ready-made mask configs. Import what you need and spread it — tree-shakeable, and the
+core bundle carries none of it.
+
+```jsx
+import InputMask from "react-input-mask-format";
+import { kzPhone, kzIban } from "react-input-mask-format/presets";
+
+<InputMask {...kzPhone} value={phone} onChange={onChange} />
+<InputMask {...kzIban} value={iban} onChange={onChange} />
+```
+
+Presets are a country-agnostic system; Kazakhstan is the first (flagship) country pack —
+PRs adding other countries are welcome.
+
+| export | mask | example |
+| --- | --- | --- |
+| `card` | `9999 9999 9999 9999` | `4242 4242 4242 4242` |
+| `kzPhone` | `+7 (799) 999-99-99` | `+7 (701) 234-56-78` |
+| `kzIin` | `999999999999` | `901010123458` |
+| `kzBin` | `999999999999` | `150340004984` |
+| `kzIban` | `KZ99 999* **** **** ****` (uppercase) | `KZ86 125K ZT50 0410 0100` |
+| `kzPlate` | `123 ABC 02` (letters `ABCEHKMNOPTXY`, uppercase) | `123 ABC 02` |
+| `kzPostal` | `999999` | `050000` |
+
+## Validators
+
+Optional checksum validators, separate entry point, zero-deps. Accept raw or formatted
+input; return `false` on empty/invalid.
+
+```jsx
+import { isValidIin, isValidBin, isValidKzIban, luhn } from "react-input-mask-format/validators";
+
+isValidIin("901010123458");                 // KZ IIN/BIN mod-11 checksum
+isValidKzIban("KZ86 125K ZT50 0410 0100");  // ISO 7064 MOD-97
+luhn("4242 4242 4242 4242");                // card Luhn
 ```
 
 ### `maskPlaceholder`

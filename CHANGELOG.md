@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+- `transform` prop on `InputMask` (`"uppercase"` | `"lowercase"` | `(char, position) => char`).
+- RegExp values in `formatChars` (string values deprecated) and a shipped `extendedFormatChars` map (`A`, `Я`, `#`).
+- `react-input-mask-format/presets`: `card`, `kzPhone`, `kzIin`, `kzBin`, `kzIban`, `kzPlate`, `kzPostal`.
+- `react-input-mask-format/validators`: `isValidIin`, `isValidBin`, `isValidKzIban`, `luhn`.
+- Redesigned demo showcase.
+
+### Notes
+- Fully backward compatible; default tokens (`9`, `a`, `*`) unchanged.
+
 ## 2.0.0
 
 First release after four years. The library is maintained again.

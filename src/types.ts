@@ -2,6 +2,11 @@ import type * as React from "react";
 
 export type Mask = string | Array<string | RegExp>;
 
+export type Transform =
+  | "uppercase"
+  | "lowercase"
+  | ((char: string, position: number) => string);
+
 export type FormatChars = Record<string, RegExp>;
 
 export interface Selection {
@@ -37,7 +42,7 @@ export interface V2MaskOptions {
   mask?: Mask;
   maskChar: string | null;
   alwaysShowMask: boolean;
-  formatChars: Record<string, string>;
+  formatChars: Record<string, RegExp | string>;
   permanents: number[];
 }
 
@@ -54,12 +59,18 @@ export interface InputMaskProps
   alwaysShowMask?: boolean;
   /** Modify masked value and cursor position before they are applied. */
   beforeMaskedStateChange?: BeforeMaskedStateChangeFn;
+  /** Normalize each entered character. "uppercase" | "lowercase" | (char, position) => char. Must be pure. */
+  transform?: Transform;
   /** Custom input component. */
   children?: React.ReactElement;
   /** @deprecated Use maskPlaceholder. */
   maskChar?: string | null;
-  /** @deprecated Use an array mask or keep for legacy. */
-  formatChars?: Record<string, string>;
+  /**
+   * Map of custom mask tokens to character classes. Prefer RegExp values
+   * (e.g. `{ "#": /[0-9]/ }`); a ready-made `extendedFormatChars` is exported.
+   * String values are a deprecated legacy form and emit a one-time warning.
+   */
+  formatChars?: Record<string, RegExp | string>;
   /** @deprecated Use beforeMaskedStateChange. */
   beforeMaskedValueChange?: BeforeMaskedValueChangeFn;
 }
