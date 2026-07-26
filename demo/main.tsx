@@ -7,7 +7,7 @@ import {
 } from "react-input-mask-format/presets";
 import { isValidIin, isValidBin, isValidKzIban, luhn } from "react-input-mask-format/validators";
 
-const bg = "#0e1420", panel = "#131c2c", line = "#223049", ink = "#f4f8ff", dim = "#6b7f9c", accent = "#4da3ff", gold = "#FFC800";
+const bg = "#0e1420", panel = "#131c2c", line = "#223049", ink = "#f4f8ff", dim = "#6b7f9c", gold = "#FFC800";
 
 const fieldStyle: React.CSSProperties = {
   fontFamily: "ui-monospace, monospace", fontSize: 15, background: "#0a0f18",
