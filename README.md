@@ -140,10 +140,10 @@ PRs adding other countries are welcome.
 
 | export | mask | example |
 | --- | --- | --- |
-| `card` | `9999 9999 9999 9999` | `4400 4302 1200 3456` |
+| `card` | `9999 9999 9999 9999` | `4242 4242 4242 4242` |
 | `kzPhone` | `+7 (799) 999-99-99` | `+7 (701) 234-56-78` |
-| `kzIin` | `999999999999` | `900101300123` |
-| `kzBin` | `999999999999` | `150340004980` |
+| `kzIin` | `999999999999` | `901010123458` |
+| `kzBin` | `999999999999` | `150340004984` |
 | `kzIban` | `KZ99 999* **** **** ****` (uppercase) | `KZ86 125K ZT50 0410 0100` |
 | `kzPlate` | `123 ABC 02` (letters `ABCEHKMNOPTXY`, uppercase) | `123 ABC 02` |
 | `kzPostal` | `999999` | `050000` |
@@ -156,9 +156,9 @@ input; return `false` on empty/invalid.
 ```jsx
 import { isValidIin, isValidBin, isValidKzIban, luhn } from "react-input-mask-format/validators";
 
-isValidIin("900101300123");                 // KZ IIN/BIN mod-11 checksum
+isValidIin("901010123458");                 // KZ IIN/BIN mod-11 checksum
 isValidKzIban("KZ86 125K ZT50 0410 0100");  // ISO 7064 MOD-97
-luhn("4400 4302 1200 3456");                // card Luhn
+luhn("4242 4242 4242 4242");                // card Luhn
 ```
 
 ### `maskPlaceholder`
