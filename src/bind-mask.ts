@@ -78,8 +78,8 @@ export function createMaskController(
   function handleFocus(): void {
     const currentValue = getInputState().value;
     if (!maskUtils.isValueFilled(currentValue)) {
-      let newValue = maskUtils.formatValue(currentValue);
-      let newSelection = maskUtils.getDefaultSelectionForValue(newValue);
+      const newValue = maskUtils.formatValue(currentValue);
+      const newSelection = maskUtils.getDefaultSelectionForValue(newValue);
       let nextState: InputState = { value: newValue, selection: newSelection };
       if (options.beforeMaskedStateChange) {
         nextState = options.beforeMaskedStateChange({ currentState: getInputState(), nextState });
