@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import MaskUtils from "../../src/utils/mask";
 import { createMaskController } from "../../src/bind-mask";
 import { useMask } from "../../src/use-mask";
+import type { UseMaskOptions } from "../../src/types";
 
 // Minimal harness: bind a controller to a raw input (the hook comes in Task 3)
 function Harness({ mask, onChange }: { mask: string; onChange?: (v: string) => void }) {
@@ -66,7 +67,7 @@ describe("bind-mask focus/blur", () => {
   });
 });
 
-function HookField({ children, ...opts }: any) {
+function HookField(opts: UseMaskOptions) {
   const ref = useMask(opts);
   return <input ref={ref} data-testid="hook" />;
 }
