@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
-import InputMask from "react-input-mask-format";
+import InputMask, { useMask } from "react-input-mask-format";
 import { extendedFormatChars } from "react-input-mask-format";
 import {
   card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal, MaskPreset
@@ -55,6 +55,24 @@ const FancyInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<
   (props, ref) => <input ref={ref} {...props} style={fieldStyle} />
 );
 
+function UseMaskField() {
+  const [readout, setReadout] = useState("");
+  const ref = useMask({ mask: "99/99/9999", maskPlaceholder: "_" });
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <input
+        ref={ref}
+        data-testid="usemask"
+        onChange={e => setReadout((e.target as HTMLInputElement).value)}
+        style={fieldStyle}
+      />
+      <span data-testid="usemask-readout" style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: dim }}>
+        {readout}
+      </span>
+    </div>
+  );
+}
+
 function App() {
   const [hex, setHex] = useState("");
   const [up, setUp] = useState("");
@@ -102,6 +120,11 @@ function App() {
           <Row label="Custom child" sub="forwardRef">
             <InputMask mask="99/99/9999"><FancyInput data-testid="children" /></InputMask>
           </Row>
+        </section>
+
+        <section style={{ display: "grid", gap: 9 }}>
+          <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Hook API · useMask</div>
+          <Row label="useMask" sub="ref on your own <input>"><UseMaskField /></Row>
         </section>
       </div>
     </main>
