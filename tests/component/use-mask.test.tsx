@@ -39,3 +39,28 @@ describe("bind-mask value masking", () => {
     expect(seen[seen.length - 1]).toBe("12/__/____");
   });
 });
+
+describe("bind-mask focus/blur", () => {
+  it("shows the placeholder mask on focus", async () => {
+    const user = userEvent.setup();
+    render(<Harness mask="99/99" />);
+    const input = screen.getByTestId("in");
+    await user.click(input);
+    expect(input).toHaveValue("__/__");
+  });
+
+  it("clears an empty value on blur (alwaysShowMask=false)", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Harness mask="99/99" />
+        <button type="button">other</button>
+      </>
+    );
+    const input = screen.getByTestId("in");
+    await user.click(input);
+    expect(input).toHaveValue("__/__");
+    await user.click(screen.getByRole("button"));
+    expect(input).toHaveValue("");
+  });
+});

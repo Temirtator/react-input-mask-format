@@ -2,6 +2,8 @@ import type MaskUtils from "./utils/mask";
 import type { BeforeMaskedStateChangeFn, InputState, Selection } from "./types";
 import { getInputSelection, setInputSelection, isInputFocused } from "./utils/input";
 import { setNativeValue } from "./set-native-value";
+import { getElementDocument } from "./utils/helpers";
+import { defer } from "./utils/defer";
 
 export interface MaskControllerOptions {
   alwaysShowMask: boolean;
@@ -37,6 +39,26 @@ export function createMaskController(
     } else {
       lastSelection = selection;
     }
+    // Resync @testing-library/user-event v14's internal shadow-value cache.
+    // The synchronous setNativeValue() write above deliberately bypasses React's
+    // value tracker (so the consumer's onChange fires with the masked value on the
+    // SAME bubbling event) — but that same bypass also leaves user-event's per-input
+    // shadow value stale, which corrupts masking from the 3rd keystroke on. A plain
+    // (idempotent) reassignment resyncs it; deferring to a microtask guarantees it
+    // runs AFTER the synchronous bubble-phase onChange/focus/blur handling and BEFORE
+    // user-event's next interaction. This must cover every programmatic write (input,
+    // focus, blur, mousedown), not just handleInput — any of them can leave the shadow
+    // cache stale for the next interaction. In a real browser this is a harmless no-op
+    // resync. Do not remove.
+    const resyncValue = value;
+    const resyncSelection = selection;
+    queueMicrotask(() => {
+      if (!input || input.value !== resyncValue) return;
+      input.value = resyncValue;
+      if (isInputFocused(input) && resyncSelection.start !== null && resyncSelection.end !== null) {
+        setInputSelection(input, resyncSelection.start, resyncSelection.end);
+      }
+    });
   }
 
   function handleInput(): void {
@@ -47,21 +69,63 @@ export function createMaskController(
       nextState = options.beforeMaskedStateChange({ currentState, previousState, nextState });
     }
     setInputState(nextState);
-    // Resync @testing-library/user-event v14's internal shadow-value cache.
-    // The synchronous setNativeValue() write above deliberately bypasses React's
-    // value tracker (so the consumer's onChange fires with the masked value on the
-    // SAME bubbling event) — but that same bypass also leaves user-event's per-input
-    // shadow value stale, which corrupts masking from the 3rd keystroke on. A plain
-    // (idempotent) reassignment resyncs it; deferring to a microtask guarantees it
-    // runs AFTER the synchronous bubble-phase onChange and BEFORE user-event's next
-    // keystroke. In a real browser this is a harmless no-op resync. Do not remove.
-    queueMicrotask(() => {
-      if (!input || input.value !== nextState.value) return;
-      input.value = nextState.value;
-      if (isInputFocused(input) && nextState.selection.start !== null && nextState.selection.end !== null) {
-        setInputSelection(input, nextState.selection.start, nextState.selection.end);
+  }
+
+  function handleFocus(): void {
+    const currentValue = getInputState().value;
+    if (!maskUtils.isValueFilled(currentValue)) {
+      let newValue = maskUtils.formatValue(currentValue);
+      let newSelection = maskUtils.getDefaultSelectionForValue(newValue);
+      let nextState: InputState = { value: newValue, selection: newSelection };
+      if (options.beforeMaskedStateChange) {
+        nextState = options.beforeMaskedStateChange({ currentState: getInputState(), nextState });
       }
-    });
+      setInputState(nextState);
+      // Chrome resets selection after focus; restore on next frame.
+      defer(() => {
+        if (input && isInputFocused(input)) {
+          setInputSelection(input, lastSelection.start!, lastSelection.end!);
+        }
+      });
+    }
+  }
+
+  function handleBlur(): void {
+    const lastValueOnBlur = getLastInputState().value;
+    if (!options.alwaysShowMask && maskUtils.isValueEmpty(lastValueOnBlur)) {
+      let nextState: InputState = { value: "", selection: { start: null, end: null } };
+      if (options.beforeMaskedStateChange) {
+        nextState = options.beforeMaskedStateChange({ currentState: getInputState(), nextState });
+      }
+      setInputState(nextState);
+    }
+  }
+
+  function handleMouseDown(event: MouseEvent): void {
+    if (!input) return;
+    const { value } = getInputState();
+    const inputDocument = getElementDocument(input);
+    if (!isInputFocused(input) && !maskUtils.isValueFilled(value)) {
+      const mouseDownX = event.clientX;
+      const mouseDownY = event.clientY;
+      const mouseDownTime = new Date().getTime();
+      const mouseUpHandler = (mouseUpEvent: MouseEvent): void => {
+        inputDocument!.removeEventListener("mouseup", mouseUpHandler);
+        if (!input || !isInputFocused(input)) return;
+        const deltaX = Math.abs(mouseUpEvent.clientX - mouseDownX);
+        const deltaY = Math.abs(mouseUpEvent.clientY - mouseDownY);
+        const axisDelta = Math.max(deltaX, deltaY);
+        const timeDelta = new Date().getTime() - mouseDownTime;
+        if ((axisDelta <= 10 && timeDelta <= 200) || (axisDelta <= 5 && timeDelta <= 300)) {
+          const newSelection = maskUtils.getDefaultSelectionForValue(lastValue);
+          if (newSelection.start !== null && newSelection.end !== null) {
+            setInputSelection(input, newSelection.start, newSelection.end);
+            lastSelection = getInputSelection(input);
+          }
+        }
+      };
+      inputDocument!.addEventListener("mouseup", mouseUpHandler);
+    }
   }
 
   function bind(el: HTMLInputElement): void {
@@ -75,11 +139,17 @@ export function createMaskController(
       lastValue = formatted;
     }
     el.addEventListener("input", handleInput);
+    el.addEventListener("focus", handleFocus);
+    el.addEventListener("blur", handleBlur);
+    el.addEventListener("mousedown", handleMouseDown);
   }
 
   function unbind(): void {
     if (input) {
       input.removeEventListener("input", handleInput);
+      input.removeEventListener("focus", handleFocus);
+      input.removeEventListener("blur", handleBlur);
+      input.removeEventListener("mousedown", handleMouseDown);
     }
     input = null;
   }
