@@ -15,15 +15,13 @@ export function parseNumber(formatted: string, options: NumberFormatOptions): Nu
   const parts = tokenize(formatted, options);
   const value = buildValue(parts);
   const formattedValue = buildFormatted(parts, options);
-  const floatValue =
-    value === "" || value === "-" || value === "." || value === "-." || value === "-0."
-      ? undefined
-      : parseFloat(value);
-  return {
-    value,
-    formattedValue,
-    floatValue: floatValue !== undefined && Number.isNaN(floatValue) ? undefined : floatValue
-  };
+
+  // No digit characters entered at all (e.g. "", "-", ".", "-.") → no numeric value.
+  const hasNoDigits = parts.int === "" && parts.frac === "";
+  const parsed = parseFloat(value);
+  const floatValue = hasNoDigits || Number.isNaN(parsed) ? undefined : parsed;
+
+  return { value, formattedValue, floatValue };
 }
 
 export function digitsBeforeCaret(value: string, caret: number): number {

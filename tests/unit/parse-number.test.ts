@@ -31,6 +31,13 @@ describe("parseNumber", () => {
     expect(r.floatValue).toBe(1);
     expect(r.formattedValue).toBe("1.");
   });
+
+  it("returns undefined floatValue when no digits are entered", () => {
+    expect(parseNumber(".", { decimalSeparator: "." }).floatValue).toBeUndefined();
+    expect(parseNumber("-.", { decimalSeparator: ".", allowNegative: true }).floatValue).toBeUndefined();
+    expect(parseNumber(",", { decimalSeparator: "," }).floatValue).toBeUndefined();
+    expect(parseNumber("1.", { decimalSeparator: "." }).floatValue).toBe(1); // trailing sep, one digit → still defined
+  });
 });
 
 describe("caret helpers", () => {
