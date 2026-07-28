@@ -58,6 +58,10 @@
       "import": { "types": "./dist/validators.d.ts", "default": "./dist/validators.js" },
       "require": { "types": "./dist/validators.d.cts", "default": "./dist/validators.cjs" }
     },
+    "./number": {
+      "import": { "types": "./dist/number.d.ts", "default": "./dist/number.js" },
+      "require": { "types": "./dist/number.d.cts", "default": "./dist/number.cjs" }
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -67,7 +71,8 @@
   "size-limit": [
     { "path": "dist/index.js", "limit": "6 KB" },
     { "path": "dist/presets.js", "limit": "2 KB" },
-    { "path": "dist/validators.js", "limit": "2 KB" }
+    { "path": "dist/validators.js", "limit": "2 KB" },
+    { "path": "dist/number.js", "limit": "2.5 KB" }
   ],
   "scripts": {
     "build": "tsup",

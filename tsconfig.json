@@ -14,7 +14,8 @@
     "paths": {
       "react-input-mask-format": ["./src/index.tsx"],
       "react-input-mask-format/presets": ["./src/presets/index.ts"],
-      "react-input-mask-format/validators": ["./src/validators/index.ts"]
+      "react-input-mask-format/validators": ["./src/validators/index.ts"],
+      "react-input-mask-format/number": ["./src/number/index.ts"]
     }
   },
   "include": [
