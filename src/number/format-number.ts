@@ -86,7 +86,22 @@ export function buildFormatted(parts: NumberParts, options: NumberFormatOptions)
 
 function numberToString(n: number): string {
   if (!Number.isFinite(n)) return "";
-  return String(n);
+  const s = String(n);
+  if (s.indexOf("e") === -1 && s.indexOf("E") === -1) return s;
+  // Expand exponential notation (e.g. "1e+21", "1e-7") to a plain decimal string
+  // so tokenize() doesn't read the exponent's digits/"-" as value characters.
+  // Precision is bounded by JS's own float precision; this only guards extreme
+  // magnitudes reachable via a numeric value prop (typing never yields "e").
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  // abs >= 1 with an exponent means a huge integer (>= 1e21, where every double
+  // is integer-valued); BigInt expands it without an exponent. toFixed alone
+  // fails here because it also switches to exponential notation at >= 1e21.
+  const expanded =
+    abs >= 1
+      ? BigInt(Math.trunc(abs)).toString()
+      : abs.toFixed(20).replace(/0+$/, "").replace(/\.$/, "");
+  return sign + expanded;
 }
 
 export function formatNumber(input: string | number, options: NumberFormatOptions): string {

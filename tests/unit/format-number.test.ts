@@ -53,4 +53,13 @@ describe("formatNumber", () => {
     expect(formatNumber(1234.5, { thousandSeparator: ",", decimalScale: 2, fixedDecimalScale: true })).toBe("1,234.50");
     expect(formatNumber(-8, { allowNegative: false })).toBe("8");
   });
+
+  it("expands exponential notation instead of corrupting it", () => {
+    // String(1e21)="1e+21", String(1e-7)="1e-7" must NOT be read as digits / negative sign
+    expect(formatNumber(1e21, {})).toBe("1000000000000000000000");
+    const tiny = formatNumber(1e-7, { decimalScale: 2 });
+    expect(tiny).not.toContain("e");
+    expect(tiny).not.toContain("-");
+    expect(tiny).toBe("0.00");
+  });
 });
