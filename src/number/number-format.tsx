@@ -59,10 +59,16 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
     const values = parseNumber(el.value, options);
 
     if (isAllowed && !isAllowed(values)) {
-      // revert: restore previous formatted value + caret
+      // Revert: restore the previous formatted value AND put the caret back where
+      // it was BEFORE the rejected keystroke. Derive that from how many chars the
+      // rejected edit added, not from caretRef (which the layout effect has already
+      // nulled by the time the next keystroke fires — that made it always fall back
+      // to end-of-string and jump the caret on mid-string edits).
+      const typedCaret = el.selectionStart ?? el.value.length;
+      const lengthDelta = el.value.length - lastFormattedRef.current.length;
+      const revertCaret = Math.max(0, typedCaret - lengthDelta);
       el.value = lastFormattedRef.current;
-      const prevCaret = caretRef.current ?? lastFormattedRef.current.length;
-      if (isInputFocused(el)) setInputSelection(el, prevCaret, prevCaret);
+      if (isInputFocused(el)) setInputSelection(el, revertCaret, revertCaret);
       return;
     }
 

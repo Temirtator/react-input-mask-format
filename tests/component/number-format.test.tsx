@@ -104,4 +104,28 @@ describe("NumberFormat component", () => {
     expect(el.getAttribute("prefix")).toBeNull();
     expect(el.getAttribute("thousandSeparator")).toBeNull();
   });
+
+  it("restores the caret to the pre-edit position when isAllowed rejects a mid-string edit", async () => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [v, setV] = useState<number | undefined>(undefined);
+      return (
+        <NumberFormat
+          value={v ?? ""}
+          onValueChange={vals => setV(vals.floatValue)}
+          isAllowed={vals => vals.floatValue === undefined || vals.floatValue <= 99}
+          data-testid="nf"
+        />
+      );
+    }
+    render(<Controlled />);
+    const input = screen.getByTestId("nf") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("15");
+    expect(input).toHaveValue("15");
+    input.setSelectionRange(1, 1); // caret between "1" and "5"
+    await user.keyboard("3");       // "135" > 99 → rejected
+    expect(input).toHaveValue("15");
+    expect(input.selectionStart).toBe(1); // caret stays where the user was, not at the end
+  });
 });
