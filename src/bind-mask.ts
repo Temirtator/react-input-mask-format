@@ -47,6 +47,14 @@ export function createMaskController(
       nextState = options.beforeMaskedStateChange({ currentState, previousState, nextState });
     }
     setInputState(nextState);
+    // Resync @testing-library/user-event v14's internal shadow-value cache.
+    // The synchronous setNativeValue() write above deliberately bypasses React's
+    // value tracker (so the consumer's onChange fires with the masked value on the
+    // SAME bubbling event) — but that same bypass also leaves user-event's per-input
+    // shadow value stale, which corrupts masking from the 3rd keystroke on. A plain
+    // (idempotent) reassignment resyncs it; deferring to a microtask guarantees it
+    // runs AFTER the synchronous bubble-phase onChange and BEFORE user-event's next
+    // keystroke. In a real browser this is a harmless no-op resync. Do not remove.
     queueMicrotask(() => {
       if (!input || input.value !== nextState.value) return;
       input.value = nextState.value;
