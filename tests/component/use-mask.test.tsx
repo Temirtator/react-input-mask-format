@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import MaskUtils from "../../src/utils/mask";
 import { createMaskController } from "../../src/bind-mask";
+import { useMask } from "../../src/use-mask";
 
 // Minimal harness: bind a controller to a raw input (the hook comes in Task 3)
 function Harness({ mask, onChange }: { mask: string; onChange?: (v: string) => void }) {
@@ -62,5 +63,46 @@ describe("bind-mask focus/blur", () => {
     expect(input).toHaveValue("__/__");
     await user.click(screen.getByRole("button"));
     expect(input).toHaveValue("");
+  });
+});
+
+function HookField({ children, ...opts }: any) {
+  const ref = useMask(opts);
+  return <input ref={ref} data-testid="hook" />;
+}
+
+describe("useMask hook", () => {
+  it("masks a raw input via ref callback", async () => {
+    const user = userEvent.setup();
+    render(<HookField mask="99/99/9999" />);
+    const input = screen.getByTestId("hook");
+    await user.click(input);
+    await user.keyboard("12345678");
+    expect(input).toHaveValue("12/34/5678");
+  });
+
+  it("applies transform to typed characters", async () => {
+    const user = userEvent.setup();
+    render(<HookField mask="aaaa" transform="uppercase" />);
+    const input = screen.getByTestId("hook");
+    await user.click(input);
+    await user.keyboard("abcd");
+    expect(input).toHaveValue("ABCD");
+  });
+
+  it("accepts RegExp formatChars", async () => {
+    const user = userEvent.setup();
+    render(<HookField mask="AAA" formatChars={{ A: /[A-Z]/ }} transform="uppercase" />);
+    const input = screen.getByTestId("hook");
+    await user.click(input);
+    await user.keyboard("abc");
+    expect(input).toHaveValue("ABC");
+  });
+});
+
+describe("useMask public export", () => {
+  it("is exported from the package entry", async () => {
+    const mod = await import("../../src/index");
+    expect(typeof mod.useMask).toBe("function");
   });
 });

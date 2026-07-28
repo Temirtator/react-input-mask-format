@@ -74,3 +74,20 @@ export interface InputMaskProps
   /** @deprecated Use beforeMaskedStateChange. */
   beforeMaskedValueChange?: BeforeMaskedValueChangeFn;
 }
+
+export interface UseMaskOptions {
+  /** Mask format — same grammar as InputMask's `mask`. */
+  mask?: Mask | null;
+  /** Character(s) to cover unfilled parts. Default "_", null — empty. */
+  maskPlaceholder?: string | null;
+  /** Show mask even when input is empty and unfocused. */
+  alwaysShowMask?: boolean;
+  /** Map of custom mask tokens to character classes. Prefer RegExp values. */
+  formatChars?: Record<string, RegExp | string>;
+  /** Normalize each entered character. Must be pure. */
+  transform?: Transform;
+  /** Modify masked value and cursor position before they are applied. */
+  beforeMaskedStateChange?: BeforeMaskedStateChangeFn;
+  /** @deprecated Use beforeMaskedStateChange. */
+  beforeMaskedValueChange?: BeforeMaskedValueChangeFn;
+}
