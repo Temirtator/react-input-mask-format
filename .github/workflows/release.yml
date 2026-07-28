@@ -4,8 +4,8 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: read
-  id-token: write
+  contents: write # create the GitHub Release
+  id-token: write # OIDC trusted publishing to npm
 
 jobs:
   publish:
@@ -20,3 +20,9 @@ jobs:
       - run: npm ci
       - run: npm run test
       - run: npm publish --provenance --access public
+      # Create the matching GitHub Release from the pushed tag (gh is preinstalled
+      # on the runner). --generate-notes builds notes from PRs since the last tag.
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --latest --verify-tag
