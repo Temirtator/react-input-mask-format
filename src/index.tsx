@@ -348,6 +348,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
 InputMask.displayName = "InputMask";
 
 export { defaultFormatChars, extendedFormatChars } from "./constants";
+export { useMask } from "./use-mask";
 export type {
   InputMaskProps,
   InputState,
@@ -356,6 +357,7 @@ export type {
   BeforeMaskedValueChangeFn,
   Mask,
   Transform,
-  FormatChars
+  FormatChars,
+  UseMaskOptions
 } from "./types";
 export default InputMask;

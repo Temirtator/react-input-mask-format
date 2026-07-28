@@ -10,7 +10,12 @@ Made with attention to UX.
 
 A maintained fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
-## What's new in 2.1
+## What's new in 2.2
+
+- `useMask` hook — mask your own `<input>` with no wrapper component, see [useMask hook](#usemask-hook)
+- `react-input-mask-format/number` — numeric & currency masking, a lightweight `react-number-format` alternative, see [Numeric & currency](#numeric--currency--react-input-mask-formatnumber)
+
+### 2.1
 
 - `transform` prop (`uppercase` / `lowercase` / custom) — see [transform](#transform)
 - Custom tokens via RegExp `formatChars` + shipped `extendedFormatChars` (`A`, `Я`, `#`)
@@ -160,6 +165,82 @@ isValidIin("901010123458");                 // KZ IIN/BIN mod-11 checksum
 isValidKzIban("KZ86 125K ZT50 0410 0100");  // ISO 7064 MOD-97
 luhn("4242 4242 4242 4242");                // card Luhn
 ```
+
+## `useMask` hook
+
+Mask your own `<input>` with no wrapper component. `useMask` returns a ref
+callback:
+
+```tsx
+import { useMask } from "react-input-mask-format";
+
+function Phone() {
+  const ref = useMask({ mask: "+7 (999) 999-99-99", maskPlaceholder: "_" });
+  return <input ref={ref} name="phone" />;
+}
+```
+
+`useMask` is **uncontrolled**: attach it to an input you don't drive with a
+React `value` prop, and read the masked value through your own `onChange` (it
+fires with the masked value) or on form submit. For a controlled component,
+use `<InputMask>`.
+
+Options: `mask`, `maskPlaceholder`, `alwaysShowMask`, `formatChars`,
+`transform`, `beforeMaskedStateChange`.
+
+## Numeric & currency — `react-input-mask-format/number`
+
+A separate, tree-shakeable entry for formatting numbers, currency, and
+percentages. Prop names match `react-number-format`, so migration is mostly a
+find-and-replace of the import.
+
+```tsx
+import { NumberFormat } from "react-input-mask-format/number";
+
+function Amount() {
+  const [value, setValue] = React.useState<number>();
+  return (
+    <NumberFormat
+      value={value ?? ""}
+      onValueChange={({ floatValue }) => setValue(floatValue)}
+      thousandSeparator="," decimalScale={2} fixedDecimalScale prefix="$ "
+      allowNegative
+    />
+  );
+}
+```
+
+`onValueChange` receives `{ value, formattedValue, floatValue }`:
+
+```txt
+typing "1234.5"  →  value "1234.5"  formattedValue "$ 1,234.50"  floatValue 1234.5
+```
+
+Options: `thousandSeparator` (`true` → `,`, or a custom string),
+`decimalSeparator` (default `.`), `decimalScale` (truncates, no rounding),
+`fixedDecimalScale`, `prefix`, `suffix`, `allowNegative` (default `true`),
+`allowLeadingZeros`, and `isAllowed(values) => boolean` (reject an edit, e.g.
+for min/max).
+
+There is also a ref hook and the pure helpers:
+
+```tsx
+import { useNumberFormat, formatNumber, parseNumber } from "react-input-mask-format/number";
+
+const ref = useNumberFormat({ thousandSeparator: " ", decimalScale: 2, prefix: "$ " });
+// <input ref={ref} />
+
+formatNumber(1234.5, { thousandSeparator: ",", decimalScale: 2, fixedDecimalScale: true }); // "1,234.50"
+```
+
+### Migrating from react-number-format
+
+`NumberFormat`'s props (`thousandSeparator`, `decimalSeparator`, `decimalScale`,
+`fixedDecimalScale`, `prefix`, `suffix`, `allowNegative`, `allowLeadingZeros`,
+`isAllowed`, `onValueChange`) mirror `react-number-format`'s `NumericFormat`.
+The main differences: `decimalScale` **truncates** rather than rounds while
+typing, and this package ships a single `NumberFormat` (no separate
+`PatternFormat` — use the mask engine / `<InputMask>` for pattern masks).
 
 ### `maskPlaceholder`
 
