@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.2.0
+
+Additive release — no migration required.
+
+### Added
+- **`useMask` hook** (main entry) — ref-based masking for your own `<input>`, no wrapper component. Uncontrolled; fires your `onChange` with the masked value.
+- **`react-input-mask-format/number`** — numeric/currency masking as a separate, tree-shakeable entry:
+  - `<NumberFormat>` — controlled component with `react-number-format`-compatible props and an `onValueChange({ value, formattedValue, floatValue })` callback.
+  - `useNumberFormat` — ref hook (uncontrolled) counterpart.
+  - `formatNumber` / `parseNumber` — pure helpers.
+
+Existing `<InputMask>`, `/presets`, and `/validators` are unchanged.
+
 ## 2.1.0
 
 ### Added
