@@ -6,6 +6,7 @@ import {
   card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal, MaskPreset
 } from "react-input-mask-format/presets";
 import { isValidIin, isValidBin, isValidKzIban, luhn } from "react-input-mask-format/validators";
+import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
 
 const bg = "#0e1420", panel = "#131c2c", line = "#223049", ink = "#f4f8ff", dim = "#6b7f9c", gold = "#FFC800";
 
@@ -73,9 +74,15 @@ function UseMaskField() {
   );
 }
 
+function NumericHookField() {
+  const ref = useNumberFormat({ thousandSeparator: " " });
+  return <input ref={ref} data-testid="numeric-hook" style={fieldStyle} />;
+}
+
 function App() {
   const [hex, setHex] = useState("");
   const [up, setUp] = useState("");
+  const [amount, setAmount] = useState<number | undefined>(undefined);
 
   return (
     <main style={{ background: bg, minHeight: "100vh", color: ink, fontFamily: "system-ui, sans-serif", margin: 0 }}>
@@ -125,6 +132,19 @@ function App() {
         <section style={{ display: "grid", gap: 9 }}>
           <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Hook API · useMask</div>
           <Row label="useMask" sub="ref on your own <input>"><UseMaskField /></Row>
+        </section>
+
+        <section style={{ display: "grid", gap: 9 }}>
+          <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Numeric &amp; currency · /number</div>
+          <Row label="Currency" sub="NumberFormat · $ ,">
+            <NumberFormat
+              value={amount ?? ""}
+              onValueChange={v => setAmount(v.floatValue)}
+              thousandSeparator="," decimalScale={2} prefix="$ " allowNegative
+              data-testid="currency" style={fieldStyle}
+            />
+          </Row>
+          <Row label="Raw hook" sub="useNumberFormat · space"><NumericHookField /></Row>
         </section>
       </div>
     </main>
