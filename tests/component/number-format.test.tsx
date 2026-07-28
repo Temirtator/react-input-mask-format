@@ -128,4 +128,24 @@ describe("NumberFormat component", () => {
     expect(input).toHaveValue("15");
     expect(input.selectionStart).toBe(1); // caret stays where the user was, not at the end
   });
+
+  it("preserves a trailing decimal separator while typing when the consumer stores floatValue", async () => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [v, setV] = useState<number | undefined>(undefined);
+      return (
+        <NumberFormat
+          value={v ?? ""}
+          onValueChange={vals => setV(vals.floatValue)}
+          thousandSeparator="," prefix="$ " decimalScale={2}
+          data-testid="nf"
+        />
+      );
+    }
+    render(<Controlled />);
+    const input = screen.getByTestId("nf");
+    await user.click(input);
+    await user.keyboard("12.5");
+    expect(input).toHaveValue("$ 12.5");
+  });
 });
