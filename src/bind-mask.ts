@@ -10,6 +10,9 @@ export interface MaskControllerOptions {
   beforeMaskedStateChange?: BeforeMaskedStateChangeFn;
 }
 
+const IS_JSDOM =
+  typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom");
+
 export interface MaskController {
   bind(input: HTMLInputElement): void;
   unbind(): void;
@@ -39,26 +42,27 @@ export function createMaskController(
     } else {
       lastSelection = selection;
     }
-    // Resync @testing-library/user-event v14's internal shadow-value cache.
-    // The synchronous setNativeValue() write above deliberately bypasses React's
-    // value tracker (so the consumer's onChange fires with the masked value on the
-    // SAME bubbling event) — but that same bypass also leaves user-event's per-input
-    // shadow value stale, which corrupts masking from the 3rd keystroke on. A plain
-    // (idempotent) reassignment resyncs it; deferring to a microtask guarantees it
-    // runs AFTER the synchronous bubble-phase onChange/focus/blur handling and BEFORE
-    // user-event's next interaction. This must cover every programmatic write (input,
-    // focus, blur, mousedown), not just handleInput — any of them can leave the shadow
-    // cache stale for the next interaction. In a real browser this is a harmless no-op
-    // resync. Do not remove.
-    const resyncValue = value;
-    const resyncSelection = selection;
-    queueMicrotask(() => {
-      if (!input || input.value !== resyncValue) return;
-      input.value = resyncValue;
-      if (isInputFocused(input) && resyncSelection.start !== null && resyncSelection.end !== null) {
-        setInputSelection(input, resyncSelection.start, resyncSelection.end);
-      }
-    });
+    // JSDOM-ONLY: resync @testing-library/user-event v14's shadow-value cache.
+    // setNativeValue() above bypasses React's value tracker so the consumer's
+    // onChange fires with the masked value on the same bubbling event. That same
+    // bypass leaves user-event's per-input shadow value stale, corrupting masking
+    // from the 3rd keystroke — so under jsdom we resync it with a plain reassignment.
+    // This MUST NOT run in a real browser: there, microtasks drain BETWEEN event
+    // listeners, so this plain write would re-sync React's tracker before React's
+    // delegated onChange listener runs, permanently suppressing onChange (verified
+    // by the real-Chrome e2e). Real browsers read the live DOM value and need no
+    // resync, so the gate is correct, not a workaround-hiding hack.
+    if (IS_JSDOM) {
+      const resyncValue = value;
+      const resyncSelection = selection;
+      queueMicrotask(() => {
+        if (!input || input.value !== resyncValue) return;
+        input.value = resyncValue;
+        if (isInputFocused(input) && resyncSelection.start !== null && resyncSelection.end !== null) {
+          setInputSelection(input, resyncSelection.start, resyncSelection.end);
+        }
+      });
+    }
   }
 
   function handleInput(): void {
