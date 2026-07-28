@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseNumber, caretAfterReformat, digitsBeforeCaret } from "../../src/number/parse-number";
+import { parseNumber, caretAfterReformat, digitsBeforeCaret, resolveCaret } from "../../src/number/parse-number";
 
 describe("parseNumber", () => {
   it("returns value/formattedValue/floatValue", () => {
@@ -51,5 +51,18 @@ describe("caret helpers", () => {
     expect(caretAfterReformat("1,234", 4)).toBe(5);
     // caret after 2 digits in "1,234" → index 3 (after "1,2")
     expect(caretAfterReformat("1,234", 2)).toBe(3);
+  });
+});
+
+describe("resolveCaret", () => {
+  it("steps past a just-typed trailing decimal separator", () => {
+    const opts = { thousandSeparator: "," as const, decimalScale: 2 };
+    const values = parseNumber("1,234.", opts);
+    expect(resolveCaret(values, 4, opts)).toBe(6); // caret lands AFTER the "."
+  });
+  it("keeps the caret before a decimal separator that has fraction digits", () => {
+    const opts = { thousandSeparator: "," as const };
+    const values = parseNumber("1,234.5", opts);
+    expect(resolveCaret(values, 4, opts)).toBe(5); // still editing the integer part
   });
 });

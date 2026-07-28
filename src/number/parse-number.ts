@@ -1,5 +1,5 @@
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
-import { tokenize, buildFormatted, type NumberParts } from "./format-number";
+import { tokenize, buildFormatted, resolveSeparators, type NumberParts } from "./format-number";
 
 function buildValue(parts: NumberParts): string {
   const sign = parts.negative ? "-" : "";
@@ -47,4 +47,23 @@ export function caretAfterReformat(nextFormatted: string, digitsBefore: number):
     }
   }
   return nextFormatted.length;
+}
+
+export function resolveCaret(
+  values: NumberFormatValues,
+  digitsBefore: number,
+  options: NumberFormatOptions
+): number {
+  const caret = caretAfterReformat(values.formattedValue, digitsBefore);
+  // caretAfterReformat is digit-anchored and can't see a just-typed trailing
+  // decimal separator with no fraction digit yet (e.g. "1,234." right after
+  // the "." is typed) — it lands the caret BEFORE that separator. Step past it
+  // so the next keystroke goes into the fraction rather than ahead of the ".".
+  if (values.value.endsWith(".")) {
+    const { decimal } = resolveSeparators(options);
+    if (decimal && values.formattedValue.slice(caret, caret + decimal.length) === decimal) {
+      return caret + decimal.length;
+    }
+  }
+  return caret;
 }

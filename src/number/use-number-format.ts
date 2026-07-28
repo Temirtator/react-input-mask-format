@@ -1,8 +1,8 @@
 import { useRef, useCallback } from "react";
 import type React from "react";
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
-import { formatNumber, resolveSeparators } from "./format-number";
-import { parseNumber, digitsBeforeCaret, caretAfterReformat } from "./parse-number";
+import { formatNumber } from "./format-number";
+import { parseNumber, digitsBeforeCaret, resolveCaret } from "./parse-number";
 import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
@@ -13,30 +13,6 @@ export interface UseNumberFormatOptions extends NumberFormatOptions {
 
 const IS_JSDOM =
   typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom");
-
-// caretAfterReformat() is digit-anchored: it places the caret right after the
-// Nth digit and has no way to see a trailing decimal separator that has no
-// fraction digit after it yet (e.g. "1,234." the instant the user types "."
-// before entering any fraction digit) — it lands the caret *before* that
-// separator instead of after it. Left uncorrected, the next keystroke is
-// inserted ahead of the separator instead of into the fraction (reproducible
-// with real DOM caret semantics, not a jsdom artifact). Nudge past the
-// separator when it's present verbatim right where the digit-anchored caret
-// landed.
-function resolveCaret(
-  values: NumberFormatValues,
-  digitsBefore: number,
-  options: NumberFormatOptions
-): number {
-  const caret = caretAfterReformat(values.formattedValue, digitsBefore);
-  if (values.value.endsWith(".")) {
-    const { decimal } = resolveSeparators(options);
-    if (decimal && values.formattedValue.slice(caret, caret + decimal.length) === decimal) {
-      return caret + decimal.length;
-    }
-  }
-  return caret;
-}
 
 export function useNumberFormat(
   options: UseNumberFormatOptions
