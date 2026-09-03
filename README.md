@@ -263,8 +263,8 @@ formatTime("2999"); // "23:59"
 `onValueChange` receives `{ value, formattedValue, hours, minutes }`:
 
 ```txt
-typing "1234"  →  value ""  formattedValue "12:34"  hours 12  minutes 34
-typing "12"    →  value ""  formattedValue "12"     hours 12  minutes undefined
+typing "1234"  →  value "12:34"  formattedValue "12:34"  hours 12  minutes 34
+typing "12"    →  value ""       formattedValue "12"     hours 12  minutes undefined
 ```
 
 `value` remains empty until both hours and minutes are complete. The canonical
@@ -275,8 +275,7 @@ option.
 When minutes are complete, they're clamped to ≤59. A single digit is never
 clamped.
 
-Options: `separator` (default `:`), and custom `isAllowed(values) => boolean`
-(reject an edit).
+Options: `separator` (default `:`).
 
 There is also a ref hook and the pure helpers:
 
@@ -287,7 +286,7 @@ const ref = useTimeFormat({ separator: ":" });
 // <input ref={ref} />
 
 formatTime("2999", { separator: ":" }); // "23:59"
-parseTime("14:30");                      // { hours: 14, minutes: 30 }
+parseTime("14:30");                      // { value: "14:30", formattedValue: "14:30", hours: 14, minutes: 30 }
 ```
 
 **Reserved for a later minor release**: seconds (HH:MM:SS) and 12-hour format
