@@ -5,7 +5,7 @@ export interface TimeParts {
   minutes: string;
 }
 
-export function tokenizeTime(raw: string | number, _separator: string): TimeParts {
+export function tokenizeTime(raw: string | number): TimeParts {
   const digits = String(raw ?? "").replace(/\D/g, "").slice(0, 4);
   let hours = digits.slice(0, 2);
   let minutes = digits.slice(2, 4);
@@ -28,5 +28,5 @@ export function buildFormatted(parts: TimeParts, separator: string): string {
 
 export function formatTime(input: string | number, options?: TimeFormatOptions): string {
   const separator = options?.separator ?? ":";
-  return buildFormatted(tokenizeTime(input, separator), separator);
+  return buildFormatted(tokenizeTime(input), separator);
 }

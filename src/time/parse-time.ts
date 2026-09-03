@@ -3,7 +3,7 @@ import { tokenizeTime, buildFormatted } from "./format-time";
 
 export function parseTime(formatted: string, options?: TimeFormatOptions): TimeFormatValues {
   const separator = options?.separator ?? ":";
-  const parts = tokenizeTime(formatted, separator);
+  const parts = tokenizeTime(formatted);
   const formattedValue = buildFormatted(parts, separator);
   const hours = parts.hours.length === 2 ? parseInt(parts.hours, 10) : undefined;
   const minutes = parts.minutes.length === 2 ? parseInt(parts.minutes, 10) : undefined;
