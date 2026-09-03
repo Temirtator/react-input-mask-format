@@ -7,6 +7,7 @@ import {
 } from "react-input-mask-format/presets";
 import { isValidIin, isValidBin, isValidKzIban, luhn } from "react-input-mask-format/validators";
 import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
+import { TimeFormat, useTimeFormat } from "react-input-mask-format/time";
 
 const bg = "#0e1420", panel = "#131c2c", line = "#223049", ink = "#f4f8ff", dim = "#6b7f9c", gold = "#FFC800";
 
@@ -79,10 +80,16 @@ function NumericHookField() {
   return <input ref={ref} data-testid="numeric-hook" style={fieldStyle} />;
 }
 
+function TimeHookField() {
+  const ref = useTimeFormat({});
+  return <input ref={ref} data-testid="time-hook" style={fieldStyle} />;
+}
+
 function App() {
   const [hex, setHex] = useState("");
   const [up, setUp] = useState("");
   const [amount, setAmount] = useState<number | undefined>(undefined);
+  const [time, setTime] = useState("");
 
   return (
     <main style={{ background: bg, minHeight: "100vh", color: ink, fontFamily: "system-ui, sans-serif", margin: 0 }}>
@@ -90,7 +97,7 @@ function App() {
         <header>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>react-input-mask-format</span>
-            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.2</span>
+            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.3</span>
           </div>
           <h1 style={{ fontSize: 26, margin: "10px 0 4px" }}>General-purpose input masks for React — with batteries</h1>
           <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · Kazakhstan is the flagship pack.</p>
@@ -145,6 +152,18 @@ function App() {
             />
           </Row>
           <Row label="Raw hook" sub="useNumberFormat · space"><NumericHookField /></Row>
+        </section>
+
+        <section style={{ display: "grid", gap: 9 }}>
+          <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Time · /time</div>
+          <Row label="Time" sub="TimeFormat · HH:MM">
+            <TimeFormat
+              value={time}
+              onValueChange={v => setTime(v.value)}
+              data-testid="time" style={fieldStyle}
+            />
+          </Row>
+          <Row label="Raw time hook" sub="useTimeFormat"><TimeHookField /></Row>
         </section>
       </div>
     </main>
