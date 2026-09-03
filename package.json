@@ -76,7 +76,8 @@
     { "path": "dist/index.js", "limit": "6 KB" },
     { "path": "dist/presets.js", "limit": "2 KB" },
     { "path": "dist/validators.js", "limit": "2 KB" },
-    { "path": "dist/number.js", "limit": "2.5 KB" }
+    { "path": "dist/number.js", "limit": "2.5 KB" },
+    { "path": "dist/time.js", "limit": "2 KB" }
   ],
   "scripts": {
     "build": "tsup",

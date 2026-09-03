@@ -10,11 +10,14 @@ Made with attention to UX.
 
 A maintained fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
-## What's new in 2.2
+## What's new in 2.3
+
+- `react-input-mask-format/time` — HH:MM (24h) masked input with clamping, see [Time](#time--react-input-mask-formattime)
+
+### 2.2
 
 - `useMask` hook — mask your own `<input>` with no wrapper component, see [useMask hook](#usemask-hook)
 - `react-input-mask-format/number` — numeric & currency masking, a lightweight `react-number-format` alternative, see [Numeric & currency](#numeric--currency--react-input-mask-formatnumber)
-- `react-input-mask-format/time` — HH:MM (24h) masked input with clamping, see [Time](#time--react-input-mask-formattime)
 
 ### 2.1
 
@@ -264,7 +267,7 @@ formatTime("2999"); // "23:59"
 
 ```txt
 typing "1234"  →  value "12:34"  formattedValue "12:34"  hours 12  minutes 34
-typing "12"    →  value ""       formattedValue "12"     hours 12  minutes undefined
+typing "12"    →  value ""       formattedValue "12:"     hours 12  minutes undefined
 ```
 
 `value` remains empty until both hours and minutes are complete. The canonical
@@ -274,6 +277,10 @@ option.
 **Clamping**: When hours are complete (two digits), they're clamped to ≤23.
 When minutes are complete, they're clamped to ≤59. A single digit is never
 clamped.
+
+Because an incomplete time has an empty canonical `value`, a controlled parent
+that resets `value` to `""` won't visibly clear a partially-typed field; to
+force-clear it, remount the input with a changed React `key`.
 
 Options: `separator` (default `:`).
 
