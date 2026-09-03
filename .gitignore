@@ -7,3 +7,5 @@ test-results
 playwright-report
 blob-report
 playwright/.cache
+# Superpowers working docs (personal, not tracked)
+.superpowers/
