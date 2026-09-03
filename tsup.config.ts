@@ -5,7 +5,8 @@ export default defineConfig({
     index: "src/index.tsx",
     presets: "src/presets/index.ts",
     validators: "src/validators/index.ts",
-    number: "src/number/index.ts"
+    number: "src/number/index.ts",
+    time: "src/time/index.ts"
   },
   format: ["esm", "cjs"],
   dts: true,

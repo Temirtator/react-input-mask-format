@@ -62,6 +62,10 @@
       "import": { "types": "./dist/number.d.ts", "default": "./dist/number.js" },
       "require": { "types": "./dist/number.d.cts", "default": "./dist/number.cjs" }
     },
+    "./time": {
+      "import": { "types": "./dist/time.d.ts", "default": "./dist/time.js" },
+      "require": { "types": "./dist/time.d.cts", "default": "./dist/time.cjs" }
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
