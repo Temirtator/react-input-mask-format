@@ -23,3 +23,19 @@ test("useTimeFormat masks a raw input", async ({ page }) => {
   await input.pressSequentially("0815");
   await expect(input).toHaveValue("08:15");
 });
+
+test("Backspace over the auto-inserted separator deletes the preceding hour digit", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const input = page.getByTestId("time");
+  await input.click();
+  await input.pressSequentially("2230");
+  await expect(input).toHaveValue("22:30");
+  await input.press("Backspace");
+  await expect(input).toHaveValue("22:3");
+  await input.press("Backspace");
+  await expect(input).toHaveValue("22:");
+  await input.press("Backspace");
+  await expect(input).toHaveValue("2");
+});

@@ -3,7 +3,12 @@ import type React from "react";
 import type { TimeFormatValues } from "./types";
 import type { TimeFormatOptions } from "./types";
 import { formatTime } from "./format-time";
-import { parseTime, digitsBeforeCaret, resolveCaret } from "./parse-time";
+import {
+  collapseTrailingSeparator,
+  parseTime,
+  digitsBeforeCaret,
+  resolveCaret,
+} from "./parse-time";
 import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "../utils/input";
 
@@ -25,12 +30,15 @@ export function useTimeFormat(
 
   return useCallback((el: HTMLInputElement | null) => {
     if (el) {
+      let previous = el.value;
       const handler = (): void => {
         const opts = optionsRef.current;
         const caret = el.selectionStart ?? el.value.length;
-        const digits = digitsBeforeCaret(el.value, caret);
-        const values = parseTime(el.value, opts);
+        const raw = collapseTrailingSeparator(el.value, previous, opts.separator ?? ":");
+        const digits = digitsBeforeCaret(raw, caret);
+        const values = parseTime(raw, opts);
         setNativeValue(el, values.formattedValue);
+        previous = values.formattedValue;
         if (isInputFocused(el)) {
           const next = resolveCaret(values, digits, opts);
           setInputSelection(el, next, next);
@@ -60,6 +68,7 @@ export function useTimeFormat(
       inputRef.current = el;
       if (el.value) {
         setNativeValue(el, formatTime(el.value, optionsRef.current));
+        previous = formatTime(el.value, optionsRef.current);
       }
     } else {
       if (inputRef.current && handlerRef.current) {

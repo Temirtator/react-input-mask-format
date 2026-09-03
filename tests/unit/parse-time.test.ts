@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { parseTime, digitsBeforeCaret, resolveCaret } from "../../src/time/parse-time";
+import {
+  parseTime,
+  digitsBeforeCaret,
+  resolveCaret,
+  collapseTrailingSeparator,
+} from "../../src/time/parse-time";
 
 describe("parseTime", () => {
   it("has no value or parts when empty", () => {
@@ -59,5 +64,20 @@ describe("resolveCaret", () => {
   it("lands after the last typed digit mid-minutes", () => {
     const values = parseTime("223");
     expect(resolveCaret(values, 3)).toBe(4);
+  });
+});
+
+describe("collapseTrailingSeparator", () => {
+  it("drops the orphaned digit when backspacing over the separator", () => {
+    expect(collapseTrailingSeparator("22", "22:", ":")).toBe("2");
+  });
+  it("does not trigger when the raw value already ends with the separator", () => {
+    expect(collapseTrailingSeparator("22:", "22:", ":")).toBe("22:");
+  });
+  it("does not trigger when the change is not a trailing-separator deletion", () => {
+    expect(collapseTrailingSeparator("22:3", "22:30", ":")).toBe("22:3");
+  });
+  it("supports a custom separator", () => {
+    expect(collapseTrailingSeparator("22", "22.", ".")).toBe("2");
   });
 });

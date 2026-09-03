@@ -1,7 +1,12 @@
 import React, { forwardRef, useLayoutEffect, useReducer, useRef } from "react";
 import type { TimeFormatOptions, TimeFormatValues } from "./types";
 import { formatTime } from "./format-time";
-import { parseTime, digitsBeforeCaret, resolveCaret } from "./parse-time";
+import {
+  collapseTrailingSeparator,
+  parseTime,
+  digitsBeforeCaret,
+  resolveCaret,
+} from "./parse-time";
 import { isInputFocused, setInputSelection } from "../utils/input";
 
 export interface TimeFormatProps
@@ -33,8 +38,9 @@ export const TimeFormat = forwardRef<HTMLInputElement, TimeFormatProps>(function
   function handleChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const el = event.target;
     const caret = el.selectionStart ?? el.value.length;
-    const digits = digitsBeforeCaret(el.value, caret);
-    const values = parseTime(el.value, options);
+    const raw = collapseTrailingSeparator(el.value, formatted, options.separator ?? ":");
+    const digits = digitsBeforeCaret(raw, caret);
+    const values = parseTime(raw, options);
     caretRef.current = resolveCaret(values, digits, options);
     lastValuesRef.current = values;
     forceUpdate();

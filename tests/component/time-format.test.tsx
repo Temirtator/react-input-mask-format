@@ -37,6 +37,32 @@ describe("useTimeFormat", () => {
       minutes: 15,
     });
   });
+
+  it("deletes the preceding hour digit when backspacing over the separator", async () => {
+    const user = userEvent.setup();
+    render(<HookField />);
+    const input = screen.getByTestId("t");
+    await user.click(input);
+    await user.keyboard("22");
+    expect(input).toHaveValue("22:");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("2");
+  });
+
+  it("steps backward through the mask with repeated backspaces", async () => {
+    const user = userEvent.setup();
+    render(<HookField />);
+    const input = screen.getByTestId("t");
+    await user.click(input);
+    await user.keyboard("223");
+    expect(input).toHaveValue("22:3");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("22:");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("2");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("");
+  });
 });
 
 function Controlled() {
@@ -66,5 +92,31 @@ describe("TimeFormat", () => {
   it("renders a plain controlled value with no handler", () => {
     render(<TimeFormat value="09:05" onValueChange={() => {}} data-testid="r" />);
     expect(screen.getByTestId("r")).toHaveValue("09:05");
+  });
+
+  it("deletes the preceding hour digit when backspacing over the separator", async () => {
+    const user = userEvent.setup();
+    render(<Controlled />);
+    const input = screen.getByTestId("c");
+    await user.click(input);
+    await user.keyboard("22");
+    expect(input).toHaveValue("22:");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("2");
+  });
+
+  it("steps backward through the mask with repeated backspaces", async () => {
+    const user = userEvent.setup();
+    render(<Controlled />);
+    const input = screen.getByTestId("c");
+    await user.click(input);
+    await user.keyboard("223");
+    expect(input).toHaveValue("22:3");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("22:");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("2");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("");
   });
 });

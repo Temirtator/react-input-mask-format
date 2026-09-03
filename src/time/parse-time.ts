@@ -1,6 +1,16 @@
 import type { TimeFormatOptions, TimeFormatValues } from "./types";
 import { tokenizeTime, buildFormatted } from "./format-time";
 
+export function collapseTrailingSeparator(
+  raw: string,
+  previous: string,
+  separator: string
+): string {
+  return previous.endsWith(separator) && raw === previous.slice(0, -separator.length)
+    ? raw.slice(0, -1)
+    : raw;
+}
+
 export function parseTime(formatted: string, options?: TimeFormatOptions): TimeFormatValues {
   const separator = options?.separator ?? ":";
   const parts = tokenizeTime(formatted);
