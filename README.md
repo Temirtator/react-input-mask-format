@@ -10,7 +10,11 @@ Made with attention to UX.
 
 A maintained fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
-## What's new in 2.2
+## What's new in 2.3
+
+- `react-input-mask-format/time` — HH:MM (24h) masked input with clamping, see [Time](#time--react-input-mask-formattime)
+
+### 2.2
 
 - `useMask` hook — mask your own `<input>` with no wrapper component, see [useMask hook](#usemask-hook)
 - `react-input-mask-format/number` — numeric & currency masking, a lightweight `react-number-format` alternative, see [Numeric & currency](#numeric--currency--react-input-mask-formatnumber)
@@ -241,6 +245,59 @@ formatNumber(1234.5, { thousandSeparator: ",", decimalScale: 2, fixedDecimalScal
 The main differences: `decimalScale` **truncates** rather than rounds while
 typing, and this package ships a single `NumberFormat` (no separate
 `PatternFormat` — use the mask engine / `<InputMask>` for pattern masks).
+
+## Time — `react-input-mask-format/time`
+
+A separate, tree-shakeable entry for formatting times in 24-hour format (HH:MM).
+
+```tsx
+import { TimeFormat, useTimeFormat, formatTime } from "react-input-mask-format/time";
+
+// controlled component
+<TimeFormat value={time} onValueChange={(v) => setTime(v.value)} />
+
+// bring-your-own input (e.g. a design-system Input)
+const ref = useTimeFormat({ onValueChange: (v) => setTime(v.value) });
+<input ref={ref} />
+
+formatTime("2999"); // "23:59"
+```
+
+`onValueChange` receives `{ value, formattedValue, hours, minutes }`:
+
+```txt
+typing "1234"  →  value "12:34"  formattedValue "12:34"  hours 12  minutes 34
+typing "12"    →  value ""       formattedValue "12:"     hours 12  minutes undefined
+```
+
+`value` remains empty until both hours and minutes are complete. The canonical
+`value` always uses `:` as the separator, regardless of the display `separator`
+option.
+
+**Clamping**: When hours are complete (two digits), they're clamped to ≤23.
+When minutes are complete, they're clamped to ≤59. A single digit is never
+clamped.
+
+Because an incomplete time has an empty canonical `value`, a controlled parent
+that resets `value` to `""` won't visibly clear a partially-typed field; to
+force-clear it, remount the input with a changed React `key`.
+
+Options: `separator` (default `:`).
+
+There is also a ref hook and the pure helpers:
+
+```tsx
+import { useTimeFormat, formatTime, parseTime } from "react-input-mask-format/time";
+
+const ref = useTimeFormat({ separator: ":" });
+// <input ref={ref} />
+
+formatTime("2999", { separator: ":" }); // "23:59"
+parseTime("14:30");                      // { value: "14:30", formattedValue: "14:30", hours: 14, minutes: 30 }
+```
+
+**Reserved for a later minor release**: seconds (HH:MM:SS) and 12-hour format
+with AM/PM.
 
 ### `maskPlaceholder`
 

@@ -1,7 +1,7 @@
 {
   "name": "react-input-mask-format",
   "description": "Masked input component for React",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "type": "module",
   "homepage": "https://github.com/Temirtator/react-input-mask-format",
   "license": "MIT",
@@ -62,6 +62,10 @@
       "import": { "types": "./dist/number.d.ts", "default": "./dist/number.js" },
       "require": { "types": "./dist/number.d.cts", "default": "./dist/number.cjs" }
     },
+    "./time": {
+      "import": { "types": "./dist/time.d.ts", "default": "./dist/time.js" },
+      "require": { "types": "./dist/time.d.cts", "default": "./dist/time.cjs" }
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -72,7 +76,8 @@
     { "path": "dist/index.js", "limit": "6 KB" },
     { "path": "dist/presets.js", "limit": "2 KB" },
     { "path": "dist/validators.js", "limit": "2 KB" },
-    { "path": "dist/number.js", "limit": "2.5 KB" }
+    { "path": "dist/number.js", "limit": "2.5 KB" },
+    { "path": "dist/time.js", "limit": "2 KB" }
   ],
   "scripts": {
     "build": "tsup",
