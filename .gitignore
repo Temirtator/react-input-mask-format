@@ -1,6 +1,7 @@
 node_modules
 lib
 dist
+dist-demo
 npm-debug.log
 browserStack.json
 test-results

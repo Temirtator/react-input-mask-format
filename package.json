@@ -82,6 +82,7 @@
   "scripts": {
     "build": "tsup",
     "demo": "vite demo",
+    "demo:build": "vite build demo",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

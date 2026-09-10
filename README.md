@@ -10,6 +10,8 @@ Made with attention to UX.
 
 A maintained fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
+**Live demo:** https://temirtator.github.io/react-input-mask-format/
+
 ## What's new in 2.3
 
 - `react-input-mask-format/time` — HH:MM (24h) masked input with clamping, see [Time](#time--react-input-mask-formattime)

@@ -5,7 +5,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 export default tseslint.config(
   {
     ignores: [
-      "dist", "lib", "node_modules", "test-results", "playwright-report",
+      "dist", "dist-demo", "lib", "node_modules", "test-results", "playwright-report",
       "*.config.js", "eslint.config.mjs"
     ]
   },
