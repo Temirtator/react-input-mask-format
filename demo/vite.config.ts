@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  base: "/react-input-mask-format/",
+  build: { outDir: "../dist-demo", emptyOutDir: true },
   plugins: [react()],
   resolve: {
     alias: [
