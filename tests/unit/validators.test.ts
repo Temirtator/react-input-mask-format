@@ -203,6 +203,7 @@ describe("isValidRuIban", () => {
 describe("isValidRuPlate", () => {
   it("accepts 2- and 3-digit regions, Cyrillic or Latin look-alikes, any spacing", () => {
     expect(isValidRuPlate("А 123 ВС 77")).toBe(true);
+    expect(isValidRuPlate("А 123 ВС 77_")).toBe(true);
     expect(isValidRuPlate("А123ВС777")).toBe(true);
     expect(isValidRuPlate("a123bc77")).toBe(true);
     expect(isValidRuPlate("а123bc777")).toBe(true);
@@ -214,6 +215,7 @@ describe("isValidRuPlate", () => {
     expect(isValidRuPlate("А 123 ВС 000")).toBe(false);
     expect(isValidRuPlate("А 123 ВС 077")).toBe(false);
     expect(isValidRuPlate("А 123 ВС 7")).toBe(false);
+    expect(isValidRuPlate("А 123 ВС 7__")).toBe(false);
   });
   it("rejects letters outside the 12 allowed and empty input", () => {
     expect(isValidRuPlate("Б 123 ВС 77")).toBe(false);
