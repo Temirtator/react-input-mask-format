@@ -5,7 +5,8 @@ import {
   card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
   ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
-  uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport
+  uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
+  kgPhone, kgInnPerson, kgInnCompany, kgAccount, kgBik, kgPlate, kgPlateCompany, kgPostal, kgPassport
 } from "../../src/presets";
 import { toRuPlateChar } from "../../src/utils/ru-plate";
 import type { MaskPreset } from "../../src/presets";
@@ -147,5 +148,34 @@ describe("Uzbekistan presets format their sample values", () => {
   });
   it("uzPassport uppercases the series", () => {
     expect(format(uzPassport, "aa1234567")).toBe("AA1234567");
+  });
+});
+
+describe("Kyrgyzstan presets format their sample values", () => {
+  it("kgPhone formats national, international and domestic-0 numbers", () => {
+    expect(format(kgPhone, "555123456")).toBe("+996 (555) 12-34-56");
+    expect(format(kgPhone, "+996555123456")).toBe("+996 (555) 12-34-56");
+    expect(format(kgPhone, "0555123456")).toBe("+996 (555) 12-34-56");
+  });
+  it("kgPhone KNOWN LIMITATION: bare national digits starting with 9 as a value", () => {
+    // formatValue matches the leading 9 against the literal 9 of +996; README tells users to pass +996….
+    expect(format(kgPhone, "995123456")).toBe("+996 (512) 34-56-__");
+  });
+  it("kgInnPerson / kgInnCompany / kgBik / kgPostal", () => {
+    expect(format(kgInnPerson, "21503199001237")).toBe("21503199001237");
+    expect(format(kgInnCompany, "01605200710113")).toBe("01605200710113");
+    expect(format(kgBik, "103001")).toBe("103001");
+    expect(format(kgPostal, "720001")).toBe("720001");
+  });
+  it("kgAccount groups 16 digits", () => {
+    expect(format(kgAccount, "1251234567890164")).toBe("125 12345678901 64");
+  });
+  it("kgPlate / kgPlateCompany uppercase Latin letters", () => {
+    expect(format(kgPlate, "01123abc")).toBe("01 123 ABC");
+    expect(format(kgPlateCompany, "08456ab")).toBe("08 456 AB");
+  });
+  it("kgPassport uppercases ID card and passport series", () => {
+    expect(format(kgPassport, "id1234567")).toBe("ID1234567");
+    expect(format(kgPassport, "pe1234567")).toBe("PE1234567");
   });
 });
