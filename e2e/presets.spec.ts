@@ -37,9 +37,9 @@ test("ruPlate converts Latin typing to Cyrillic and keeps a 2-digit region on bl
   const input = page.getByTestId("ruPlate");
   await input.click();
   await input.pressSequentially("a123bc77");
-  await expect(input).toHaveValue("А 123 ВС 77");
+  await expect(input).toHaveValue("А 123 ВС 77_");
   await page.getByTestId("ruPostal").click();
-  await expect(input).toHaveValue("А 123 ВС 77");
+  await expect(input).toHaveValue("А 123 ВС 77_");
 });
 
 test("ruSnils formats typed digits", async ({ page }) => {

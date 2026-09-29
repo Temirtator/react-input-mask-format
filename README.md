@@ -215,9 +215,9 @@ a bare `"7771234567"` is ambiguous with a partially typed `"77…"` and is read 
 
 Notes:
 - `ruPlate` accepts Latin look-alikes (`A B E K M H O P C T Y X`) and stores **Cyrillic**.
-  Regions are 2 or 3 digits, so the preset has no placeholder — check completeness with `isValidRuPlate`.
+  Regions are 2 or 3 digits: with a 2-digit region the value ends with the placeholder
+  (`А 123 ВС 77_`). `isValidRuPlate` accepts both forms (a gap inside the plate is invalid); strip `_` before storing if you need the bare plate.
 - `ruPlate` covers type-1 (passenger car) plates only — not taxi, trailer, motorcycle, or diplomatic plates.
-- Because the region length varies, `ruPlate` has no placeholder; deleting a character in the middle shifts the rest of the plate and may drop it — clear and retype the plate to fix a typo.
 - `ruPhone`: pasting `+7 912 …`, `8 912 …` or `89123456789` gives `+7 (912) 345-67-89`.
   Typing a leading `8` key by key is still read as area code `8xx` (it is a valid code, e.g. 812).
 
