@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask, { useMask } from "../../src/index";
 import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone } from "../../src/presets";
@@ -328,6 +328,66 @@ describe("prefix-aware paste across presets", () => {
     const input = screen.getByTestId("hooked") as HTMLInputElement;
     await user.click(input);
     await user.paste("+998 90 123 45 67");
+    expect(input.value).toBe("+998 (90) 123-45-67");
+  });
+});
+
+function DigitsOnlyInput({ mask }: { mask: MaskPreset["mask"] }) {
+  const [value, setValue] = React.useState("");
+  return (
+    <InputMask
+      mask={mask}
+      value={value}
+      onChange={e => setValue(e.target.value.replace(/\D/g, ""))}
+      data-testid="digits"
+    />
+  );
+}
+
+describe("prefix-aware controlled and autofill input", () => {
+  const typed: Array<[string, MaskPreset["mask"], string, string]> = [
+    ["uzPhone", uzPhone.mask, "901234567", "+998 (90) 123-45-67"],
+    ["kgPhone", kgPhone.mask, "555123456", "+996 (555) 12-34-56"],
+    ["kzPhone", kzPhone.mask, "011234567", "+7 (701) 123-45-67"],
+    ["custom +1 mask", "+1 (999) 999-9999", "5551234567", "+1 (555) 123-4567"]
+  ];
+  for (const [name, mask, keys, expected] of typed) {
+    it(`digits-only controlled ${name}: typing key by key keeps the number`, async () => {
+      const user = userEvent.setup();
+      render(<DigitsOnlyInput mask={mask} />);
+      const input = screen.getByTestId("digits") as HTMLInputElement;
+      await user.click(input);
+      await user.keyboard(keys);
+      expect(input.value).toBe(expected);
+    });
+  }
+
+  it("uncontrolled uzPhone: unfocused change with an international number", () => {
+    render(<InputMask {...uzPhone} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "+998901234567" } });
+    expect(input.value).toBe("+998 (90) 123-45-67");
+  });
+
+  it("uncontrolled uzPhone: unfocused change with a bare national number", () => {
+    render(<InputMask {...uzPhone} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "901234567" } });
+    expect(input.value).toBe("+998 (90) 123-45-67");
+  });
+
+  it("uncontrolled kgPhone: unfocused change with an international number", () => {
+    render(<InputMask {...kgPhone} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "+996555123456" } });
+    expect(input.value).toBe("+996 (555) 12-34-56");
+  });
+
+  it("useMask uzPhone: unfocused input with an international number", () => {
+    // useMask listens to the native "input" event (autofill fires it); fireEvent.change would not reach it
+    render(<HookedInput preset={uzPhone} />);
+    const input = screen.getByTestId("hooked") as HTMLInputElement;
+    fireEvent.input(input, { target: { value: "+998901234567" } });
     expect(input.value).toBe("+998 (90) 123-45-67");
   });
 });

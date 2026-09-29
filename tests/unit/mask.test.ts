@@ -120,6 +120,14 @@ describe("MaskUtils prefix-aware input", () => {
     expect(utils.formatValue("+998901234567")).toBe("+998 (90) 123-45-67");
   });
 
+  it("formatValue treats values starting with the prefix digits as prefix + partial input", () => {
+    expect(phone().formatValue("9989")).toBe("+998 (9_) ___-__-__");
+    expect(phone().formatValue("998901")).toBe("+998 (90) 1__-__-__");
+    expect(phone().formatValue("+998901234")).toBe("+998 (90) 123-4_-__");
+    expect(phone().formatValue("998901234")).toBe("+998 (90) 123-4_-__");
+    expect(phone().formatValue("998")).toBe("+998 (__) ___-__-__");
+  });
+
   it("formatValue keeps the last characters of an overflowing unprefixed value", () => {
     expect(phone().formatValue("9989012345678")).toBe("+998 (01) 234-56-78");
   });
