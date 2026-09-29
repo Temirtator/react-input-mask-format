@@ -50,6 +50,19 @@ describe("Russia presets on InputMask", () => {
     expect(input.value).toBe("А 123 ВС 777");
   });
 
+  it("ruPlate KNOWN LIMITATION: deleting a middle character drops the tail", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...ruPlate} data-testid="plate" />);
+    const input = screen.getByTestId("plate") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("a123bc77");
+    input.setSelectionRange(3, 3);
+    await user.keyboard("{Backspace}");
+    // README documents this (no placeholder => rest shifts left, misfit chars dropped);
+    // a core fix is a follow-up.
+    expect(input.value).toBe("А 237 ");
+  });
+
   it("ruPlate: partial 2-digit region survives blur (controlled)", async () => {
     const user = userEvent.setup();
     render(<ControlledRuPlate />);

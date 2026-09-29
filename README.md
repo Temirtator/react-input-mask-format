@@ -194,6 +194,8 @@ PRs adding other countries are welcome.
 Notes:
 - `ruPlate` accepts Latin look-alikes (`A B E K M H O P C T Y X`) and stores **Cyrillic**.
   Regions are 2 or 3 digits, so the preset has no placeholder — check completeness with `isValidRuPlate`.
+- `ruPlate` covers type-1 (passenger car) plates only — not taxi, trailer, motorcycle, or diplomatic plates.
+- Because the region length varies, `ruPlate` has no placeholder; deleting a character in the middle shifts the rest of the plate and may drop it — clear and retype the plate to fix a typo.
 - `ruPhone` expects the 10-digit national number. A number typed with the domestic
   trunk prefix `8` (`8 912 …`) is read as area code `891`; `+7…` and `7…` input is handled.
 
@@ -217,6 +219,7 @@ isValidRuInn("7707083893");                          // 10 (company) or 12 (pers
 isValidRuSnils("112-233-445 95");                    // mod-101; ≤ 001-001-998 not checked
 isValidRuOgrn("1027700132195");                      // OGRN (13) · isValidRuOgrnip — 15
 isValidRuAccount("40817810538091310419", "044525225"); // account control key with BIK
+isValidRuAccount("03100643000000018500", "017003983"); // treasury 03… accounts: structure only (no control key)
 isValidRuIban("RU03 0445 2522 5408 1781 0538 0913 1041 9");
 isValidRuPlate("А 123 ВС 77");                       // region 2–3 digits, Latin look-alikes OK
 isValidRuKpp("7707AB001"); isValidRuBik("044525225"); // format only (no checksum exists)

@@ -85,9 +85,14 @@ export function isValidRuAccount(account: string, bik: string): boolean {
   if (a.length !== 20 || !isValidRuBik(b)) {
     return false;
   }
-  // correspondent accounts (30101…) are keyed with the RKC prefix "0" + BIK[4..5];
-  // everything else with the last 3 BIK digits (CBR order 515)
-  const prefix = a.startsWith("30101") ? "0" + b.slice(4, 6) : b.slice(6, 9);
+  // Treasury accounts (03…) carry no control key under CBR order 515: structure only.
+  if (a.startsWith("03")) {
+    return true;
+  }
+  // Correspondent accounts (30101…) and single treasury accounts (40102…, ЕКС) are keyed
+  // with the RKC prefix "0" + BIK[4..5]; everything else with the last 3 BIK digits.
+  const rkcKeyed = a.startsWith("30101") || a.startsWith("40102");
+  const prefix = rkcKeyed ? "0" + b.slice(4, 6) : b.slice(6, 9);
   const s = prefix + a;
   let sum = 0;
   for (let i = 0; i < s.length; i++) {
