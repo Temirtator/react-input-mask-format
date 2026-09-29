@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.7.0
+
+### Fixed
+- Masks that start with fixed characters (phone presets `kzPhone`, `ruPhone`, `uzPhone`, `kgPhone`,
+  IBAN presets, custom masks like `+1 (999) …`): pasted text containing the country code or a domestic
+  trunk prefix (`+998 90 123 45 67`, `8 912 345-67-89`, `0555 12 34 56`) now fills the right slots.
+- `value` given as the bare national number (`"901234567"`) or an international number
+  (`"+998901234567"`, `"89123456789"`) now formats correctly for such masks (`InputMask` and `useMask`).
+
+### Changed
+- For masks with a fixed prefix, pasted text **and programmatic values** longer than the mask keep their last
+  characters instead of their first ones (e.g. `value="9989012345678"` → `+998 (01) 234-56-78`). Masks
+  without a fixed prefix (dates, cards, plates) are unchanged.
+- Replacing the whole value of a prefixed mask (select all + paste/type) now inserts after the prefix, so
+  select-all + typing or pasting a national number works; typing the country code key by key over a selection
+  (`9`, `9`, `8`, …) is read as the national number.
+
 ## 2.6.0
 
 Additive release — no migration required.
