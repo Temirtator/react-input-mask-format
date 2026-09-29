@@ -5,19 +5,24 @@
 [![CI](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml/badge.svg)](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml)
 
 General-purpose input masking for React — dates, phone numbers, cards, custom
-tokens, and a growing set of ready-made country packs (Kazakhstan, Russia, Uzbekistan).
+tokens, and a growing set of ready-made country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan).
 Made with attention to UX.
 
 A maintained fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
 **Live demo:** https://temirtator.github.io/react-input-mask-format/
 
-## What's new in 2.5
+## What's new in 2.6
+
+- Kyrgyzstan country pack in `react-input-mask-format/presets` — phone, INN (person / company), bank account, BIK, car plates (individual and company), postal code, ID card / passport, see [Presets](#presets)
+- `isValidKgAccount` (NBKR MOD-97), `isValidKgInn` (structure and embedded date) and `isValidKgBik` (format) in `react-input-mask-format/validators`, see [Validators](#validators)
+
+All additive — no migration needed.
+
+### 2.5
 
 - Uzbekistan country pack in `react-input-mask-format/presets` — phone, PINFL, INN, bank account, MFO, car plates (individual and company), postal code, passport / ID card, see [Presets](#presets)
 - `isValidUzPinfl` (official 7-3-1 checksum + embedded birth date) and `isValidUzInn` (format) in `react-input-mask-format/validators`, see [Validators](#validators)
-
-All additive — no migration needed.
 
 ### 2.4
 
@@ -158,7 +163,7 @@ import { kzPhone, kzIban } from "react-input-mask-format/presets";
 <InputMask {...kzIban} value={iban} onChange={onChange} />
 ```
 
-Presets are a country-agnostic system with country packs for Kazakhstan, Russia and Uzbekistan —
+Presets are a country-agnostic system with country packs for Kazakhstan, Russia, Uzbekistan and Kyrgyzstan —
 PRs adding other countries are welcome.
 
 ### Generic
@@ -232,6 +237,31 @@ Notes:
   personalised plates (since 2026), diplomatic and foreign plates are not supported.
 - Uzbekistan is not in the IBAN registry; bank accounts are 20 digits plus a 5-digit MFO bank code.
 
+### Kyrgyzstan
+
+| export | mask | example |
+| --- | --- | --- |
+| `kgPhone` | `+996 (999) 99-99-99` (first code digit 2–9) | `+996 (555) 12-34-56` |
+| `kgInnPerson` | `99999999999999` | `21503199001237` |
+| `kgInnCompany` | `99999999999999` | `01605200710113` |
+| `kgAccount` | `999 99999999999 99` | `125 12345678901 64` |
+| `kgBik` | `999999` | `103001` |
+| `kgPlate` | `99 999 aaa` (uppercase) | `01 123 ABC` |
+| `kgPlateCompany` | `99 999 aa` (uppercase) | `08 456 AB` |
+| `kgPostal` | `999999` | `720001` |
+| `kgPassport` | `aa9999999` (uppercase) | `ID1234567` |
+
+Notes:
+- `kgPhone` takes the 9-digit national number; a domestic leading `0` (`0555 12 34 56`) is skipped.
+  Known limitations (a core fix is planned):
+  - pasting an international number (`+996 555 12 34 56`) misreads the prefix — it becomes `+996 (996) 55-51-23`;
+  - when setting `value` programmatically, pass the international form (`+996555123456`) or the formatted
+    value — bare national digits starting with `9` are misread (`"995123456"` renders `+996 (512) 34-56-__`).
+    Store phones as `+996…`.
+- `isValidKgInn` checks the structure (type digit, embedded date) but not the check digit — its algorithm is not published.
+- `kgPlate` / `kgPlateCompany` cover the 2016+ plates; older, foreign and diplomatic plates are not supported.
+- Kyrgyzstan is not in the IBAN registry; bank accounts are 16 digits (the first 3 are the bank's BIK prefix).
+
 ## Validators
 
 Optional checksum validators, separate entry point, zero-deps. Accept raw or formatted
@@ -242,7 +272,8 @@ import {
   isValidIin, isValidBin, isValidKzIban, luhn,
   isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip,
   isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate,
-  isValidUzPinfl, isValidUzInn
+  isValidUzPinfl, isValidUzInn,
+  isValidKgInn, isValidKgAccount, isValidKgBik
 } from "react-input-mask-format/validators";
 
 isValidIin("901010123458");                          // KZ IIN/BIN mod-11 checksum
@@ -260,6 +291,10 @@ isValidRuKpp("7707AB001"); isValidRuBik("044525225"); // format only (no checksu
 
 isValidUzPinfl("31210932040247");                    // PINFL: 7-3-1 checksum + birth date
 isValidUzInn("207086151");                           // format only (checksum not published)
+
+isValidKgAccount("1251234567890164");                // NBKR MOD-97 control digits
+isValidKgInn("21503199001237");                      // structure + date (check digit not published)
+isValidKgBik("103001");                              // format
 ```
 
 ## `useMask` hook
