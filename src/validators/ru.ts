@@ -1,4 +1,5 @@
-import { digitsOnly, remainder } from "./shared";
+import { digitsOnly, remainder, isIbanChecksumValid } from "./shared";
+import { RU_PLATE_LETTERS, toRuPlateChar } from "../utils/ru-plate";
 
 const INN10_W = [2, 4, 10, 3, 5, 9, 4, 6, 8];
 const INN12_W1 = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
@@ -61,4 +62,58 @@ export function isValidRuOgrnip(value: string): boolean {
   }
   // the check digit is the last digit of the remainder (10-12 → 0-2)
   return remainder(digits.slice(0, 14), 13) % 10 === Number(digits[14]);
+}
+
+function compactUpper(value: string): string {
+  return (value ?? "").replace(/\s+/g, "").toUpperCase();
+}
+
+export function isValidRuKpp(value: string): boolean {
+  return /^\d{4}[\dA-Z]{2}\d{3}$/.test(compactUpper(value));
+}
+
+export function isValidRuBik(value: string): boolean {
+  // 732-P: first digit 0 (direct), 1 (indirect), 2 (CBR client); legacy BIKs start with 04
+  return /^[012]\d{8}$/.test(digitsOnly(value));
+}
+
+const ACCOUNT_W = [7, 1, 3];
+
+export function isValidRuAccount(account: string, bik: string): boolean {
+  const a = digitsOnly(account);
+  const b = digitsOnly(bik);
+  if (a.length !== 20 || !isValidRuBik(b)) {
+    return false;
+  }
+  // correspondent accounts (30101…) are keyed with the RKC prefix "0" + BIK[4..5];
+  // everything else with the last 3 BIK digits (CBR order 515)
+  const prefix = a.startsWith("30101") ? "0" + b.slice(4, 6) : b.slice(6, 9);
+  const s = prefix + a;
+  let sum = 0;
+  for (let i = 0; i < s.length; i++) {
+    sum += (s.charCodeAt(i) - 48) * ACCOUNT_W[i % 3];
+  }
+  return sum % 10 === 0;
+}
+
+export function isValidRuIban(value: string): boolean {
+  const s = compactUpper(value);
+  if (s.length !== 33 || !s.startsWith("RU") || !/^[0-9A-Z]+$/.test(s)) {
+    return false;
+  }
+  return isIbanChecksumValid(s);
+}
+
+const PLATE_RE = new RegExp(
+  `^[${RU_PLATE_LETTERS}](\\d{3})[${RU_PLATE_LETTERS}]{2}(\\d{2}|[1-9]\\d{2})$`
+);
+
+export function isValidRuPlate(value: string): boolean {
+  const s = (value ?? "").replace(/\s+/g, "").split("").map(toRuPlateChar).join("");
+  const m = PLATE_RE.exec(s);
+  if (!m) {
+    return false;
+  }
+  // 000 is never issued; region 00 does not exist
+  return m[1] !== "000" && Number(m[2]) !== 0;
 }
