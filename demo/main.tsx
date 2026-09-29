@@ -5,12 +5,14 @@ import { extendedFormatChars } from "react-input-mask-format";
 import {
   card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
-  ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport, MaskPreset
+  ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
+  uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport, MaskPreset
 } from "react-input-mask-format/presets";
 import {
   isValidIin, isValidBin, isValidKzIban, luhn,
   isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp,
-  isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate
+  isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate,
+  isValidUzPinfl, isValidUzInn
 } from "react-input-mask-format/validators";
 import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
 import { TimeFormat, useTimeFormat } from "react-input-mask-format/time";
@@ -91,10 +93,11 @@ function TimeHookField() {
   return <input ref={ref} data-testid="time-hook" style={fieldStyle} />;
 }
 
-type Country = "kz" | "ru";
+type Country = "kz" | "ru" | "uz";
 const COUNTRIES: { id: Country; label: string }[] = [
   { id: "kz", label: "KZ" },
-  { id: "ru", label: "RU" }
+  { id: "ru", label: "RU" },
+  { id: "uz", label: "UZ" }
 ];
 const DEMO_BIK = "044525225";
 
@@ -135,10 +138,10 @@ function App() {
         <header>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>react-input-mask-format</span>
-            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.4</span>
+            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.5</span>
           </div>
           <h1 style={{ fontSize: 26, margin: "10px 0 4px" }}>General-purpose input masks for React — with batteries</h1>
-          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia.</p>
+          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia, Uzbekistan.</p>
         </header>
 
         <section style={{ display: "grid", gap: 9 }}>
@@ -171,6 +174,19 @@ function App() {
               <Row label="Госномер" sub="ruPlate · Latin→Кириллица"><PresetField preset={ruPlate} testid="ruPlate" validate={isValidRuPlate} /></Row>
               <Row label="Индекс" sub="ruPostal"><PresetField preset={ruPostal} testid="ruPostal" /></Row>
               <Row label="Паспорт" sub="ruPassport"><PresetField preset={ruPassport} testid="ruPassport" /></Row>
+            </>
+          )}
+          {country === "uz" && (
+            <>
+              <Row label="Телефон" sub="uzPhone"><PresetField preset={uzPhone} testid="uzPhone" /></Row>
+              <Row label="ПИНФЛ" sub="uzPinfl · checksum"><PresetField preset={uzPinfl} testid="uzPinfl" validate={isValidUzPinfl} /></Row>
+              <Row label="ИНН" sub="uzInn · format"><PresetField preset={uzInn} testid="uzInn" validate={isValidUzInn} /></Row>
+              <Row label="Р/счёт" sub="uzAccount"><PresetField preset={uzAccount} testid="uzAccount" /></Row>
+              <Row label="МФО" sub="uzMfo"><PresetField preset={uzMfo} testid="uzMfo" /></Row>
+              <Row label="Госномер" sub="uzPlate · UPPER"><PresetField preset={uzPlate} testid="uzPlate" /></Row>
+              <Row label="Госномер юрлица" sub="uzPlateCompany · UPPER"><PresetField preset={uzPlateCompany} testid="uzPlateCompany" /></Row>
+              <Row label="Индекс" sub="uzPostal"><PresetField preset={uzPostal} testid="uzPostal" /></Row>
+              <Row label="Паспорт / ID" sub="uzPassport · UPPER"><PresetField preset={uzPassport} testid="uzPassport" /></Row>
             </>
           )}
           <Row label="Карта" sub="card · Luhn"><PresetField preset={card} testid="card" validate={luhn} /></Row>
