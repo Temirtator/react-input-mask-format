@@ -58,7 +58,7 @@ describe("Russia presets on InputMask", () => {
     await user.click(input);
     await user.keyboard("a123bc77");
     input.setSelectionRange(3, 3);
-    await selectionSettled();
+    await nextFrame();
     await user.keyboard("{Backspace}");
     // README documents this (no placeholder => rest shifts left, misfit chars dropped);
     // a core fix is a follow-up.
@@ -199,8 +199,9 @@ describe("Kyrgyzstan presets on InputMask", () => {
   });
 });
 
-// The mask tracks the selection in a requestAnimationFrame loop, so let it observe setSelectionRange.
-const selectionSettled = () => new Promise<void>((resolve) => setTimeout(resolve, 50));
+// The mask tracks the selection in a requestAnimationFrame loop; its callback is queued earlier
+// in the same frame, so one frame lets it observe setSelectionRange.
+const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
 function HookedInput({ preset }: { preset: MaskPreset }) {
   const ref = useMask(preset);
@@ -233,7 +234,7 @@ describe("prefix-aware paste across presets", () => {
     await user.click(input);
     await user.keyboard("901234567");
     input.setSelectionRange(0, input.value.length);
-    await selectionSettled();
+    await nextFrame();
     await user.paste("+998 91 765 43 21");
     expect(input.value).toBe("+998 (91) 765-43-21");
   });
@@ -245,7 +246,7 @@ describe("prefix-aware paste across presets", () => {
     await user.click(input);
     await user.keyboard("555123456");
     input.setSelectionRange(0, input.value.length);
-    await selectionSettled();
+    await nextFrame();
     await user.paste("+996 700 98 76 54");
     expect(input.value).toBe("+996 (700) 98-76-54");
   });
@@ -257,7 +258,7 @@ describe("prefix-aware paste across presets", () => {
     await user.click(input);
     await user.keyboard("901234567");
     input.setSelectionRange(0, input.value.length);
-    await selectionSettled();
+    await nextFrame();
     await user.paste("91 765 43 21");
     expect(input.value).toBe("+998 (91) 765-43-21");
   });
@@ -268,7 +269,7 @@ describe("prefix-aware paste across presets", () => {
     const input = screen.getByTestId("p") as HTMLInputElement;
     await user.click(input);
     input.setSelectionRange(0, 0);
-    await selectionSettled();
+    await nextFrame();
     await user.paste("+998 91 765 43 21");
     expect(input.value).toBe("+998 (91) 765-43-21");
   });
@@ -280,9 +281,45 @@ describe("prefix-aware paste across presets", () => {
     await user.click(input);
     await user.keyboard("9123456789");
     input.setSelectionRange(0, input.value.length);
-    await selectionSettled();
+    await nextFrame();
     await user.paste("+7 912 345-67-89");
     expect(input.value).toBe("+7 (912) 345-67-89");
+  });
+
+  it("kzIban filled: select all + type k clears to the prefix", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...kzIban} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("86125kzt5004100100");
+    input.setSelectionRange(0, input.value.length);
+    await nextFrame();
+    await user.keyboard("k");
+    expect(input.value).toBe("KZ__ ____ ____ ____ ____");
+  });
+
+  it("kzIban filled: select all + type k7 leaves no stale tail", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...kzIban} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("86125kzt5004100100");
+    input.setSelectionRange(0, input.value.length);
+    await nextFrame();
+    await user.keyboard("k7");
+    expect(input.value).toBe("KZ7_ ____ ____ ____ ____");
+  });
+
+  it("kzIban filled: select all + paste a lowercase IBAN", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...kzIban} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("86125kzt5004100100");
+    input.setSelectionRange(0, input.value.length);
+    await nextFrame();
+    await user.paste("kz86125kzt5004100100");
+    expect(input.value).toBe("KZ86 125K ZT50 0410 0100");
   });
 
   it("useMask gets the same fix", async () => {

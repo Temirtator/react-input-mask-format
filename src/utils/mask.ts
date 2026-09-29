@@ -154,13 +154,21 @@ export default class MaskUtils {
   // than the mask has slots carries its own country/trunk prefix
   // ("+998 90 123 45 67", "8 912 …", "0555 …"): keep only the last characters that fit.
   // Replacing text from inside a significant prefix (e.g. select all + paste) inserts after the
-  // prefix, unless the user is typing the prefix itself (first char equals the prefix char there).
+  // prefix, unless the user is typing the prefix itself (first char equals the prefix char there,
+  // case-insensitively after transform) or the text fills nothing after the prefix.
   shouldInsertAfterPrefix = (string: string, position: number, wasTrimmed: boolean): boolean => {
     const { prefix } = this.maskOptions;
     if (!string || !this.hasSignificantPrefix() || position >= prefix!.length) {
       return false;
     }
-    return wasTrimmed || string[0] !== prefix![position];
+    if (!wasTrimmed) {
+      const first = this.transform ? this.transform(string[0], position) : string[0];
+      if (first.toUpperCase() === prefix![position].toUpperCase()) {
+        return false; // the user is typing the prefix itself
+      }
+    }
+    // redirect only if the text actually fills something after the prefix
+    return this.getStringFillingLengthAtPosition(string, prefix!.length) > 0;
   };
 
   trimOverflowingPrefix = (string: string, position: number): string => {
