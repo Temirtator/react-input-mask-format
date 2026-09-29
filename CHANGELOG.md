@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.5.0
+
+Additive release — no migration required.
+
+### Added
+- Uzbekistan preset pack in `react-input-mask-format/presets`: `uzPhone`, `uzPinfl`, `uzInn`, `uzAccount`, `uzMfo`, `uzPlate`, `uzPlateCompany`, `uzPostal`, `uzPassport`.
+- Uzbek validators in `react-input-mask-format/validators`: `isValidUzPinfl` (official 7-3-1 checksum, sex/century digit and birth date), `isValidUzInn` (format only).
+- Demo: Uzbekistan tab in the country switcher.
+
 ## 2.4.0
 
 Additive release — no migration required.
