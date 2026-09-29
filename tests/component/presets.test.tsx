@@ -112,6 +112,22 @@ describe("Uzbekistan presets on InputMask", () => {
     expect(input.value).toBe("+998 (90) 123-45-67");
   });
 
+  it("uzPhone KNOWN LIMITATION: pasting an international +998 number misreads the prefix", async () => {
+    // The core does not consume the mask's +998 prefix on paste; the 9s fill the operator code.
+    // README documents it; a core fix is planned.
+    const user = userEvent.setup();
+    render(<InputMask {...uzPhone} data-testid="uz-phone" />);
+    const input = screen.getByTestId("uz-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.paste("+998 90 123 45 67");
+    expect(input.value).toBe("+998 (99) 890-12-34");
+  });
+
+  it("uzPhone: a full international value set programmatically formats correctly", () => {
+    render(<InputMask {...uzPhone} value="+998901234567" onChange={() => {}} data-testid="uz-phone" />);
+    expect((screen.getByTestId("uz-phone") as HTMLInputElement).value).toBe("+998 (90) 123-45-67");
+  });
+
   it("uzPlate: lowercase letters are uppercased", async () => {
     const user = userEvent.setup();
     render(<InputMask {...uzPlate} data-testid="uz-plate" />);
