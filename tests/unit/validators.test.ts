@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate } from "../../src/validators";
-import { digitsOnly, remainder, isIbanChecksumValid } from "../../src/validators/shared";
+import { digitsOnly, remainder, isIbanChecksumValid, isRealDate } from "../../src/validators/shared";
+import { isValidUzPinfl, isValidUzInn } from "../../src/validators";
 
 describe("luhn", () => {
   it("accepts valid card numbers (raw and formatted)", () => {
@@ -220,5 +221,57 @@ describe("isValidRuPlate", () => {
     expect(isValidRuPlate("D 123 BC 77")).toBe(false);
     expect(isValidRuPlate("")).toBe(false);
     expect(isValidRuPlate(null as unknown as string)).toBe(false);
+  });
+});
+
+describe("isRealDate", () => {
+  it("handles month lengths and leap years without using the clock", () => {
+    expect(isRealDate(2000, 2, 29)).toBe(true);  // divisible by 400
+    expect(isRealDate(1900, 2, 29)).toBe(false); // divisible by 100
+    expect(isRealDate(2024, 2, 29)).toBe(true);
+    expect(isRealDate(2023, 2, 29)).toBe(false);
+    expect(isRealDate(2023, 4, 31)).toBe(false);
+    expect(isRealDate(2023, 12, 31)).toBe(true);
+    expect(isRealDate(2023, 13, 1)).toBe(false);
+    expect(isRealDate(2023, 0, 10)).toBe(false);
+    expect(isRealDate(2023, 1, 0)).toBe(false);
+  });
+});
+
+describe("isValidUzPinfl (official 7-3-1 checksum + structure)", () => {
+  it("accepts valid PINFLs", () => {
+    expect(isValidUzPinfl("31210932040247")).toBe(true); // worked example, CM resolution No. 177
+    expect(isValidUzPinfl("42502870304564")).toBe(true);
+    expect(isValidUzPinfl("60101050901236")).toBe(true);
+    expect(isValidUzPinfl("3 121093 204 024 7")).toBe(true);
+  });
+  it("uses the century from the first digit (leap years, 1800s)", () => {
+    expect(isValidUzPinfl("52902001234561")).toBe(true);  // 29.02.2000
+    expect(isValidUzPinfl("52902011234568")).toBe(false); // 29.02.2001, checksum correct
+    expect(isValidUzPinfl("10101991234568")).toBe(true);  // 01.01.1899
+  });
+  it("rejects a wrong check digit, first digit outside 1-6, impossible date", () => {
+    expect(isValidUzPinfl("31210932040248")).toBe(false);
+    expect(isValidUzPinfl("71210932040245")).toBe(false); // checksum correct, first digit 7
+    expect(isValidUzPinfl("33002902040249")).toBe(false); // checksum correct, 30.02.1990
+  });
+  it("rejects wrong length, empty, nullish", () => {
+    expect(isValidUzPinfl("3121093204024")).toBe(false);
+    expect(isValidUzPinfl("")).toBe(false);
+    expect(isValidUzPinfl(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe("isValidUzInn (format only — no public checksum)", () => {
+  it("accepts any 9-digit value, raw or grouped", () => {
+    expect(isValidUzInn("207086151")).toBe(true);
+    expect(isValidUzInn("200833707")).toBe(true);
+    expect(isValidUzInn("313 296 186")).toBe(true);
+  });
+  it("rejects wrong length, empty, nullish", () => {
+    expect(isValidUzInn("20708615")).toBe(false);
+    expect(isValidUzInn("2070861510")).toBe(false);
+    expect(isValidUzInn("")).toBe(false);
+    expect(isValidUzInn(null as unknown as string)).toBe(false);
   });
 });
