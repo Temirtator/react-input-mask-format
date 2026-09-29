@@ -120,6 +120,10 @@ describe("MaskUtils prefix-aware input", () => {
     expect(utils.formatValue("+998901234567")).toBe("+998 (90) 123-45-67");
   });
 
+  it("formatValue keeps the last characters of an overflowing unprefixed value", () => {
+    expect(phone().formatValue("9989012345678")).toBe("+998 (01) 234-56-78");
+  });
+
   it("masks without a significant prefix are unchanged", () => {
     expect(new MaskUtils({ mask: "99/99/9999", maskPlaceholder: "_" }).formatValue("12345678"))
       .toBe("12/34/5678");

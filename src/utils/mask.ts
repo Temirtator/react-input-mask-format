@@ -123,6 +123,7 @@ export default class MaskUtils {
   };
 
   // Indices of characters in `string` that could fill some editable position
+  // (`transform` must be pure: it may be called for several positions)
   getFillingCharacterIndices = (string: string): number[] => {
     const { mask } = this.maskOptions;
     const indices: number[] = [];
@@ -149,9 +150,19 @@ export default class MaskUtils {
     return !!prefix && /[0-9A-Za-z]/.test(prefix);
   };
 
-  // Text entered at the start of a prefixed mask that has more filling characters
+  // Text entered at or inside the prefix (position <= prefix length) of a prefixed mask that has more filling characters
   // than the mask has slots carries its own country/trunk prefix
   // ("+998 90 123 45 67", "8 912 …", "0555 …"): keep only the last characters that fit.
+  // Replacing text from inside a significant prefix (e.g. select all + paste) inserts after the
+  // prefix, unless the user is typing the prefix itself (first char equals the prefix char there).
+  shouldInsertAfterPrefix = (string: string, position: number, wasTrimmed: boolean): boolean => {
+    const { prefix } = this.maskOptions;
+    if (!string || !this.hasSignificantPrefix() || position >= prefix!.length) {
+      return false;
+    }
+    return wasTrimmed || string[0] !== prefix![position];
+  };
+
   trimOverflowingPrefix = (string: string, position: number): string => {
     const { prefix } = this.maskOptions;
     if (!this.hasSignificantPrefix() || position > prefix!.length) {
@@ -321,16 +332,20 @@ export default class MaskUtils {
     let enteredString = "";
     let formattedEnteredStringLength = 0;
     let removedLength = 0;
+    let insertAfterPrefix = false;
     let cursorPosition = Math.min(previousSelection.start!, selection.start!);
 
     if (selection.end! > previousSelection.start!) {
-      enteredString = this.trimOverflowingPrefix(
-        newValue.slice(previousSelection.start!, selection.end!),
-        cursorPosition
+      const raw = newValue.slice(previousSelection.start!, selection.end!);
+      enteredString = this.trimOverflowingPrefix(raw, cursorPosition);
+      insertAfterPrefix = this.shouldInsertAfterPrefix(
+        enteredString,
+        cursorPosition,
+        enteredString !== raw
       );
       formattedEnteredStringLength = this.getStringFillingLengthAtPosition(
         enteredString,
-        cursorPosition
+        insertAfterPrefix ? prefix!.length : cursorPosition
       );
       if (!formattedEnteredStringLength) {
         removedLength = 0;
@@ -351,6 +366,10 @@ export default class MaskUtils {
           : this.getLeftEditablePosition(selection.start!))!;
       }
       newValue = this.clearRange(newValue, cursorPosition, removedLength);
+    }
+
+    if (insertAfterPrefix) {
+      cursorPosition = prefix!.length;
     }
 
     newValue = this.insertStringAtPosition(
