@@ -114,7 +114,7 @@ const PLATE_RE = new RegExp(
 );
 
 export function isValidRuPlate(value: string): boolean {
-  const s = (value ?? "").replace(/\s+/g, "").split("").map(toRuPlateChar).join("");
+  const s = (value ?? "").replace(/\s+/g, "").replace(/_+$/, "").split("").map(toRuPlateChar).join("");
   const m = PLATE_RE.exec(s);
   if (!m) {
     return false;

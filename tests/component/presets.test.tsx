@@ -5,6 +5,8 @@ import userEvent from "@testing-library/user-event";
 import InputMask from "../../src/index";
 import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone } from "../../src/presets";
 
+const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+
 describe("preset spread onto InputMask", () => {
   it("kzIban uppercases typed account letters", async () => {
     const user = userEvent.setup();
@@ -50,17 +52,18 @@ describe("Russia presets on InputMask", () => {
     expect(input.value).toBe("А 123 ВС 777");
   });
 
-  it("ruPlate KNOWN LIMITATION: deleting a middle character drops the tail", async () => {
+  it("ruPlate: deleting a middle character leaves a gap and keeps the rest", async () => {
     const user = userEvent.setup();
     render(<InputMask {...ruPlate} data-testid="plate" />);
     const input = screen.getByTestId("plate") as HTMLInputElement;
     await user.click(input);
     await user.keyboard("a123bc77");
     input.setSelectionRange(3, 3);
+    await nextFrame();
     await user.keyboard("{Backspace}");
-    // README documents this (no placeholder => rest shifts left, misfit chars dropped);
-    // a core fix is a follow-up.
-    expect(input.value).toBe("А 237 ");
+    expect(input.value).toBe("А _23 ВС 77_");
+    await user.keyboard("9");
+    expect(input.value).toBe("А 923 ВС 77_");
   });
 
   it("ruPlate: partial 2-digit region survives blur (controlled)", async () => {
@@ -70,7 +73,7 @@ describe("Russia presets on InputMask", () => {
     await user.click(input);
     await user.keyboard("a123bc77");
     await user.click(screen.getByRole("button", { name: "next" }));
-    expect(input.value).toBe("А 123 ВС 77");
+    expect(input.value).toBe("А 123 ВС 77_");
   });
 
   it("ruPlate: partial 2-digit region survives blur (uncontrolled)", async () => {
@@ -80,7 +83,7 @@ describe("Russia presets on InputMask", () => {
     await user.click(input);
     await user.keyboard("a123bc77");
     await user.click(screen.getByRole("button", { name: "next" }));
-    expect(input.value).toBe("А 123 ВС 77");
+    expect(input.value).toBe("А 123 ВС 77_");
   });
 
   it("ruPhone: a typed leading 7 is skipped", async () => {
