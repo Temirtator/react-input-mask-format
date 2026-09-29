@@ -3,9 +3,15 @@ import { createRoot } from "react-dom/client";
 import InputMask, { useMask } from "react-input-mask-format";
 import { extendedFormatChars } from "react-input-mask-format";
 import {
-  card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal, MaskPreset
+  card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
+  ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
+  ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport, MaskPreset
 } from "react-input-mask-format/presets";
-import { isValidIin, isValidBin, isValidKzIban, luhn } from "react-input-mask-format/validators";
+import {
+  isValidIin, isValidBin, isValidKzIban, luhn,
+  isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp,
+  isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate
+} from "react-input-mask-format/validators";
 import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
 import { TimeFormat, useTimeFormat } from "react-input-mask-format/time";
 
@@ -85,7 +91,39 @@ function TimeHookField() {
   return <input ref={ref} data-testid="time-hook" style={fieldStyle} />;
 }
 
+type Country = "kz" | "ru";
+const COUNTRIES: { id: Country; label: string }[] = [
+  { id: "kz", label: "KZ" },
+  { id: "ru", label: "RU" }
+];
+const DEMO_BIK = "044525225";
+
+function CountryTabs({ value, onChange }: { value: Country; onChange: (c: Country) => void }) {
+  return (
+    <div role="tablist" style={{ display: "flex", gap: 6 }}>
+      {COUNTRIES.map(c => (
+        <button
+          key={c.id}
+          type="button"
+          role="tab"
+          aria-selected={value === c.id}
+          data-testid={`country-${c.id}`}
+          onClick={() => onChange(c.id)}
+          style={{
+            fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, cursor: "pointer",
+            padding: "4px 12px", borderRadius: 20, border: `1px solid ${value === c.id ? gold : line}`,
+            background: value === c.id ? gold : "transparent", color: value === c.id ? bg : dim
+          }}
+        >
+          {c.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function App() {
+  const [country, setCountry] = useState<Country>("kz");
   const [hex, setHex] = useState("");
   const [up, setUp] = useState("");
   const [amount, setAmount] = useState<number | undefined>(undefined);
@@ -97,20 +135,44 @@ function App() {
         <header>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>react-input-mask-format</span>
-            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.3</span>
+            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.4</span>
           </div>
           <h1 style={{ fontSize: 26, margin: "10px 0 4px" }}>General-purpose input masks for React — with batteries</h1>
-          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · Kazakhstan is the flagship pack.</p>
+          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia.</p>
         </header>
 
         <section style={{ display: "grid", gap: 9 }}>
-          <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Kazakhstan preset pack · /presets</div>
-          <Row label="Телефон" sub="kzPhone"><PresetField preset={kzPhone} testid="kzPhone" /></Row>
-          <Row label="ИИН" sub="kzIin · checksum"><PresetField preset={kzIin} testid="iin" validate={isValidIin} /></Row>
-          <Row label="БИН" sub="kzBin · checksum"><PresetField preset={kzBin} testid="bin" validate={isValidBin} /></Row>
-          <Row label="IBAN" sub="kzIban · UPPER · mod-97"><PresetField preset={kzIban} testid="iban" validate={isValidKzIban} /></Row>
-          <Row label="Госномер" sub="kzPlate · UPPER"><PresetField preset={kzPlate} testid="plate" /></Row>
-          <Row label="Индекс" sub="kzPostal"><PresetField preset={kzPostal} testid="postal" /></Row>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Country preset packs · /presets</div>
+            <CountryTabs value={country} onChange={setCountry} />
+          </div>
+          {country === "kz" && (
+            <>
+              <Row label="Телефон" sub="kzPhone"><PresetField preset={kzPhone} testid="kzPhone" /></Row>
+              <Row label="ИИН" sub="kzIin · checksum"><PresetField preset={kzIin} testid="iin" validate={isValidIin} /></Row>
+              <Row label="БИН" sub="kzBin · checksum"><PresetField preset={kzBin} testid="bin" validate={isValidBin} /></Row>
+              <Row label="IBAN" sub="kzIban · UPPER · mod-97"><PresetField preset={kzIban} testid="iban" validate={isValidKzIban} /></Row>
+              <Row label="Госномер" sub="kzPlate · UPPER"><PresetField preset={kzPlate} testid="plate" /></Row>
+              <Row label="Индекс" sub="kzPostal"><PresetField preset={kzPostal} testid="postal" /></Row>
+            </>
+          )}
+          {country === "ru" && (
+            <>
+              <Row label="Телефон" sub="ruPhone"><PresetField preset={ruPhone} testid="ruPhone" /></Row>
+              <Row label="ИНН физлица" sub="ruInnPerson · checksum"><PresetField preset={ruInnPerson} testid="ruInnPerson" validate={isValidRuInn} /></Row>
+              <Row label="ИНН юрлица" sub="ruInnCompany · checksum"><PresetField preset={ruInnCompany} testid="ruInnCompany" validate={isValidRuInn} /></Row>
+              <Row label="СНИЛС" sub="ruSnils · checksum"><PresetField preset={ruSnils} testid="ruSnils" validate={isValidRuSnils} /></Row>
+              <Row label="ОГРН" sub="ruOgrn · checksum"><PresetField preset={ruOgrn} testid="ruOgrn" validate={isValidRuOgrn} /></Row>
+              <Row label="ОГРНИП" sub="ruOgrnip · checksum"><PresetField preset={ruOgrnip} testid="ruOgrnip" validate={isValidRuOgrnip} /></Row>
+              <Row label="КПП" sub="ruKpp · UPPER"><PresetField preset={ruKpp} testid="ruKpp" validate={isValidRuKpp} /></Row>
+              <Row label="БИК" sub="ruBik"><PresetField preset={ruBik} testid="ruBik" validate={isValidRuBik} /></Row>
+              <Row label="Р/счёт" sub={`ruAccount · key vs БИК ${DEMO_BIK}`}><PresetField preset={ruAccount} testid="ruAccount" validate={v => isValidRuAccount(v, DEMO_BIK)} /></Row>
+              <Row label="IBAN" sub="ruIban · mod-97"><PresetField preset={ruIban} testid="ruIban" validate={isValidRuIban} /></Row>
+              <Row label="Госномер" sub="ruPlate · Latin→Кириллица"><PresetField preset={ruPlate} testid="ruPlate" validate={isValidRuPlate} /></Row>
+              <Row label="Индекс" sub="ruPostal"><PresetField preset={ruPostal} testid="ruPostal" /></Row>
+              <Row label="Паспорт" sub="ruPassport"><PresetField preset={ruPassport} testid="ruPassport" /></Row>
+            </>
+          )}
           <Row label="Карта" sub="card · Luhn"><PresetField preset={card} testid="card" validate={luhn} /></Row>
         </section>
 

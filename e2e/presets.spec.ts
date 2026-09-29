@@ -23,3 +23,30 @@ test("hex token accepts hex digits only", async ({ page }) => {
   await input.pressSequentially("1ag2");
   await expect(input).toHaveValue("1a2___"); // 'g' rejected; remaining positions filled with placeholder
 });
+
+test("country switcher shows the Russia pack", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-ru").click();
+  await expect(page.getByTestId("ruPhone")).toBeVisible();
+  await expect(page.getByTestId("iin")).toHaveCount(0);
+});
+
+test("ruPlate converts Latin typing to Cyrillic and keeps a 2-digit region on blur", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-ru").click();
+  const input = page.getByTestId("ruPlate");
+  await input.click();
+  await input.pressSequentially("a123bc77");
+  await expect(input).toHaveValue("А 123 ВС 77");
+  await page.getByTestId("ruPostal").click();
+  await expect(input).toHaveValue("А 123 ВС 77");
+});
+
+test("ruSnils formats typed digits", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-ru").click();
+  const input = page.getByTestId("ruSnils");
+  await input.click();
+  await input.pressSequentially("11223344595");
+  await expect(input).toHaveValue("112-233-445 95");
+});
