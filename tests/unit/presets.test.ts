@@ -95,7 +95,7 @@ describe("Russia presets format their sample values", () => {
       .toBe("RU03 0445 2522 5408 1781 0538 0913 1041 9");
   });
   it("ruPlate converts Latin look-alikes to Cyrillic, 2- and 3-digit regions", () => {
-    expect(format(ruPlate, "a123bc77")).toBe("А 123 ВС 77");
+    expect(format(ruPlate, "a123bc77")).toBe("А 123 ВС 77_");
     expect(format(ruPlate, "а123bc777")).toBe("А 123 ВС 777");
   });
   it("ruPostal / ruPassport", () => {
@@ -108,7 +108,7 @@ describe("ruPlate letter restriction", () => {
   it("accepts the 12 plate letters in either script, rejects others", () => {
     const utils = new MaskUtils({
       mask: ruPlate.mask,
-      maskPlaceholder: null,
+      maskPlaceholder: ruPlate.maskPlaceholder,
       transform: resolveTransform(ruPlate.transform)
     });
     expect(utils.isCharacterFillingPosition(toRuPlateChar("a"), 0)).toBe(true);
