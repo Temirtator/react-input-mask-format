@@ -164,6 +164,19 @@ describe("isValidRuAccount (control key with BIK)", () => {
   it("accepts a correspondent account (30101…) using the RKC prefix", () => {
     expect(isValidRuAccount("30101810400000000225", "044525225")).toBe(true);
   });
+  it("accepts treasury single accounts (40102…) keyed with the RKC prefix", () => {
+    expect(isValidRuAccount("40102810445370000059", "017003983")).toBe(true);
+    expect(isValidRuAccount("40102810545370000003", "004525988")).toBe(true);
+  });
+  it("accepts treasury accounts (03…) by structure — they carry no control key", () => {
+    expect(isValidRuAccount("03100643000000018500", "017003983")).toBe(true);
+    expect(isValidRuAccount("03100643000000017300", "004525988")).toBe(true);
+    expect(isValidRuAccount("0310064300000001850", "017003983")).toBe(false); // 19 digits
+    expect(isValidRuAccount("03100643000000018500", "31700398")).toBe(false); // bad BIK
+  });
+  it("still rejects a 40102… account with a wrong key", () => {
+    expect(isValidRuAccount("40102810445370000058", "017003983")).toBe(false);
+  });
   it("rejects wrong key, wrong BIK, bad lengths, empty", () => {
     expect(isValidRuAccount("40602810800000000025", "049805746")).toBe(false);
     expect(isValidRuAccount("40817810538091310419", "044525974")).toBe(false); // other bank's BIK (verified to fail)

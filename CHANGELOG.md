@@ -12,6 +12,13 @@ Additive release — no migration required.
 ### Changed
 - Presets and validators sources are organised per country; public imports are unchanged.
 
+## 2.3.0
+
+Additive release — no migration required.
+
+### Added
+- `react-input-mask-format/time` — HH:MM (24h) masked input with clamping: `<TimeFormat>` component, `useTimeFormat` ref hook, `formatTime` / `parseTime` helpers.
+
 ## 2.2.0
 
 Additive release — no migration required.
