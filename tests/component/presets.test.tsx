@@ -2,8 +2,9 @@ import React from "react";
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import InputMask from "../../src/index";
-import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone } from "../../src/presets";
+import InputMask, { useMask } from "../../src/index";
+import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone } from "../../src/presets";
+import type { MaskPreset } from "../../src/presets";
 
 describe("preset spread onto InputMask", () => {
   it("kzIban uppercases typed account letters", async () => {
@@ -112,15 +113,36 @@ describe("Uzbekistan presets on InputMask", () => {
     expect(input.value).toBe("+998 (90) 123-45-67");
   });
 
-  it("uzPhone KNOWN LIMITATION: pasting an international +998 number misreads the prefix", async () => {
-    // The core does not consume the mask's +998 prefix on paste; the 9s fill the operator code.
-    // README documents it; a core fix is planned.
+  it("uzPhone: pasting an international or domestic-8 number", async () => {
+    const user = userEvent.setup();
+    for (const pasted of ["+998 90 123 45 67", "998901234567", "8 90 123 45 67"]) {
+      const { unmount } = render(<InputMask {...uzPhone} data-testid="uz-phone" />);
+      const input = screen.getByTestId("uz-phone") as HTMLInputElement;
+      await user.click(input);
+      await user.paste(pasted);
+      expect(input.value).toBe("+998 (90) 123-45-67");
+      unmount();
+    }
+  });
+
+  it("uzPhone KNOWN LIMITATION: typing the country code key by key fills the operator code", async () => {
+    // Without look-ahead a typed 9 cannot be told apart from an operator-code 9. README documents it.
     const user = userEvent.setup();
     render(<InputMask {...uzPhone} data-testid="uz-phone" />);
     const input = screen.getByTestId("uz-phone") as HTMLInputElement;
     await user.click(input);
-    await user.paste("+998 90 123 45 67");
+    await user.keyboard("998901234567");
     expect(input.value).toBe("+998 (99) 890-12-34");
+  });
+
+  it("uzPhone: paste after typing keeps the typed digits", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...uzPhone} data-testid="uz-phone" />);
+    const input = screen.getByTestId("uz-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("90");
+    await user.paste("1234567");
+    expect(input.value).toBe("+998 (90) 123-45-67");
   });
 
   it("uzPhone: a full international value set programmatically formats correctly", () => {
@@ -166,13 +188,46 @@ describe("Kyrgyzstan presets on InputMask", () => {
     expect(input.value).toBe("+996 (995) 12-34-56");
   });
 
-  it("kgPhone KNOWN LIMITATION: pasting an international +996 number misreads the prefix", async () => {
-    // The core does not consume the mask's +996 prefix on paste; README documents it; a core fix is planned.
+  it("kgPhone: pasting an international number", async () => {
     const user = userEvent.setup();
     render(<InputMask {...kgPhone} data-testid="kg-phone" />);
     const input = screen.getByTestId("kg-phone") as HTMLInputElement;
     await user.click(input);
     await user.paste("+996 555 12 34 56");
-    expect(input.value).toBe("+996 (996) 55-51-23");
+    expect(input.value).toBe("+996 (555) 12-34-56");
+  });
+});
+
+function HookedInput({ preset }: { preset: MaskPreset }) {
+  const ref = useMask(preset);
+  return <input ref={ref} data-testid="hooked" />;
+}
+
+describe("prefix-aware paste across presets", () => {
+  const cases: Array<[string, MaskPreset, string, string]> = [
+    ["kzPhone international", kzPhone, "+7 701 123 45 67", "+7 (701) 123-45-67"],
+    ["kzPhone domestic 8", kzPhone, "8 701 123 45 67", "+7 (701) 123-45-67"],
+    ["ruPhone domestic 8", ruPhone, "89123456789", "+7 (912) 345-67-89"],
+    ["ruPhone international", ruPhone, "+7 912 345-67-89", "+7 (912) 345-67-89"],
+    ["kzIban full IBAN", kzIban, "KZ86 125K ZT50 0410 0100", "KZ86 125K ZT50 0410 0100"]
+  ];
+  for (const [name, preset, pasted, expected] of cases) {
+    it(name, async () => {
+      const user = userEvent.setup();
+      render(<InputMask {...preset} data-testid="p" />);
+      const input = screen.getByTestId("p") as HTMLInputElement;
+      await user.click(input);
+      await user.paste(pasted);
+      expect(input.value).toBe(expected);
+    });
+  }
+
+  it("useMask gets the same fix", async () => {
+    const user = userEvent.setup();
+    render(<HookedInput preset={uzPhone} />);
+    const input = screen.getByTestId("hooked") as HTMLInputElement;
+    await user.click(input);
+    await user.paste("+998 90 123 45 67");
+    expect(input.value).toBe("+998 (90) 123-45-67");
   });
 });

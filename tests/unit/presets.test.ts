@@ -66,10 +66,8 @@ describe("Russia presets format their sample values", () => {
     expect(format(ruPhone, "+79123456789")).toBe("+7 (912) 345-67-89");
     expect(format(ruPhone, "+7 (912) 345-67-89")).toBe("+7 (912) 345-67-89");
   });
-  it("ruPhone KNOWN LIMITATION: leading trunk 8 is taken as the area code", () => {
-    // 8xx is a real Russian area code (812 St Petersburg) so 8 cannot be rejected.
-    // README documents: enter the 10-digit number without the leading 8.
-    expect(format(ruPhone, "89123456789")).toBe("+7 (891) 234-56-78");
+  it("ruPhone drops a leading trunk 8 when the value has 11 digits", () => {
+    expect(format(ruPhone, "89123456789")).toBe("+7 (912) 345-67-89");
   });
   it("ruInnPerson / ruInnCompany", () => {
     expect(format(ruInnPerson, "500100732259")).toBe("500100732259");
@@ -128,10 +126,8 @@ describe("Uzbekistan presets format their sample values", () => {
     expect(format(uzPhone, "+998901234567")).toBe("+998 (90) 123-45-67");
     expect(format(uzPhone, "998712002700")).toBe("+998 (71) 200-27-00");
   });
-  it("uzPhone KNOWN LIMITATION: bare national digits starting with 9 as a value", () => {
-    // formatValue matches the leading 9 against the literal 9 of +998.
-    // Typing/pasting are unaffected (component tests); README tells users to pass +998….
-    expect(format(uzPhone, "901234567")).toBe("+998 (01) 234-56-7_");
+  it("uzPhone places bare national digits after the +998 prefix", () => {
+    expect(format(uzPhone, "901234567")).toBe("+998 (90) 123-45-67");
   });
   it("uzPinfl / uzInn / uzMfo / uzPostal", () => {
     expect(format(uzPinfl, "31210932040247")).toBe("31210932040247");
@@ -157,9 +153,8 @@ describe("Kyrgyzstan presets format their sample values", () => {
     expect(format(kgPhone, "+996555123456")).toBe("+996 (555) 12-34-56");
     expect(format(kgPhone, "0555123456")).toBe("+996 (555) 12-34-56");
   });
-  it("kgPhone KNOWN LIMITATION: bare national digits starting with 9 as a value", () => {
-    // formatValue matches the leading 9 against the literal 9 of +996; README tells users to pass +996….
-    expect(format(kgPhone, "995123456")).toBe("+996 (512) 34-56-__");
+  it("kgPhone places bare national digits after the +996 prefix", () => {
+    expect(format(kgPhone, "995123456")).toBe("+996 (995) 12-34-56");
   });
   it("kgInnPerson / kgInnCompany / kgBik / kgPostal", () => {
     expect(format(kgInnPerson, "21503199001237")).toBe("21503199001237");
