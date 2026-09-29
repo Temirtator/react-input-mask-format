@@ -58,6 +58,7 @@ describe("Russia presets on InputMask", () => {
     await user.click(input);
     await user.keyboard("a123bc77");
     input.setSelectionRange(3, 3);
+    await selectionSettled();
     await user.keyboard("{Backspace}");
     // README documents this (no placeholder => rest shifts left, misfit chars dropped);
     // a core fix is a follow-up.
@@ -198,6 +199,9 @@ describe("Kyrgyzstan presets on InputMask", () => {
   });
 });
 
+// The mask tracks the selection in a requestAnimationFrame loop, so let it observe setSelectionRange.
+const selectionSettled = () => new Promise<void>((resolve) => setTimeout(resolve, 50));
+
 function HookedInput({ preset }: { preset: MaskPreset }) {
   const ref = useMask(preset);
   return <input ref={ref} data-testid="hooked" />;
@@ -221,6 +225,65 @@ describe("prefix-aware paste across presets", () => {
       expect(input.value).toBe(expected);
     });
   }
+
+  it("uzPhone filled: select all + paste an international number", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...uzPhone} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("901234567");
+    input.setSelectionRange(0, input.value.length);
+    await selectionSettled();
+    await user.paste("+998 91 765 43 21");
+    expect(input.value).toBe("+998 (91) 765-43-21");
+  });
+
+  it("kgPhone filled: select all + paste an international number", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...kgPhone} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("555123456");
+    input.setSelectionRange(0, input.value.length);
+    await selectionSettled();
+    await user.paste("+996 700 98 76 54");
+    expect(input.value).toBe("+996 (700) 98-76-54");
+  });
+
+  it("uzPhone filled: select all + paste a bare national number", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...uzPhone} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("901234567");
+    input.setSelectionRange(0, input.value.length);
+    await selectionSettled();
+    await user.paste("91 765 43 21");
+    expect(input.value).toBe("+998 (91) 765-43-21");
+  });
+
+  it("uzPhone empty: paste at cursor 0", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...uzPhone} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    await user.click(input);
+    input.setSelectionRange(0, 0);
+    await selectionSettled();
+    await user.paste("+998 91 765 43 21");
+    expect(input.value).toBe("+998 (91) 765-43-21");
+  });
+
+  it("ruPhone filled: select all + paste an international number", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...ruPhone} data-testid="p" />);
+    const input = screen.getByTestId("p") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("9123456789");
+    input.setSelectionRange(0, input.value.length);
+    await selectionSettled();
+    await user.paste("+7 912 345-67-89");
+    expect(input.value).toBe("+7 (912) 345-67-89");
+  });
 
   it("useMask gets the same fix", async () => {
     const user = userEvent.setup();
