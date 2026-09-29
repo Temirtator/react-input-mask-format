@@ -17,6 +17,16 @@
   select-all + typing or pasting a national number works; typing the country code key by key over a selection
   (`9`, `9`, `8`, …) is read as the national number.
 
+### Upgrade notes
+- Pasted text and values longer than a prefixed mask keep their **last** characters.
+- Replacing the whole value (select all + paste/type) inserts after the prefix; typing the country code
+  key by key over a selection is read as the national number.
+- The legacy v2 `beforeMaskedValueChange` callback now receives `userInput` with the country/trunk prefix
+  already removed (e.g. `"91 765 43 21"` for a pasted `"+998 91 765 43 21"`).
+- A controlled value that consists only of digits is read as "prefix digits + what was typed" when it
+  starts with the prefix digits (`"998901…"`), so a bare national number that itself starts with them
+  (e.g. a Kazakh `"7771234567"`) should be passed with the country code (`"+77771234567"`) or formatted.
+
 ## 2.6.0
 
 Additive release — no migration required.

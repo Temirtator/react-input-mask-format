@@ -18,6 +18,7 @@ A maintained fork of [react-input-mask](https://github.com/sanniassin/react-inpu
   already contain the country code or a domestic trunk prefix: `+998 90 123 45 67`, `8 912 345-67-89`,
   `0555 12 34 56` all land in the right slots. Setting `value` to the bare national number
   (`"901234567"`) or an international one (`"+998901234567"`) also formats correctly.
+- Replacing the whole value (select all + paste or type a national number) now lands after the prefix.
 
 No migration needed. For masks with a fixed prefix, pasted text that is longer than the mask
 now keeps its **last** characters (the prefix part is dropped) instead of its first ones.
@@ -190,6 +191,9 @@ PRs adding other countries are welcome.
 | `kzIban` | `KZ99 999* **** **** ****` (uppercase) | `KZ86 125K ZT50 0410 0100` |
 | `kzPlate` | `123 ABC 02` (letters `ABCEHKMNOPTXY`, uppercase) | `123 ABC 02` |
 | `kzPostal` | `999999` | `050000` |
+
+Note: for `kzPhone`, pass programmatic values with the country code (`"+77771234567"`) or formatted —
+a bare `"7771234567"` is ambiguous with a partially typed `"77…"` and is read that way.
 
 ### Russia
 

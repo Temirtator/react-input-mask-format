@@ -147,6 +147,14 @@ describe("Uzbekistan presets format their sample values", () => {
   });
 });
 
+describe("kzPhone ambiguous digits-only values", () => {
+  it("kzPhone KNOWN LIMITATION: a 10-digit national value starting with 77 is read as prefix + partial", () => {
+    // Ambiguous with "+7 7" + 8 typed digits (digits-only controlled state); same as 2.6.0. README documents it.
+    expect(format(kzPhone, "7771234567")).toBe("+7 (771) 234-56-7_");
+    expect(format(kzPhone, "+77771234567")).toBe("+7 (777) 123-45-67");
+  });
+});
+
 describe("Kyrgyzstan presets format their sample values", () => {
   it("kgPhone formats national, international and domestic-0 numbers", () => {
     expect(format(kgPhone, "555123456")).toBe("+996 (555) 12-34-56");

@@ -155,15 +155,14 @@ export default class MaskUtils {
   // ("+998 90 123 45 67", "8 912 …", "0555 …"): keep only the last characters that fit.
   // Replacing text from inside a significant prefix (e.g. select all + paste) inserts after the
   // prefix, unless the user is typing the prefix itself (first char equals the prefix char there,
-  // case-insensitively after transform) or the text fills nothing after the prefix.
+  // case-insensitively) or the text fills nothing after the prefix.
   shouldInsertAfterPrefix = (string: string, position: number, wasTrimmed: boolean): boolean => {
     const { prefix } = this.maskOptions;
     if (!string || !this.hasSignificantPrefix() || position >= prefix!.length) {
       return false;
     }
     if (!wasTrimmed) {
-      const first = this.transform ? this.transform(string[0], position) : string[0];
-      if (first.toUpperCase() === prefix![position].toUpperCase()) {
+      if (string[0].toUpperCase() === prefix![position].toUpperCase()) {
         return false; // the user is typing the prefix itself
       }
     }
@@ -184,9 +183,17 @@ export default class MaskUtils {
     return string.slice(indices[indices.length - slots]);
   };
 
-  // A raw value that does not start with the mask prefix and holds at least as many
-  // filling characters as the mask has slots ("901234567", "+998901234567",
-  // "89123456789") is placed after the prefix, keeping its last characters.
+  // Letters/digits of the prefix: "998" for "+998 (", "77" for "+7 (7", "KZ" for "KZ"
+  getPrefixSignificantCharacters = (): string => {
+    return (this.maskOptions.prefix || "").replace(/[^0-9A-Za-z]/g, "");
+  };
+
+  // A raw value that does not start with the literal mask prefix is placed after the prefix:
+  // - if its filling characters start with the prefix's letters/digits ("998…", "+998…", "kz…"),
+  //   those are dropped and the rest is used (its last N characters if it overflows);
+  // - otherwise, if it holds at least N filling characters ("901234567", "89123456789"),
+  //   its last N characters are used.
+  // Anything else keeps the old behaviour (null).
   normalizeUnprefixedValue = (value: string): string | null => {
     const { prefix } = this.maskOptions;
     if (!this.hasSignificantPrefix() || !value || value.startsWith(prefix!)) {
@@ -194,6 +201,19 @@ export default class MaskUtils {
     }
     const slots = this.countEditablePositionsFrom(prefix!.length);
     const indices = this.getFillingCharacterIndices(value);
+    const significant = this.getPrefixSignificantCharacters();
+    const startsWithPrefix =
+      indices.length >= significant.length &&
+      significant
+        .split("")
+        .every((character, k) => value[indices[k]].toUpperCase() === character.toUpperCase());
+    if (startsWithPrefix) {
+      const rest = indices.slice(significant.length);
+      if (rest.length === 0) {
+        return "";
+      }
+      return value.slice(rest[Math.max(0, rest.length - slots)]);
+    }
     if (indices.length < slots) {
       return null;
     }
@@ -378,6 +398,9 @@ export default class MaskUtils {
 
     if (insertAfterPrefix) {
       cursorPosition = prefix!.length;
+      if (!newValue.startsWith(prefix!)) {
+        newValue = prefix! + newValue.slice(prefix!.length);
+      }
     }
 
     newValue = this.insertStringAtPosition(
