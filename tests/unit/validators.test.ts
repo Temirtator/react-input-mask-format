@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { luhn, isValidIin, isValidBin, isValidKzIban } from "../../src/validators";
+import { digitsOnly, remainder, isIbanChecksumValid } from "../../src/validators/shared";
 
 describe("luhn", () => {
   it("accepts valid card numbers (raw and formatted)", () => {
@@ -50,5 +51,23 @@ describe("isValidKzIban (ISO 7064 MOD-97-10)", () => {
     expect(isValidKzIban("KZ8612KZT5004100100")).toBe(false); // 18 chars
     expect(isValidKzIban("DE86125KZT5004100100")).toBe(false);
     expect(isValidKzIban("")).toBe(false);
+  });
+});
+
+describe("shared helpers", () => {
+  it("digitsOnly strips non-digits and tolerates nullish", () => {
+    expect(digitsOnly("112-233-445 95")).toBe("11223344595");
+    expect(digitsOnly(undefined as unknown as string)).toBe("");
+    expect(digitsOnly(null as unknown as string)).toBe("");
+  });
+  it("remainder handles numbers longer than 2^53", () => {
+    expect(remainder("30450011600015", 13)).toBe(7);
+    expect(remainder("12512345678934", 97)).toBe(0);
+    expect(remainder("", 11)).toBe(0);
+  });
+  it("isIbanChecksumValid runs MOD-97 on compact uppercase IBANs", () => {
+    expect(isIbanChecksumValid("KZ86125KZT5004100100")).toBe(true);
+    expect(isIbanChecksumValid("RU0304452522540817810538091310419")).toBe(true);
+    expect(isIbanChecksumValid("KZ00125KZT5004100100")).toBe(false);
   });
 });
