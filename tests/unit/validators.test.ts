@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip } from "../../src/validators";
+import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate } from "../../src/validators";
 import { digitsOnly, remainder, isIbanChecksumValid } from "../../src/validators/shared";
 
 describe("luhn", () => {
@@ -134,5 +134,78 @@ describe("isValidRuOgrn / isValidRuOgrnip", () => {
     expect(isValidRuOgrnip("404500116000157")).toBe(false);
     expect(isValidRuOgrnip("30450011600015")).toBe(false);
     expect(isValidRuOgrnip(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe("isValidRuKpp / isValidRuBik (format only)", () => {
+  it("KPP: 9 chars, positions 5-6 digit or Latin A-Z", () => {
+    expect(isValidRuKpp("770701001")).toBe(true);
+    expect(isValidRuKpp("7707AB001")).toBe(true);
+    expect(isValidRuKpp("7707ab001")).toBe(true);
+    expect(isValidRuKpp("77AB01001")).toBe(false);
+    expect(isValidRuKpp("77070100")).toBe(false);
+    expect(isValidRuKpp("")).toBe(false);
+  });
+  it("BIK: 9 digits, first digit 0/1/2", () => {
+    expect(isValidRuBik("044525225")).toBe(true);
+    expect(isValidRuBik("149805746")).toBe(true);
+    expect(isValidRuBik("344525225")).toBe(false);
+    expect(isValidRuBik("04452522")).toBe(false);
+    expect(isValidRuBik(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe("isValidRuAccount (control key with BIK)", () => {
+  it("accepts settlement accounts", () => {
+    expect(isValidRuAccount("40602810700000000025", "049805746")).toBe(true); // CBR example
+    expect(isValidRuAccount("40817810538091310419", "044525225")).toBe(true);
+    expect(isValidRuAccount("40817 810 5 3809 1310419", "044525225")).toBe(true);
+  });
+  it("accepts a correspondent account (30101…) using the RKC prefix", () => {
+    expect(isValidRuAccount("30101810400000000225", "044525225")).toBe(true);
+  });
+  it("rejects wrong key, wrong BIK, bad lengths, empty", () => {
+    expect(isValidRuAccount("40602810800000000025", "049805746")).toBe(false);
+    expect(isValidRuAccount("40817810538091310419", "044525974")).toBe(false); // other bank's BIK (verified to fail)
+    expect(isValidRuAccount("4081781053809131041", "044525225")).toBe(false);
+    expect(isValidRuAccount("40817810538091310419", "04452522")).toBe(false);
+    expect(isValidRuAccount("", "")).toBe(false);
+  });
+});
+
+describe("isValidRuIban", () => {
+  it("accepts the SWIFT registry example raw and grouped", () => {
+    expect(isValidRuIban("RU0304452522540817810538091310419")).toBe(true);
+    expect(isValidRuIban("RU03 0445 2522 5408 1781 0538 0913 1041 9")).toBe(true);
+    expect(isValidRuIban("ru0304452522540817810538091310419")).toBe(true);
+  });
+  it("rejects wrong check digits, wrong country, wrong length, empty", () => {
+    expect(isValidRuIban("RU1704452522540817810538091310419")).toBe(false);
+    expect(isValidRuIban("KZ86125KZT5004100100")).toBe(false);
+    expect(isValidRuIban("RU030445252254081781053809131041")).toBe(false);
+    expect(isValidRuIban("")).toBe(false);
+  });
+});
+
+describe("isValidRuPlate", () => {
+  it("accepts 2- and 3-digit regions, Cyrillic or Latin look-alikes, any spacing", () => {
+    expect(isValidRuPlate("А 123 ВС 77")).toBe(true);
+    expect(isValidRuPlate("А123ВС777")).toBe(true);
+    expect(isValidRuPlate("a123bc77")).toBe(true);
+    expect(isValidRuPlate("а123bc777")).toBe(true);
+    expect(isValidRuPlate("Х 001 ХХ 01")).toBe(true);
+  });
+  it("rejects 000 digits, zero or leading-zero 3-digit regions, short regions", () => {
+    expect(isValidRuPlate("А 000 ВС 77")).toBe(false);
+    expect(isValidRuPlate("А 123 ВС 00")).toBe(false);
+    expect(isValidRuPlate("А 123 ВС 000")).toBe(false);
+    expect(isValidRuPlate("А 123 ВС 077")).toBe(false);
+    expect(isValidRuPlate("А 123 ВС 7")).toBe(false);
+  });
+  it("rejects letters outside the 12 allowed and empty input", () => {
+    expect(isValidRuPlate("Б 123 ВС 77")).toBe(false);
+    expect(isValidRuPlate("D 123 BC 77")).toBe(false);
+    expect(isValidRuPlate("")).toBe(false);
+    expect(isValidRuPlate(null as unknown as string)).toBe(false);
   });
 });
