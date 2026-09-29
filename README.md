@@ -219,9 +219,15 @@ Notes:
 | `uzPassport` | `aa9999999` (uppercase) | `AA1234567` |
 
 Notes:
-- `uzPhone`: typing and pasting work from an empty field. When you set the value
-  programmatically, pass the international (`+998901234567`) or formatted value —
-  bare national digits starting with `9` are matched against the `+998` prefix.
+- `uzPhone` takes the 9-digit national number (`90 123 45 67`): type or paste it without the country code.
+  Known limitations (a core fix is planned):
+  - pasting an international number (`+998 90 123 45 67`, `998901234567`) or a domestic `8 90 …` number
+    misreads the prefix — e.g. `+998 90 123 45 67` becomes `+998 (99) 890-12-34`;
+  - when setting `value` programmatically, pass the international form (`+998901234567`) or the formatted
+    value — bare national digits starting with `9` are misread (`"901234567"` renders `+998 (01) 234-56-7_`).
+    Store phones as `+998…`.
+- In the table the mask is shown as users see it; in source the country-code 9s are escaped
+  (`"+\\9\\98 (99) 999-99-99"`), because `9` is the digit token.
 - `uzPlate` / `uzPlateCompany` cover the standard individual and company plates;
   personalised plates (since 2026), diplomatic and foreign plates are not supported.
 - Uzbekistan is not in the IBAN registry; bank accounts are 20 digits plus a 5-digit MFO bank code.
