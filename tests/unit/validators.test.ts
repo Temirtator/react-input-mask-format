@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate } from "../../src/validators";
 import { digitsOnly, remainder, isIbanChecksumValid, isRealDate } from "../../src/validators/shared";
-import { isValidUzPinfl, isValidUzInn } from "../../src/validators";
+import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik } from "../../src/validators";
 
 describe("luhn", () => {
   it("accepts valid card numbers (raw and formatted)", () => {
@@ -273,5 +273,61 @@ describe("isValidUzInn (format only — no public checksum)", () => {
     expect(isValidUzInn("2070861510")).toBe(false);
     expect(isValidUzInn("")).toBe(false);
     expect(isValidUzInn(null as unknown as string)).toBe(false);
+  });
+});
+
+describe("isValidKgInn (structure only — check digit algorithm unpublished)", () => {
+  it("accepts person and company INNs with a real embedded date", () => {
+    expect(isValidKgInn("21503199001237")).toBe(true); // person, 15.03.1990
+    expect(isValidKgInn("01605200710113")).toBe(true); // company, 16.05.2007
+    expect(isValidKgInn("00305200510030")).toBe(true); // State Tax Service
+    expect(isValidKgInn("2 15031990 0 123 7")).toBe(true);
+  });
+  it("does not verify the check digit (policy: never reject a real INN)", () => {
+    expect(isValidKgInn("21503199001238")).toBe(true);
+  });
+  it("handles leap years and the 1900 floor", () => {
+    expect(isValidKgInn("12902200012345")).toBe(true);  // 29.02.2000
+    expect(isValidKgInn("12902190012345")).toBe(false); // 29.02.1900
+    expect(isValidKgInn("20101189901234")).toBe(false); // 01.01.1899
+  });
+  it("rejects impossible dates, first digit above 5, wrong length, empty, nullish", () => {
+    expect(isValidKgInn("23213199001237")).toBe(false); // 32.13.1990
+    expect(isValidKgInn("61503199001237")).toBe(false);
+    expect(isValidKgInn("2150319900123")).toBe(false);
+    expect(isValidKgInn("")).toBe(false);
+    expect(isValidKgInn(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe("isValidKgAccount (NBKR instruction 3/5, MOD-97)", () => {
+  it("accepts NBKR examples, raw and grouped", () => {
+    expect(isValidKgAccount("1251234567890164")).toBe(true);
+    expect(isValidKgAccount("125 12345678901 64")).toBe(true);
+  });
+  it("maps remainder 0 to 97 and pads single-digit remainders", () => {
+    expect(isValidKgAccount("1251234567893497")).toBe(true); // remainder 0 → "97"
+    expect(isValidKgAccount("1251234567893501")).toBe(true); // remainder 1 → "01"
+    expect(isValidKgAccount("1251234567893400")).toBe(false); // remainder 0 is written "97", never "00"
+  });
+  it("rejects wrong control digits, wrong length, empty, nullish", () => {
+    expect(isValidKgAccount("1251234567890165")).toBe(false);
+    expect(isValidKgAccount("125123456789016")).toBe(false);
+    expect(isValidKgAccount("")).toBe(false);
+    expect(isValidKgAccount(null as unknown as string)).toBe(false);
+  });
+});
+
+describe("isValidKgBik (format)", () => {
+  it("accepts 6 digits: participant 100-999, branch not 000", () => {
+    expect(isValidKgBik("103001")).toBe(true);
+    expect(isValidKgBik("121015")).toBe(true);
+  });
+  it("rejects a leading 0, branch 000, wrong length, empty, nullish", () => {
+    expect(isValidKgBik("044705")).toBe(false);
+    expect(isValidKgBik("103000")).toBe(false);
+    expect(isValidKgBik("10300")).toBe(false);
+    expect(isValidKgBik("")).toBe(false);
+    expect(isValidKgBik(undefined as unknown as string)).toBe(false);
   });
 });
