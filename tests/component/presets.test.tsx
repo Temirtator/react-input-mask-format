@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask from "../../src/index";
-import { kzIban, kzPlate, ruPhone, ruPlate } from "../../src/presets";
+import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate } from "../../src/presets";
 
 describe("preset spread onto InputMask", () => {
   it("kzIban uppercases typed account letters", async () => {
@@ -90,5 +90,34 @@ describe("Russia presets on InputMask", () => {
     await user.click(input);
     await user.keyboard("79123456789");
     expect(input.value).toBe("+7 (912) 345-67-89");
+  });
+});
+
+describe("Uzbekistan presets on InputMask", () => {
+  it("uzPhone: typing a national number starting with 9", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...uzPhone} data-testid="uz-phone" />);
+    const input = screen.getByTestId("uz-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("901234567");
+    expect(input.value).toBe("+998 (90) 123-45-67");
+  });
+
+  it("uzPhone: pasting a national number starting with 9", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...uzPhone} data-testid="uz-phone" />);
+    const input = screen.getByTestId("uz-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.paste("901234567");
+    expect(input.value).toBe("+998 (90) 123-45-67");
+  });
+
+  it("uzPlate: lowercase letters are uppercased", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...uzPlate} data-testid="uz-plate" />);
+    const input = screen.getByTestId("uz-plate") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("01a123bc");
+    expect(input.value).toBe("01 A 123 BC");
   });
 });
