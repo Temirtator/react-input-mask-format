@@ -216,6 +216,9 @@ describe("isValidRuPlate", () => {
     expect(isValidRuPlate("А 123 ВС 077")).toBe(false);
     expect(isValidRuPlate("А 123 ВС 7")).toBe(false);
     expect(isValidRuPlate("А 123 ВС 7__")).toBe(false);
+    expect(isValidRuPlate("А 123 ВС 7_7")).toBe(false);
+    expect(isValidRuPlate("А 123 ВС _77")).toBe(false);
+    expect(isValidRuPlate("А _23 ВС 77_")).toBe(false);
   });
   it("rejects letters outside the 12 allowed and empty input", () => {
     expect(isValidRuPlate("Б 123 ВС 77")).toBe(false);

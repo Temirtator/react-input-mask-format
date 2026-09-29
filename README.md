@@ -194,7 +194,7 @@ PRs adding other countries are welcome.
 Notes:
 - `ruPlate` accepts Latin look-alikes (`A B E K M H O P C T Y X`) and stores **Cyrillic**.
   Regions are 2 or 3 digits: with a 2-digit region the value ends with the placeholder
-  (`А 123 ВС 77_`). `isValidRuPlate` accepts both forms; strip `_` before storing if you need the bare plate.
+  (`А 123 ВС 77_`). `isValidRuPlate` accepts both forms (a gap inside the plate is invalid); strip `_` before storing if you need the bare plate.
 - `ruPlate` covers type-1 (passenger car) plates only — not taxi, trailer, motorcycle, or diplomatic plates.
 - `ruPhone` expects the 10-digit national number. A number typed with the domestic
   trunk prefix `8` (`8 912 …`) is read as area code `891`; `+7…` and `7…` input is handled.
