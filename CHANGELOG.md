@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.4.0
+
+Additive release — no migration required.
+
+### Added
+- Russia preset pack in `react-input-mask-format/presets`: `ruPhone`, `ruInnPerson`, `ruInnCompany`, `ruSnils`, `ruOgrn`, `ruOgrnip`, `ruKpp`, `ruBik`, `ruAccount`, `ruIban`, `ruPlate` (Latin input → Cyrillic), `ruPostal`, `ruPassport`.
+- Russian validators in `react-input-mask-format/validators`: `isValidRuInn`, `isValidRuSnils`, `isValidRuOgrn`, `isValidRuOgrnip`, `isValidRuAccount` (control key with BIK), `isValidRuIban`, `isValidRuPlate`, `isValidRuKpp`, `isValidRuBik` (format).
+- Demo: country switcher (KZ / RU).
+
+### Changed
+- Presets and validators sources are organised per country; public imports are unchanged.
+
 ## 2.2.0
 
 Additive release — no migration required.
