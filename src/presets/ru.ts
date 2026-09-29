@@ -64,13 +64,13 @@ export const ruIban: MaskPreset = {
 
 const RU_PLATE_LETTER = new RegExp(`[${RU_PLATE_LETTERS}]`);
 export const ruPlate: MaskPreset = {
-  // letter · 3 digits · 2 letters · region (2 or 3 digits — the 3rd is optional,
-  // hence no placeholder; check completeness with isValidRuPlate)
+  // letter · 3 digits · 2 letters · region (2 or 3 digits). A 2-digit region
+  // leaves the trailing placeholder (А 123 ВС 77_), which isValidRuPlate accepts.
   mask: [
     RU_PLATE_LETTER, " ", DIGIT, DIGIT, DIGIT, " ",
     RU_PLATE_LETTER, RU_PLATE_LETTER, " ", DIGIT, DIGIT, DIGIT
   ],
-  maskPlaceholder: null,
+  maskPlaceholder: "_",
   transform: toRuPlateChar
 };
 
