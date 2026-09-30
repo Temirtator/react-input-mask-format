@@ -5,14 +5,21 @@
 [![CI](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml/badge.svg)](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml)
 
 General-purpose input masking for React — dates, phone numbers, cards, custom
-tokens, and a growing set of ready-made country packs (Kazakhstan ships first).
+tokens, and a growing set of ready-made country packs (Kazakhstan, Russia).
 Made with attention to UX.
 
 A maintained fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
 **Live demo:** https://temirtator.github.io/react-input-mask-format/
 
-## What's new in 2.3
+## What's new in 2.4
+
+- Russia country pack in `react-input-mask-format/presets` — phone, INN, SNILS, OGRN/OGRNIP, KPP, BIK, bank account, IBAN, car plate, postal code, passport, see [Presets](#presets)
+- Russian validators in `react-input-mask-format/validators` — INN, SNILS, OGRN/OGRNIP, bank account key (with BIK), IBAN, plate, KPP/BIK format, see [Validators](#validators)
+
+All additive — no migration needed.
+
+### 2.3
 
 - `react-input-mask-format/time` — HH:MM (24h) masked input with clamping, see [Time](#time--react-input-mask-formattime)
 
@@ -146,12 +153,19 @@ import { kzPhone, kzIban } from "react-input-mask-format/presets";
 <InputMask {...kzIban} value={iban} onChange={onChange} />
 ```
 
-Presets are a country-agnostic system; Kazakhstan is the first (flagship) country pack —
+Presets are a country-agnostic system with country packs for Kazakhstan and Russia —
 PRs adding other countries are welcome.
+
+### Generic
 
 | export | mask | example |
 | --- | --- | --- |
 | `card` | `9999 9999 9999 9999` | `4242 4242 4242 4242` |
+
+### Kazakhstan
+
+| export | mask | example |
+| --- | --- | --- |
 | `kzPhone` | `+7 (799) 999-99-99` | `+7 (701) 234-56-78` |
 | `kzIin` | `999999999999` | `901010123458` |
 | `kzBin` | `999999999999` | `150340004984` |
@@ -159,17 +173,56 @@ PRs adding other countries are welcome.
 | `kzPlate` | `123 ABC 02` (letters `ABCEHKMNOPTXY`, uppercase) | `123 ABC 02` |
 | `kzPostal` | `999999` | `050000` |
 
+### Russia
+
+| export | mask | example |
+| --- | --- | --- |
+| `ruPhone` | `+7 (999) 999-99-99` (first digit 3/4/8/9) | `+7 (912) 345-67-89` |
+| `ruInnPerson` | `999999999999` | `500100732259` |
+| `ruInnCompany` | `9999999999` | `7707083893` |
+| `ruSnils` | `999-999-999 99` | `112-233-445 95` |
+| `ruOgrn` | `9999999999999` | `1027700132195` |
+| `ruOgrnip` | `999999999999999` | `304500116000157` |
+| `ruKpp` | `9999**999` (uppercase) | `7707AB001` |
+| `ruBik` | `999999999` | `044525225` |
+| `ruAccount` | `99999 999 9 9999 9999999` | `40817 810 5 3809 1310419` |
+| `ruIban` | `RU99 9999 9999 9999 99** **** **** **** *` (uppercase) | `RU03 0445 2522 5408 1781 0538 0913 1041 9` |
+| `ruPlate` | `А 999 АА 999` (letters `АВЕКМНОРСТУХ`) | `А 123 ВС 77` |
+| `ruPostal` | `999999` | `101000` |
+| `ruPassport` | `9999 999999` | `4506 123456` |
+
+Notes:
+- `ruPlate` accepts Latin look-alikes (`A B E K M H O P C T Y X`) and stores **Cyrillic**.
+  Regions are 2 or 3 digits: with a 2-digit region the value ends with the placeholder
+  (`А 123 ВС 77_`). `isValidRuPlate` accepts both forms (a gap inside the plate is invalid); strip `_` before storing if you need the bare plate.
+- `ruPlate` covers type-1 (passenger car) plates only — not taxi, trailer, motorcycle, or diplomatic plates.
+- `ruPhone` expects the 10-digit national number. A number typed with the domestic
+  trunk prefix `8` (`8 912 …`) is read as area code `891`; `+7…` and `7…` input is handled.
+
 ## Validators
 
 Optional checksum validators, separate entry point, zero-deps. Accept raw or formatted
 input; return `false` on empty/invalid.
 
 ```jsx
-import { isValidIin, isValidBin, isValidKzIban, luhn } from "react-input-mask-format/validators";
+import {
+  isValidIin, isValidBin, isValidKzIban, luhn,
+  isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip,
+  isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate
+} from "react-input-mask-format/validators";
 
-isValidIin("901010123458");                 // KZ IIN/BIN mod-11 checksum
-isValidKzIban("KZ86 125K ZT50 0410 0100");  // ISO 7064 MOD-97
-luhn("4242 4242 4242 4242");                // card Luhn
+isValidIin("901010123458");                          // KZ IIN/BIN mod-11 checksum
+isValidKzIban("KZ86 125K ZT50 0410 0100");           // ISO 7064 MOD-97
+luhn("4242 4242 4242 4242");                         // card Luhn
+
+isValidRuInn("7707083893");                          // 10 (company) or 12 (person) digits
+isValidRuSnils("112-233-445 95");                    // mod-101; ≤ 001-001-998 not checked
+isValidRuOgrn("1027700132195");                      // OGRN (13) · isValidRuOgrnip — 15
+isValidRuAccount("40817810538091310419", "044525225"); // account control key with BIK
+isValidRuAccount("03100643000000018500", "017003983"); // treasury 03… accounts: structure only (no control key)
+isValidRuIban("RU03 0445 2522 5408 1781 0538 0913 1041 9");
+isValidRuPlate("А 123 ВС 77");                       // region 2–3 digits, Latin look-alikes OK
+isValidRuKpp("7707AB001"); isValidRuBik("044525225"); // format only (no checksum exists)
 ```
 
 ## `useMask` hook
