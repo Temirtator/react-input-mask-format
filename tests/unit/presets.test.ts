@@ -4,7 +4,8 @@ import { resolveTransform } from "../../src/utils/transform";
 import {
   card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
-  ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport
+  ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
+  uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport
 } from "../../src/presets";
 import { toRuPlateChar } from "../../src/utils/ru-plate";
 import type { MaskPreset } from "../../src/presets";
@@ -118,5 +119,33 @@ describe("ruPlate letter restriction", () => {
   it("toRuPlateChar leaves digits and spaces alone", () => {
     expect(toRuPlateChar("7")).toBe("7");
     expect(toRuPlateChar(" ")).toBe(" ");
+  });
+});
+
+describe("Uzbekistan presets format their sample values", () => {
+  it("uzPhone formats a full international number", () => {
+    expect(format(uzPhone, "+998901234567")).toBe("+998 (90) 123-45-67");
+    expect(format(uzPhone, "998712002700")).toBe("+998 (71) 200-27-00");
+  });
+  it("uzPhone KNOWN LIMITATION: bare national digits starting with 9 as a value", () => {
+    // formatValue matches the leading 9 against the literal 9 of +998.
+    // Typing/pasting are unaffected (component tests); README tells users to pass +998….
+    expect(format(uzPhone, "901234567")).toBe("+998 (01) 234-56-7_");
+  });
+  it("uzPinfl / uzInn / uzMfo / uzPostal", () => {
+    expect(format(uzPinfl, "31210932040247")).toBe("31210932040247");
+    expect(format(uzInn, "207086151")).toBe("207086151");
+    expect(format(uzMfo, "00417")).toBe("00417");
+    expect(format(uzPostal, "100123")).toBe("100123");
+  });
+  it("uzAccount groups 20 digits", () => {
+    expect(format(uzAccount, "20208000900600293001")).toBe("20208 000 9 00600293 001");
+  });
+  it("uzPlate / uzPlateCompany uppercase Latin letters", () => {
+    expect(format(uzPlate, "01a123bc")).toBe("01 A 123 BC");
+    expect(format(uzPlateCompany, "01123abc")).toBe("01 123 ABC");
+  });
+  it("uzPassport uppercases the series", () => {
+    expect(format(uzPassport, "aa1234567")).toBe("AA1234567");
   });
 });

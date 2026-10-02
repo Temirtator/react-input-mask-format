@@ -5,19 +5,24 @@
 [![CI](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml/badge.svg)](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml)
 
 General-purpose input masking for React — dates, phone numbers, cards, custom
-tokens, and a growing set of ready-made country packs (Kazakhstan, Russia).
+tokens, and a growing set of ready-made country packs (Kazakhstan, Russia, Uzbekistan).
 Made with attention to UX.
 
 A maintained fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
 **Live demo:** https://temirtator.github.io/react-input-mask-format/
 
-## What's new in 2.4
+## What's new in 2.5
+
+- Uzbekistan country pack in `react-input-mask-format/presets` — phone, PINFL, INN, bank account, MFO, car plates (individual and company), postal code, passport / ID card, see [Presets](#presets)
+- `isValidUzPinfl` (official 7-3-1 checksum + embedded birth date) and `isValidUzInn` (format) in `react-input-mask-format/validators`, see [Validators](#validators)
+
+All additive — no migration needed.
+
+### 2.4
 
 - Russia country pack in `react-input-mask-format/presets` — phone, INN, SNILS, OGRN/OGRNIP, KPP, BIK, bank account, IBAN, car plate, postal code, passport, see [Presets](#presets)
 - Russian validators in `react-input-mask-format/validators` — INN, SNILS, OGRN/OGRNIP, bank account key (with BIK), IBAN, plate, KPP/BIK format, see [Validators](#validators)
-
-All additive — no migration needed.
 
 ### 2.3
 
@@ -153,7 +158,7 @@ import { kzPhone, kzIban } from "react-input-mask-format/presets";
 <InputMask {...kzIban} value={iban} onChange={onChange} />
 ```
 
-Presets are a country-agnostic system with country packs for Kazakhstan and Russia —
+Presets are a country-agnostic system with country packs for Kazakhstan, Russia and Uzbekistan —
 PRs adding other countries are welcome.
 
 ### Generic
@@ -199,6 +204,34 @@ Notes:
 - `ruPhone` expects the 10-digit national number. A number typed with the domestic
   trunk prefix `8` (`8 912 …`) is read as area code `891`; `+7…` and `7…` input is handled.
 
+### Uzbekistan
+
+| export | mask | example |
+| --- | --- | --- |
+| `uzPhone` | `+998 (99) 999-99-99` | `+998 (90) 123-45-67` |
+| `uzPinfl` | `99999999999999` | `31210932040247` |
+| `uzInn` | `999999999` | `207086151` |
+| `uzAccount` | `99999 999 9 99999999 999` | `20208 000 9 00600293 001` |
+| `uzMfo` | `99999` | `00417` |
+| `uzPlate` | `99 a 999 aa` (uppercase) | `01 A 123 BC` |
+| `uzPlateCompany` | `99 999 aaa` (uppercase) | `01 123 ABC` |
+| `uzPostal` | `999999` | `100123` |
+| `uzPassport` | `aa9999999` (uppercase) | `AA1234567` |
+
+Notes:
+- `uzPhone` takes the 9-digit national number (`90 123 45 67`): type or paste it without the country code.
+  Known limitations (a core fix is planned):
+  - pasting an international number (`+998 90 123 45 67`, `998901234567`) or a domestic `8 90 …` number
+    misreads the prefix — e.g. `+998 90 123 45 67` becomes `+998 (99) 890-12-34`;
+  - when setting `value` programmatically, pass the international form (`+998901234567`) or the formatted
+    value — bare national digits starting with `9` are misread (`"901234567"` renders `+998 (01) 234-56-7_`).
+    Store phones as `+998…`.
+- In the table the mask is shown as users see it; in source the country-code 9s are escaped
+  (`"+\\9\\98 (99) 999-99-99"`), because `9` is the digit token.
+- `uzPlate` / `uzPlateCompany` cover the standard individual and company plates;
+  personalised plates (since 2026), diplomatic and foreign plates are not supported.
+- Uzbekistan is not in the IBAN registry; bank accounts are 20 digits plus a 5-digit MFO bank code.
+
 ## Validators
 
 Optional checksum validators, separate entry point, zero-deps. Accept raw or formatted
@@ -208,7 +241,8 @@ input; return `false` on empty/invalid.
 import {
   isValidIin, isValidBin, isValidKzIban, luhn,
   isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip,
-  isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate
+  isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate,
+  isValidUzPinfl, isValidUzInn
 } from "react-input-mask-format/validators";
 
 isValidIin("901010123458");                          // KZ IIN/BIN mod-11 checksum
@@ -223,6 +257,9 @@ isValidRuAccount("03100643000000018500", "017003983"); // treasury 03… account
 isValidRuIban("RU03 0445 2522 5408 1781 0538 0913 1041 9");
 isValidRuPlate("А 123 ВС 77");                       // region 2–3 digits, Latin look-alikes OK
 isValidRuKpp("7707AB001"); isValidRuBik("044525225"); // format only (no checksum exists)
+
+isValidUzPinfl("31210932040247");                    // PINFL: 7-3-1 checksum + birth date
+isValidUzInn("207086151");                           // format only (checksum not published)
 ```
 
 ## `useMask` hook
