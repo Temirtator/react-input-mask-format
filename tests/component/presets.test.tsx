@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask from "../../src/index";
-import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate } from "../../src/presets";
+import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone } from "../../src/presets";
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
@@ -138,5 +138,44 @@ describe("Uzbekistan presets on InputMask", () => {
     await user.click(input);
     await user.keyboard("01a123bc");
     expect(input.value).toBe("01 A 123 BC");
+  });
+});
+
+describe("Kyrgyzstan presets on InputMask", () => {
+  it("kgPhone: typing with the domestic leading 0", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...kgPhone} data-testid="kg-phone" />);
+    const input = screen.getByTestId("kg-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("0555123456");
+    expect(input.value).toBe("+996 (555) 12-34-56");
+  });
+
+  it("kgPhone: pasting a domestic 0555 number", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...kgPhone} data-testid="kg-phone" />);
+    const input = screen.getByTestId("kg-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.paste("0555 12 34 56");
+    expect(input.value).toBe("+996 (555) 12-34-56");
+  });
+
+  it("kgPhone: typing an operator code starting with 9", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...kgPhone} data-testid="kg-phone" />);
+    const input = screen.getByTestId("kg-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("995123456");
+    expect(input.value).toBe("+996 (995) 12-34-56");
+  });
+
+  it("kgPhone KNOWN LIMITATION: pasting an international +996 number misreads the prefix", async () => {
+    // The core does not consume the mask's +996 prefix on paste; README documents it; a core fix is planned.
+    const user = userEvent.setup();
+    render(<InputMask {...kgPhone} data-testid="kg-phone" />);
+    const input = screen.getByTestId("kg-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.paste("+996 555 12 34 56");
+    expect(input.value).toBe("+996 (996) 55-51-23");
   });
 });
