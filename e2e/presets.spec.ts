@@ -50,3 +50,21 @@ test("ruSnils formats typed digits", async ({ page }) => {
   await input.pressSequentially("11223344595");
   await expect(input).toHaveValue("112-233-445 95");
 });
+
+test("uzPhone formats a typed national number", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-uz").click();
+  const input = page.getByTestId("uzPhone");
+  await input.click();
+  await input.pressSequentially("901234567");
+  await expect(input).toHaveValue("+998 (90) 123-45-67");
+});
+
+test("uzPlate uppercases typed letters", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-uz").click();
+  const input = page.getByTestId("uzPlate");
+  await input.click();
+  await input.pressSequentially("01a123bc");
+  await expect(input).toHaveValue("01 A 123 BC");
+});
