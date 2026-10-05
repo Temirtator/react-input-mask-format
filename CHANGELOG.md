@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.6.0
+
+Additive release — no migration required.
+
+### Added
+- Kyrgyzstan preset pack in `react-input-mask-format/presets`: `kgPhone` (domestic leading 0 is skipped), `kgInnPerson`, `kgInnCompany`, `kgAccount`, `kgBik`, `kgPlate`, `kgPlateCompany`, `kgPostal`, `kgPassport`.
+- Kyrgyz validators in `react-input-mask-format/validators`: `isValidKgAccount` (NBKR MOD-97), `isValidKgInn` (structure and embedded date; check digit not verified), `isValidKgBik` (format).
+- Demo: Kyrgyzstan tab in the country switcher.
+
 ## 2.5.0
 
 Additive release — no migration required.

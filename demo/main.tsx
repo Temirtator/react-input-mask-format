@@ -6,13 +6,15 @@ import {
   card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
   ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
-  uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport, MaskPreset
+  uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
+  kgPhone, kgInnPerson, kgInnCompany, kgAccount, kgBik, kgPlate, kgPlateCompany, kgPostal, kgPassport, MaskPreset
 } from "react-input-mask-format/presets";
 import {
   isValidIin, isValidBin, isValidKzIban, luhn,
   isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp,
   isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate,
-  isValidUzPinfl, isValidUzInn
+  isValidUzPinfl, isValidUzInn,
+  isValidKgInn, isValidKgAccount, isValidKgBik
 } from "react-input-mask-format/validators";
 import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
 import { TimeFormat, useTimeFormat } from "react-input-mask-format/time";
@@ -93,11 +95,12 @@ function TimeHookField() {
   return <input ref={ref} data-testid="time-hook" style={fieldStyle} />;
 }
 
-type Country = "kz" | "ru" | "uz";
+type Country = "kz" | "ru" | "uz" | "kg";
 const COUNTRIES: { id: Country; label: string }[] = [
   { id: "kz", label: "KZ" },
   { id: "ru", label: "RU" },
-  { id: "uz", label: "UZ" }
+  { id: "uz", label: "UZ" },
+  { id: "kg", label: "KG" }
 ];
 const DEMO_BIK = "044525225";
 
@@ -138,10 +141,10 @@ function App() {
         <header>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>react-input-mask-format</span>
-            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.5</span>
+            <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.6</span>
           </div>
           <h1 style={{ fontSize: 26, margin: "10px 0 4px" }}>General-purpose input masks for React — with batteries</h1>
-          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia, Uzbekistan.</p>
+          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia, Uzbekistan, Kyrgyzstan.</p>
         </header>
 
         <section style={{ display: "grid", gap: 9 }}>
@@ -187,6 +190,19 @@ function App() {
               <Row label="Госномер юрлица" sub="uzPlateCompany · UPPER"><PresetField preset={uzPlateCompany} testid="uzPlateCompany" /></Row>
               <Row label="Индекс" sub="uzPostal"><PresetField preset={uzPostal} testid="uzPostal" /></Row>
               <Row label="Паспорт / ID" sub="uzPassport · UPPER"><PresetField preset={uzPassport} testid="uzPassport" /></Row>
+            </>
+          )}
+          {country === "kg" && (
+            <>
+              <Row label="Телефон" sub="kgPhone"><PresetField preset={kgPhone} testid="kgPhone" /></Row>
+              <Row label="ИНН физлица" sub="kgInnPerson · structure"><PresetField preset={kgInnPerson} testid="kgInnPerson" validate={isValidKgInn} /></Row>
+              <Row label="ИНН юрлица" sub="kgInnCompany · structure"><PresetField preset={kgInnCompany} testid="kgInnCompany" validate={isValidKgInn} /></Row>
+              <Row label="Р/счёт" sub="kgAccount · mod-97"><PresetField preset={kgAccount} testid="kgAccount" validate={isValidKgAccount} /></Row>
+              <Row label="БИК" sub="kgBik"><PresetField preset={kgBik} testid="kgBik" validate={isValidKgBik} /></Row>
+              <Row label="Госномер" sub="kgPlate · UPPER"><PresetField preset={kgPlate} testid="kgPlate" /></Row>
+              <Row label="Госномер юрлица" sub="kgPlateCompany · UPPER"><PresetField preset={kgPlateCompany} testid="kgPlateCompany" /></Row>
+              <Row label="Индекс" sub="kgPostal"><PresetField preset={kgPostal} testid="kgPostal" /></Row>
+              <Row label="ID / паспорт" sub="kgPassport · UPPER"><PresetField preset={kgPassport} testid="kgPassport" /></Row>
             </>
           )}
           <Row label="Карта" sub="card · Luhn"><PresetField preset={card} testid="card" validate={luhn} /></Row>
