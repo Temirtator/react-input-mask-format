@@ -68,3 +68,21 @@ test("uzPlate uppercases typed letters", async ({ page }) => {
   await input.pressSequentially("01a123bc");
   await expect(input).toHaveValue("01 A 123 BC");
 });
+
+test("kgPhone skips a typed domestic leading 0", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-kg").click();
+  const input = page.getByTestId("kgPhone");
+  await input.click();
+  await input.pressSequentially("0555123456");
+  await expect(input).toHaveValue("+996 (555) 12-34-56");
+});
+
+test("kgPassport uppercases the ID card series", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-kg").click();
+  const input = page.getByTestId("kgPassport");
+  await input.click();
+  await input.pressSequentially("id1234567");
+  await expect(input).toHaveValue("ID1234567");
+});
