@@ -95,3 +95,57 @@ describe("MaskUtils transform", () => {
     expect(utils.formatValue("abc")).toBe("abc");
   });
 });
+
+describe("MaskUtils prefix-aware input", () => {
+  const uzPhoneMask = "+\\9\\98 (99) 999-99-99";
+  const phone = () => new MaskUtils({ mask: uzPhoneMask, maskPlaceholder: "_" });
+
+  it("formatValue places bare national digits after the prefix", () => {
+    expect(phone().formatValue("901234567")).toBe("+998 (90) 123-45-67");
+  });
+
+  it("formatValue drops a country code that overflows the slots", () => {
+    expect(phone().formatValue("+998901234567")).toBe("+998 (90) 123-45-67");
+    expect(phone().formatValue("998 90 123 45 67")).toBe("+998 (90) 123-45-67");
+  });
+
+  it("formatValue leaves formatted and partial prefixed values alone", () => {
+    expect(phone().formatValue("+998 (90) 123-45-67")).toBe("+998 (90) 123-45-67");
+    expect(phone().formatValue("+998 (90) 1__-__-__")).toBe("+998 (90) 1__-__-__");
+  });
+
+  it("formatValue normalises values for a prefixed mask without placeholder", () => {
+    const utils = new MaskUtils({ mask: uzPhoneMask, maskPlaceholder: null });
+    expect(utils.formatValue("901234567")).toBe("+998 (90) 123-45-67");
+    expect(utils.formatValue("+998901234567")).toBe("+998 (90) 123-45-67");
+  });
+
+  it("formatValue treats values starting with the prefix digits as prefix + partial input", () => {
+    expect(phone().formatValue("9989")).toBe("+998 (9_) ___-__-__");
+    expect(phone().formatValue("998901")).toBe("+998 (90) 1__-__-__");
+    expect(phone().formatValue("+998901234")).toBe("+998 (90) 123-4_-__");
+    expect(phone().formatValue("998901234")).toBe("+998 (90) 123-4_-__");
+    expect(phone().formatValue("998")).toBe("+998 (__) ___-__-__");
+  });
+
+  it("formatValue keeps the last characters of an overflowing unprefixed value", () => {
+    expect(phone().formatValue("9989012345678")).toBe("+998 (01) 234-56-78");
+  });
+
+  it("masks without a significant prefix are unchanged", () => {
+    expect(new MaskUtils({ mask: "99/99/9999", maskPlaceholder: "_" }).formatValue("12345678"))
+      .toBe("12/34/5678");
+    expect(new MaskUtils({ mask: "9999 9999 9999 9999", maskPlaceholder: "_" }).formatValue("42424242424242421"))
+      .toBe("4242 4242 4242 4242");
+    expect(new MaskUtils({ mask: "(999) 999-9999", maskPlaceholder: "_" }).formatValue("5551234567"))
+      .toBe("(555) 123-4567");
+  });
+
+  it("trimOverflowingPrefix keeps the last slots-worth of characters entered at the start", () => {
+    const utils = phone();
+    expect(utils.trimOverflowingPrefix("+998 90 123 45 67", 6)).toBe("90 123 45 67");
+    expect(utils.trimOverflowingPrefix("8 90 123 45 67", 6)).toBe("90 123 45 67");
+    expect(utils.trimOverflowingPrefix("90 123 45 67", 6)).toBe("90 123 45 67");
+    expect(utils.trimOverflowingPrefix("+998 90 123 45 67", 10)).toBe("+998 90 123 45 67");
+  });
+});

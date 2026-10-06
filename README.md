@@ -12,12 +12,21 @@ A maintained fork of [react-input-mask](https://github.com/sanniassin/react-inpu
 
 **Live demo:** https://temirtator.github.io/react-input-mask-format/
 
-## What's new in 2.6
+## What's new in 2.7
+
+- Pasting into masks that start with fixed characters (`+998 (`, `+7 (`, `KZ`…) now understands numbers that
+  already contain the country code or a domestic trunk prefix: `+998 90 123 45 67`, `8 912 345-67-89`,
+  `0555 12 34 56` all land in the right slots. Setting `value` to the bare national number
+  (`"901234567"`) or an international one (`"+998901234567"`) also formats correctly.
+- Replacing the whole value (select all + paste or type a national number) now lands after the prefix.
+
+No migration needed. For masks with a fixed prefix, pasted text that is longer than the mask
+now keeps its **last** characters (the prefix part is dropped) instead of its first ones.
+
+### 2.6
 
 - Kyrgyzstan country pack in `react-input-mask-format/presets` — phone, INN (person / company), bank account, BIK, car plates (individual and company), postal code, ID card / passport, see [Presets](#presets)
 - `isValidKgAccount` (NBKR MOD-97), `isValidKgInn` (structure and embedded date) and `isValidKgBik` (format) in `react-input-mask-format/validators`, see [Validators](#validators)
-
-All additive — no migration needed.
 
 ### 2.5
 
@@ -183,6 +192,9 @@ PRs adding other countries are welcome.
 | `kzPlate` | `123 ABC 02` (letters `ABCEHKMNOPTXY`, uppercase) | `123 ABC 02` |
 | `kzPostal` | `999999` | `050000` |
 
+Note: for `kzPhone`, pass programmatic values with the country code (`"+77771234567"`) or formatted —
+a bare `"7771234567"` is ambiguous with a partially typed `"77…"` and is read that way.
+
 ### Russia
 
 | export | mask | example |
@@ -206,8 +218,8 @@ Notes:
   Regions are 2 or 3 digits: with a 2-digit region the value ends with the placeholder
   (`А 123 ВС 77_`). `isValidRuPlate` accepts both forms (a gap inside the plate is invalid); strip `_` before storing if you need the bare plate.
 - `ruPlate` covers type-1 (passenger car) plates only — not taxi, trailer, motorcycle, or diplomatic plates.
-- `ruPhone` expects the 10-digit national number. A number typed with the domestic
-  trunk prefix `8` (`8 912 …`) is read as area code `891`; `+7…` and `7…` input is handled.
+- `ruPhone`: pasting `+7 912 …`, `8 912 …` or `89123456789` gives `+7 (912) 345-67-89`.
+  Typing a leading `8` key by key is still read as area code `8xx` (it is a valid code, e.g. 812).
 
 ### Uzbekistan
 
@@ -224,13 +236,9 @@ Notes:
 | `uzPassport` | `aa9999999` (uppercase) | `AA1234567` |
 
 Notes:
-- `uzPhone` takes the 9-digit national number (`90 123 45 67`): type or paste it without the country code.
-  Known limitations (a core fix is planned):
-  - pasting an international number (`+998 90 123 45 67`, `998901234567`) or a domestic `8 90 …` number
-    misreads the prefix — e.g. `+998 90 123 45 67` becomes `+998 (99) 890-12-34`;
-  - when setting `value` programmatically, pass the international form (`+998901234567`) or the formatted
-    value — bare national digits starting with `9` are misread (`"901234567"` renders `+998 (01) 234-56-7_`).
-    Store phones as `+998…`.
+- `uzPhone`: type or paste the national number (`90 123 45 67`); pasted `+998 90 …`, `998 90 …` and
+  `8 90 …` numbers and programmatic values (`"901234567"`, `"+998901234567"`) are all recognised.
+  Typing the country code key by key (`9`, `9`, `8`, …) is not — the 9s fill the operator code.
 - In the table the mask is shown as users see it; in source the country-code 9s are escaped
   (`"+\\9\\98 (99) 999-99-99"`), because `9` is the digit token.
 - `uzPlate` / `uzPlateCompany` cover the standard individual and company plates;
@@ -252,12 +260,9 @@ Notes:
 | `kgPassport` | `aa9999999` (uppercase) | `ID1234567` |
 
 Notes:
-- `kgPhone` takes the 9-digit national number; a domestic leading `0` (`0555 12 34 56`) is skipped.
-  Known limitations (a core fix is planned):
-  - pasting an international number (`+996 555 12 34 56`) misreads the prefix — it becomes `+996 (996) 55-51-23`;
-  - when setting `value` programmatically, pass the international form (`+996555123456`) or the formatted
-    value — bare national digits starting with `9` are misread (`"995123456"` renders `+996 (512) 34-56-__`).
-    Store phones as `+996…`.
+- `kgPhone`: type or paste the national number; a domestic leading `0` (`0555 12 34 56`), pasted
+  `+996 555 …` numbers and programmatic values (`"995123456"`, `"+996555123456"`) are all recognised.
+  Typing the country code key by key is not.
 - `isValidKgInn` checks the structure (type digit, embedded date) but not the check digit — its algorithm is not published.
 - `kgPlate` / `kgPlateCompany` cover the 2016+ plates; older, foreign and diplomatic plates are not supported.
 - Kyrgyzstan is not in the IBAN registry; bank accounts are 16 digits (the first 3 are the bank's BIK prefix).
