@@ -154,15 +154,18 @@ export default class MaskUtils {
   // than the mask has slots carries its own country/trunk prefix
   // ("+998 90 123 45 67", "8 912 …", "0555 …"): keep only the last characters that fit.
   // Replacing text from inside a significant prefix (e.g. select all + paste) inserts after the
-  // prefix, unless the user is typing the prefix itself (first char equals the prefix char there,
-  // case-insensitively) or the text fills nothing after the prefix.
+  // prefix, unless the user is typing the prefix itself (the text's letters/digits continue the
+  // prefix's letters/digits from that position, case-insensitively; "+", "(" are skipped) or the
+  // text fills nothing after the prefix.
   shouldInsertAfterPrefix = (string: string, position: number, wasTrimmed: boolean): boolean => {
     const { prefix } = this.maskOptions;
     if (!string || !this.hasSignificantPrefix() || position >= prefix!.length) {
       return false;
     }
     if (!wasTrimmed) {
-      if (string[0].toUpperCase() === prefix![position].toUpperCase()) {
+      const remaining = prefix!.slice(position).replace(/[^0-9A-Za-z]/g, "");
+      const typed = string.replace(/[^0-9A-Za-z]/g, "").slice(0, remaining.length);
+      if (typed && remaining.toUpperCase().startsWith(typed.toUpperCase())) {
         return false; // the user is typing the prefix itself
       }
     }
@@ -188,6 +191,16 @@ export default class MaskUtils {
     return (this.maskOptions.prefix || "").replace(/[^0-9A-Za-z]/g, "");
   };
 
+  // Whether the filling characters of `value` (at `indices`) start with `characters`, case-insensitively
+  startsWithCharacters = (value: string, indices: number[], characters: string): boolean => {
+    return (
+      indices.length >= characters.length &&
+      characters
+        .split("")
+        .every((character, k) => value[indices[k]].toUpperCase() === character.toUpperCase())
+    );
+  };
+
   // A raw value that does not start with the literal mask prefix is placed after the prefix:
   // - if its filling characters start with the prefix's letters/digits ("998…", "+998…", "kz…"),
   //   those are dropped and the rest is used (its last N characters if it overflows);
@@ -202,11 +215,14 @@ export default class MaskUtils {
     const slots = this.countEditablePositionsFrom(prefix!.length);
     const indices = this.getFillingCharacterIndices(value);
     const significant = this.getPrefixSignificantCharacters();
-    const startsWithPrefix =
-      indices.length >= significant.length &&
-      significant
-        .split("")
-        .every((character, k) => value[indices[k]].toUpperCase() === character.toUpperCase());
+    // A complete number whose first characters are the prefix's last ones ("777 123 45 67" for
+    // "+7 (7"): the prefix part is already in the mask, so its last N characters are used.
+    for (let k = 1; k < significant.length; k++) {
+      if (indices.length === slots + k && this.startsWithCharacters(value, indices, significant.slice(-k))) {
+        return value.slice(indices[k]);
+      }
+    }
+    const startsWithPrefix = this.startsWithCharacters(value, indices, significant);
     if (startsWithPrefix) {
       const rest = indices.slice(significant.length);
       if (rest.length === 0) {
@@ -242,6 +258,19 @@ export default class MaskUtils {
     }
 
     return this.insertStringAtPosition(maskPlaceholder, value, start);
+  };
+
+  // A controlled value that holds the same letters/digits as the value already shown (e.g. the
+  // parent stored it digits-only) keeps the shown value instead of being read again.
+  formatControlledValue = (value: string, shownValue: string): string => {
+    if (value && shownValue && value !== shownValue && this.formatValue(shownValue) === shownValue) {
+      const fillingCharacters = (string: string) =>
+        this.getFillingCharacterIndices(string).map(i => string[i]).join("").toUpperCase();
+      if (fillingCharacters(value) === fillingCharacters(shownValue)) {
+        return shownValue;
+      }
+    }
+    return this.formatValue(value);
   };
 
   clearRange = (value: string, start: number, len: number): string => {

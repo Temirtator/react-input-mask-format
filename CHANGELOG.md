@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.7.1
+
+### Fixed
+- Select all + typing a number that starts with the country code fills the right slots again in prefixed
+  masks (`kzPhone`, `ruPhone`, `uzPhone`, `kgPhone`), and typing a Kazakh national number over a selection
+  (`701 …`) no longer duplicates the operator `7` (`+7 (770) …`). Regression in 2.7.0.
+- `kzPhone`: a bare 10-digit `value` starting with `77` (`"7771234567"`) is read as the national number
+  (`+7 (777) 123-45-67`) instead of prefix + partial input (`+7 (771) 234-56-7_`).
+- A digits-only controlled `value` that holds the same digits as the shown value keeps the shown value.
+
+### Upgrade notes
+- Over a selection, a first key that matches the prefix's next letter/digit continues the prefix, so typing a
+  national number that starts with it (`uzPhone` `90 …`, `kzPhone` `777 …`) is read as the country code, as in
+  2.6.0. Other national numbers (`uzPhone` `33 …`) still land after the prefix; paste is unaffected.
+- The 2.7.0 note about passing a Kazakh `"7771234567"` with the country code no longer applies.
+
 ## 2.7.0
 
 ### Fixed

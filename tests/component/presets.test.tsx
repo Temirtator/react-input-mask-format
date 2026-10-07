@@ -287,6 +287,50 @@ describe("prefix-aware paste across presets", () => {
     expect(input.value).toBe("+7 (912) 345-67-89");
   });
 
+  // Retyping over a selected value: the first key continues the prefix when it matches the
+  // prefix's next letter/digit ("+" and other literals are skipped).
+  const retypeCases: Array<[string, MaskPreset, string, string, string]> = [
+    ["kzPhone with country code", kzPhone, "7011234567", "77779876543", "+7 (777) 987-65-43"],
+    ["kzPhone national", kzPhone, "7771234567", "7019876543", "+7 (701) 987-65-43"],
+    ["ruPhone with country code", ruPhone, "9123456789", "79876543210", "+7 (987) 654-32-10"],
+    ["uzPhone with country code", uzPhone, "901234567", "998917654321", "+998 (91) 765-43-21"],
+    ["kgPhone with country code", kgPhone, "555123456", "996700987654", "+996 (700) 98-76-54"],
+    ["uzPhone national not starting with 9", uzPhone, "901234567", "331234567", "+998 (33) 123-45-67"]
+  ];
+  it("KNOWN LIMITATION: select all + typing a national number that starts with the prefix's next digit", async () => {
+    // Key by key, uzPhone "9…" and kzPhone "77…" cannot be told apart from the country code; same as 2.6.0.
+    // README documents it; paste and programmatic values are not affected.
+    const user = userEvent.setup();
+    for (const [preset, initial, typed, expected] of [
+      [uzPhone, "331234567", "901234567", "+998 (01) 234-56-7_"],
+      [kzPhone, "7011234567", "7779876543", "+7 (779) 876-54-3_"]
+    ] as Array<[MaskPreset, string, string, string]>) {
+      const { unmount } = render(<InputMask {...preset} data-testid="p" />);
+      const input = screen.getByTestId("p") as HTMLInputElement;
+      await user.click(input);
+      await user.keyboard(initial);
+      input.setSelectionRange(0, input.value.length);
+      await nextFrame();
+      await user.keyboard(typed);
+      expect(input.value).toBe(expected);
+      unmount();
+    }
+  });
+
+  for (const [name, preset, initial, typed, expected] of retypeCases) {
+    it(`filled: select all + type ${name}`, async () => {
+      const user = userEvent.setup();
+      render(<InputMask {...preset} data-testid="p" />);
+      const input = screen.getByTestId("p") as HTMLInputElement;
+      await user.click(input);
+      await user.keyboard(initial);
+      input.setSelectionRange(0, input.value.length);
+      await nextFrame();
+      await user.keyboard(typed);
+      expect(input.value).toBe(expected);
+    });
+  }
+
   it("kzIban filled: select all + type k clears to the prefix", async () => {
     const user = userEvent.setup();
     render(<InputMask {...kzIban} data-testid="p" />);
@@ -362,6 +406,11 @@ describe("prefix-aware controlled and autofill input", () => {
       expect(input.value).toBe(expected);
     });
   }
+
+  it("controlled kzPhone: a stored 10-digit national number starting with 77 is shown in full", () => {
+    render(<InputMask mask={kzPhone.mask} maskPlaceholder="_" value="7771234567" onChange={() => {}} data-testid="p" />);
+    expect((screen.getByTestId("p") as HTMLInputElement).value).toBe("+7 (777) 123-45-67");
+  });
 
   it("uncontrolled uzPhone: unfocused change with an international number", () => {
     render(<InputMask {...uzPhone} data-testid="p" />);
