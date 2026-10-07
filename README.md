@@ -14,14 +14,33 @@ A maintained fork of [react-input-mask](https://github.com/sanniassin/react-inpu
 
 ## What's new in 2.7
 
+### 2.7.1
+
+- Select all + typing a number that starts with the country code works again in prefixed masks
+  (`7 701 …` in `kzPhone`, `998 91 …` in `uzPhone`, `996 700 …` in `kgPhone`), and so does typing
+  a Kazakh national number (`701 …`). Typing over a selection now continues the prefix when the first key
+  matches it, and inserts after the prefix otherwise (`33 …` in `uzPhone`).
+- `kzPhone`: a bare 10-digit value starting with `77` (`"7771234567"`) is read as the full national number.
+
+### 2.7.0
+
 - Pasting into masks that start with fixed characters (`+998 (`, `+7 (`, `KZ`…) now understands numbers that
   already contain the country code or a domestic trunk prefix: `+998 90 123 45 67`, `8 912 345-67-89`,
   `0555 12 34 56` all land in the right slots. Setting `value` to the bare national number
   (`"901234567"`) or an international one (`"+998901234567"`) also formats correctly.
 - Replacing the whole value (select all + paste or type a national number) now lands after the prefix.
 
-No migration needed. For masks with a fixed prefix, pasted text that is longer than the mask
-now keeps its **last** characters (the prefix part is dropped) instead of its first ones.
+Behaviour changes for masks with a fixed prefix are listed under "Upgrade notes" in the
+[CHANGELOG](CHANGELOG.md#270): for example, pasted text that is longer than the mask now keeps its
+**last** characters (the prefix part is dropped) instead of its first ones.
+
+Ambiguous input in prefixed masks:
+- Typed key by key, a national number that starts with the prefix's next digit cannot be told apart from
+  the country code: over a selection, `uzPhone` `90 …` and `kzPhone` `777 …` are read as the country code
+  (paste them, or type over an empty field); in an empty field, typing `998 …` fills the operator code.
+- A digits-only `value` that starts with the prefix digits and is shorter than a full international
+  number is read as "prefix digits + partial input" (`uzPhone` `"998901234"` → `+998 (90) 123-4_-__`).
+  Pass values with `+` and the country code, or formatted, to avoid guessing.
 
 ### 2.6
 
@@ -192,8 +211,8 @@ PRs adding other countries are welcome.
 | `kzPlate` | `123 ABC 02` (letters `ABCEHKMNOPTXY`, uppercase) | `123 ABC 02` |
 | `kzPostal` | `999999` | `050000` |
 
-Note: for `kzPhone`, pass programmatic values with the country code (`"+77771234567"`) or formatted —
-a bare `"7771234567"` is ambiguous with a partially typed `"77…"` and is read that way.
+Note: `kzPhone` reads bare values as the national number (`"7771234567"`, `"7011234567"`) or with the
+country code (`"77771234567"`, `"+77771234567"`).
 
 ### Russia
 

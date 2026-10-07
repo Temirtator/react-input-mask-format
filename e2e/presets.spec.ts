@@ -86,3 +86,15 @@ test("kgPassport uppercases the ID card series", async ({ page }) => {
   await input.pressSequentially("id1234567");
   await expect(input).toHaveValue("ID1234567");
 });
+
+test("kzPhone select all + retype with the country code", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("kzPhone");
+  await input.click();
+  await input.pressSequentially("7011234567");
+  await input.press("ControlOrMeta+a");
+  // the mask tracks the selection once per animation frame
+  await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+  await input.pressSequentially("77779876543");
+  await expect(input).toHaveValue("+7 (777) 987-65-43");
+});
