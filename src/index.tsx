@@ -243,7 +243,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     const isFocused = !!input && isInputFocused(input);
     let newValue =
       isFocused || alwaysShowMask || props.value
-        ? maskUtils.formatValue(props.value as string)
+        ? maskUtils.formatControlledValue(props.value as string, getLastInputState().value)
         : (props.value as string);
 
     if (beforeMaskedStateChange) {

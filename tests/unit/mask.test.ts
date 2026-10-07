@@ -141,6 +141,15 @@ describe("MaskUtils prefix-aware input", () => {
       .toBe("(555) 123-4567");
   });
 
+  it("formatValue reads a complete national number that starts with the prefix's last digits", () => {
+    // kzPhone: "+7 (7" — a 10-digit national number already includes the fixed operator 7
+    const kz = new MaskUtils({ mask: "+7 (799) 999-99-99", maskPlaceholder: "_" });
+    expect(kz.formatValue("7771234567")).toBe("+7 (777) 123-45-67");
+    expect(kz.formatValue("7712345678")).toBe("+7 (771) 234-56-78");
+    expect(kz.formatValue("77771234567")).toBe("+7 (777) 123-45-67");
+    expect(kz.formatValue("777")).toBe("+7 (77_) ___-__-__");
+  });
+
   it("trimOverflowingPrefix keeps the last slots-worth of characters entered at the start", () => {
     const utils = phone();
     expect(utils.trimOverflowingPrefix("+998 90 123 45 67", 6)).toBe("90 123 45 67");
