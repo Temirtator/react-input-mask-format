@@ -8,7 +8,7 @@ import type { InputMaskProps, UseMaskOptions } from "../../src/types";
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
-type Options = UseMaskOptions & { alwaysShowMask?: boolean };
+type Options = UseMaskOptions & { alwaysShowMask?: boolean; autoFocus?: boolean };
 
 function Component(props: Options & { onChange?: (value: string) => void }) {
   const { onChange, ...rest } = props;
@@ -22,12 +22,13 @@ function Component(props: Options & { onChange?: (value: string) => void }) {
 }
 
 function Hook(props: Options & { onChange?: (value: string) => void }) {
-  const { onChange, ...rest } = props;
+  const { onChange, autoFocus, ...rest } = props;
   const ref = useMask(rest);
   return (
     <input
       ref={ref}
       data-testid="field"
+      autoFocus={autoFocus}
       onChange={e => onChange?.((e.target as HTMLInputElement).value)}
     />
   );
@@ -145,6 +146,18 @@ describe.each([
     await selectAll(input);
     await user.paste("+7 701 555 44 33");
     expect(input.value).toBe("+7 (701) 555-44-33");
+  });
+
+  it("tracks the selection from mount with autoFocus", async () => {
+    const user = userEvent.setup();
+    render(<Field mask="99/99/9999" autoFocus />);
+    const input = screen.getByTestId("field") as HTMLInputElement;
+    expect(document.activeElement).toBe(input);
+    await user.click(input);
+    await user.keyboard("12345678");
+    await selectAll(input);
+    await user.keyboard("8765");
+    expect(input.value).toBe("87/65/____");
   });
 
   it("select all + delete empties the slots", async () => {
