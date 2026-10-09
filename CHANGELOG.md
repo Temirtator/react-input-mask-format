@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.7.2
+
+### Fixed
+- `useMask`: typing or pasting over a selected value now replaces it instead of appending (the hook did
+  not track the selection). Its deprecation warnings now match `InputMask`'s and link to the migration guide.
+
+### Internal
+- `InputMask` and `useMask` share one masking core (`src/core/`); `InputMask` behavior is unchanged.
+- README restructured.
+
 ## 2.7.1
 
 ### Fixed
