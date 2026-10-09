@@ -10,3 +10,6 @@ blob-report
 playwright/.cache
 # Superpowers working docs (personal, not tracked)
 .superpowers/
+docs/superpowers/
+CLAUDE.md
+AGENTS.md
