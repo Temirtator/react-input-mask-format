@@ -4,16 +4,12 @@ import { useInputState, useInputElement, usePrevious } from "./hooks";
 import { validateMaxLength, validateChildren, validateMaskPlaceholder } from "./validate-props";
 import { defer } from "./utils/defer";
 import { isInputFocused } from "./utils/input";
-import { isFunction, toString, getElementDocument } from "./utils/helpers";
-import MaskUtils from "./utils/mask";
-import {
-  resolveMaskPlaceholder,
-  normalizeFormatChars,
-  createBeforeMaskedStateChangeAdapter,
-  warnDeprecatedOnce
-} from "./v2-compat";
-import { resolveTransform } from "./utils/transform";
-import type { InputMaskProps, InputState, V2MaskOptions } from "./types";
+import { isFunction, toString } from "./utils/helpers";
+import { resolveMaskConfig } from "./core/config";
+import type { MaskConfig } from "./core/config";
+import { decideChange, decideFocus, decideBlur, decideClickSelection } from "./core/decide";
+import { watchClick } from "./core/click-tracker";
+import type { InputMaskProps, InputState } from "./types";
 
 const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMask(
   props,
@@ -32,49 +28,21 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     ...restProps
   } = props;
 
-  if (maskChar !== undefined) {
-    warnDeprecatedOnce("maskChar", "maskChar is deprecated, use maskPlaceholder instead. See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask");
-  }
-  if (beforeMaskedValueChange !== undefined) {
-    warnDeprecatedOnce("beforeMaskedValueChange", "beforeMaskedValueChange is deprecated, use beforeMaskedStateChange. See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask");
-  }
-
-  const resolvedPlaceholder = resolveMaskPlaceholder(maskPlaceholderProp, maskChar);
-  const maskPlaceholder = resolvedPlaceholder === undefined ? "_" : resolvedPlaceholder;
-
   validateMaxLength(props);
-  validateMaskPlaceholder({ ...props, maskPlaceholder });
 
-  const { formatChars: normalizedFormatChars, hasLegacyString } =
-    normalizeFormatChars(formatChars);
-  if (hasLegacyString) {
-    warnDeprecatedOnce(
-      "formatChars",
-      "string values in formatChars are deprecated, pass RegExp values instead (e.g. { \"#\": /[0-9]/ }). See migration guide: https://github.com/Temirtator/react-input-mask-format#migrating-from-react-input-mask"
-    );
-  }
-
-  const maskUtils = new MaskUtils({
+  const { maskUtils, maskPlaceholder, beforeMaskedStateChange } = resolveMaskConfig({
     mask,
-    maskPlaceholder,
-    formatChars: normalizedFormatChars,
-    transform: resolveTransform(transform)
+    maskPlaceholder: maskPlaceholderProp,
+    maskChar,
+    alwaysShowMask,
+    formatChars,
+    transform,
+    beforeMaskedStateChange: beforeMaskedStateChangeProp,
+    beforeMaskedValueChange
   });
+  const config: MaskConfig = { maskUtils, maskPlaceholder, alwaysShowMask, beforeMaskedStateChange };
 
-  let beforeMaskedStateChange = beforeMaskedStateChangeProp;
-  if (!beforeMaskedStateChange && beforeMaskedValueChange) {
-    const v2MaskOptions: V2MaskOptions = {
-      mask,
-      maskChar: maskPlaceholder,
-      alwaysShowMask,
-      formatChars: formatChars ?? { "9": "[0-9]", a: "[A-Za-z]", "*": "[A-Za-z0-9]" },
-      permanents: maskUtils.maskOptions.permanents
-    };
-    beforeMaskedStateChange = createBeforeMaskedStateChangeAdapter(
-      beforeMaskedValueChange,
-      v2MaskOptions
-    );
-  }
+  validateMaskPlaceholder({ ...props, maskPlaceholder });
 
   const isMasked = !!mask;
   const isEditable = !restProps.disabled && !restProps.readOnly;
@@ -93,56 +61,26 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   const getInputElement = useInputElement(inputRef);
 
   function onChange(event: React.ChangeEvent<HTMLInputElement>): void {
-    const currentState = getInputState();
-    const previousState = getLastInputState();
-    let newInputState: InputState = maskUtils.processChange(currentState, previousState);
-
-    if (beforeMaskedStateChange) {
-      newInputState = beforeMaskedStateChange({
-        currentState,
-        previousState,
-        nextState: newInputState
-      });
-    }
-
+    const newInputState = decideChange(config, getInputState(), getLastInputState());
     setInputState(newInputState);
-
     if (props.onChange) {
       props.onChange(event);
     }
   }
 
   function onFocus(event: React.FocusEvent<HTMLInputElement>): void {
-    // If autoFocus property is set, focus event fires before the ref handler gets called
     inputRef.current = event.target;
 
-    const currentValue = getInputState().value;
+    const currentState = getInputState();
+    const newInputState = isMasked ? decideFocus(config, currentState) : null;
 
-    if (isMasked && !maskUtils.isValueFilled(currentValue)) {
-      let newValue = maskUtils.formatValue(currentValue);
-      let newSelection = maskUtils.getDefaultSelectionForValue(newValue);
-      let newInputState: InputState = {
-        value: newValue,
-        selection: newSelection
-      };
-
-      if (beforeMaskedStateChange) {
-        newInputState = beforeMaskedStateChange({
-          currentState: getInputState(),
-          nextState: newInputState
-        });
-        newValue = newInputState.value;
-        newSelection = newInputState.selection;
-      }
-
+    if (newInputState) {
       setInputState(newInputState);
 
-      if (newValue !== currentValue && props.onChange) {
+      if (newInputState.value !== currentState.value && props.onChange) {
         props.onChange(event as unknown as React.ChangeEvent<HTMLInputElement>);
       }
 
-      // Chrome resets selection after focus event,
-      // so we want to restore it later
       defer(() => {
         setInputState(getLastInputState());
       });
@@ -154,27 +92,15 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   }
 
   function onBlur(event: React.FocusEvent<HTMLInputElement>): void {
-    const currentValue = getInputState().value;
-    const lastValue = getLastInputState().value;
+    const currentState = getInputState();
+    const newInputState = isMasked
+      ? decideBlur(config, currentState, getLastInputState().value)
+      : null;
 
-    if (isMasked && !alwaysShowMask && maskUtils.isValueEmpty(lastValue)) {
-      let newValue = "";
-      let newInputState: InputState = {
-        value: newValue,
-        selection: { start: null, end: null }
-      };
-
-      if (beforeMaskedStateChange) {
-        newInputState = beforeMaskedStateChange({
-          currentState: getInputState(),
-          nextState: newInputState
-        });
-        newValue = newInputState.value;
-      }
-
+    if (newInputState) {
       setInputState(newInputState);
 
-      if (newValue !== currentValue && props.onChange) {
+      if (newInputState.value !== currentState.value && props.onChange) {
         props.onChange(event as unknown as React.ChangeEvent<HTMLInputElement>);
       }
     }
@@ -184,49 +110,15 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     }
   }
 
-  // Tiny unintentional mouse movements can break cursor
-  // position on focus, so we have to restore it in that case
-  //
-  // https://github.com/sanniassin/react-input-mask/issues/108
   function onMouseDown(event: React.MouseEvent<HTMLInputElement>): void {
     const input = getInputElement();
     const { value } = getInputState();
-    const inputDocument = getElementDocument(input);
 
-    if (!isInputFocused(input as HTMLInputElement) && !maskUtils.isValueFilled(value)) {
-      const mouseDownX = event.clientX;
-      const mouseDownY = event.clientY;
-      const mouseDownTime = new Date().getTime();
-
-      const mouseUpHandler = (mouseUpEvent: MouseEvent): void => {
-        inputDocument!.removeEventListener("mouseup", mouseUpHandler);
-
-        if (!isInputFocused(input as HTMLInputElement)) {
-          return;
-        }
-
-        const deltaX = Math.abs(mouseUpEvent.clientX - mouseDownX);
-        const deltaY = Math.abs(mouseUpEvent.clientY - mouseDownY);
-        const axisDelta = Math.max(deltaX, deltaY);
-        const timeDelta = new Date().getTime() - mouseDownTime;
-
-        if (
-          (axisDelta <= 10 && timeDelta <= 200) ||
-          (axisDelta <= 5 && timeDelta <= 300)
-        ) {
-          const lastState = getLastInputState();
-          const newSelection = maskUtils.getDefaultSelectionForValue(
-            lastState.value
-          );
-          const newState = {
-            ...lastState,
-            selection: newSelection
-          };
-          setInputState(newState);
-        }
-      };
-
-      inputDocument!.addEventListener("mouseup", mouseUpHandler);
+    if (input && !isInputFocused(input) && !maskUtils.isValueFilled(value)) {
+      watchClick(input, event, () => {
+        const lastState = getLastInputState();
+        setInputState({ ...lastState, selection: decideClickSelection(config, lastState.value) });
+      });
     }
 
     if (props.onMouseDown) {
