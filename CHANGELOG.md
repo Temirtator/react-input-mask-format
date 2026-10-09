@@ -5,9 +5,14 @@
 ### Fixed
 - `useMask`: typing or pasting over a selected value now replaces it instead of appending (the hook did
   not track the selection). Its deprecation warnings now match `InputMask`'s and link to the migration guide.
+- `useMask`: in Firefox, tabbing into an empty prefixed field (`+7 (___) …`) no longer loses the first typed
+  digit; the hook now places the caret after the browser's select-all on keyboard focus, as `InputMask` does.
+- `InputMask` with `autoFocus`: the selection is tracked from mount, so select all + typing replaces the value
+  right away instead of after the first blur.
 
 ### Internal
-- `InputMask` and `useMask` share one masking core (`src/core/`); `InputMask` behavior is unchanged.
+- `InputMask` and `useMask` share one masking core (`src/core/`); apart from the `autoFocus` fix above,
+  `InputMask` behavior is unchanged.
 - README restructured.
 
 ## 2.7.1

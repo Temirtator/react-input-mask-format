@@ -100,7 +100,7 @@ export function createMaskController(config: MaskConfig): MaskController {
       lastValue = formatted;
     }
     el.addEventListener("input", handleInput);
-    el.addEventListener("focus", handleFocus);
+    el.addEventListener("focusin", handleFocus);
     el.addEventListener("blur", handleBlur);
     el.addEventListener("mousedown", handleMouseDown);
     if (isInputFocused(el)) {
@@ -112,7 +112,7 @@ export function createMaskController(config: MaskConfig): MaskController {
     tracker.stop();
     if (input) {
       input.removeEventListener("input", handleInput);
-      input.removeEventListener("focus", handleFocus);
+      input.removeEventListener("focusin", handleFocus);
       input.removeEventListener("blur", handleBlur);
       input.removeEventListener("mousedown", handleMouseDown);
     }

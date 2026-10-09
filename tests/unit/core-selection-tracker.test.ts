@@ -65,7 +65,7 @@ describe("createSelectionTracker", () => {
     expect(tracker.getLast()).toMatchObject({ start: 2, end: 5 });
   });
 
-  it("set is a no-op on an unfocused input", () => {
+  it("set is a no-op on an unfocused input (Safari focuses the input on selection change, #154)", () => {
     const tracker = createSelectionTracker(() => input);
     const spy = vi.spyOn(input, "setSelectionRange");
     tracker.set({ start: 1, end: 1 });
