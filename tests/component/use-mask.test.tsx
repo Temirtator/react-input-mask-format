@@ -11,7 +11,9 @@ import type { UseMaskOptions } from "../../src/types";
 function Harness({ mask, onChange }: { mask: string; onChange?: (v: string) => void }) {
   const ref = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
-    const controller = createMaskController(new MaskUtils({ mask, maskPlaceholder: "_" }), {
+    const controller = createMaskController({
+      maskUtils: new MaskUtils({ mask, maskPlaceholder: "_" }),
+      maskPlaceholder: "_",
       alwaysShowMask: false
     });
     controller.bind(ref.current!);

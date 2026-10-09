@@ -1,14 +1,11 @@
-import type MaskUtils from "./utils/mask";
-import type { BeforeMaskedStateChangeFn, InputState, Selection } from "./types";
+import type { MaskConfig } from "./core/config";
+import { decideChange, decideFocus, decideBlur, decideClickSelection } from "./core/decide";
+import { createSelectionTracker } from "./core/selection-tracker";
+import { watchClick } from "./core/click-tracker";
+import type { InputState } from "./types";
 import { getInputSelection, setInputSelection, isInputFocused } from "./utils/input";
 import { setNativeValue } from "./set-native-value";
-import { getElementDocument } from "./utils/helpers";
 import { defer } from "./utils/defer";
-
-export interface MaskControllerOptions {
-  alwaysShowMask: boolean;
-  beforeMaskedStateChange?: BeforeMaskedStateChangeFn;
-}
 
 const IS_JSDOM =
   typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom");
@@ -16,31 +13,25 @@ const IS_JSDOM =
 export interface MaskController {
   bind(input: HTMLInputElement): void;
   unbind(): void;
-  update(maskUtils: MaskUtils, options: MaskControllerOptions): void;
+  update(config: MaskConfig): void;
 }
 
-export function createMaskController(
-  maskUtils: MaskUtils,
-  options: MaskControllerOptions
-): MaskController {
+export function createMaskController(config: MaskConfig): MaskController {
   let input: HTMLInputElement | null = null;
   let lastValue = "";
-  let lastSelection: Selection = { start: null, end: null };
+  const tracker = createSelectionTracker(() => input);
 
   function getInputState(): InputState {
     return { value: input!.value, selection: getInputSelection(input!) };
   }
   function getLastInputState(): InputState {
-    return { value: lastValue, selection: lastSelection };
+    return { value: lastValue, selection: tracker.getLast() };
   }
   function setInputState({ value, selection }: InputState): void {
     setNativeValue(input!, value);
     lastValue = value;
-    if (input && isInputFocused(input) && selection.start !== null && selection.end !== null) {
-      setInputSelection(input, selection.start, selection.end);
-      lastSelection = getInputSelection(input);
-    } else {
-      lastSelection = selection;
+    if (selection.start !== null && selection.end !== null) {
+      tracker.set(selection);
     }
     // JSDOM-ONLY: resync @testing-library/user-event v14's shadow-value cache.
     // setNativeValue() above bypasses React's value tracker so the consumer's
@@ -66,41 +57,26 @@ export function createMaskController(
   }
 
   function handleInput(): void {
-    const currentState = getInputState();
-    const previousState = getLastInputState();
-    let nextState: InputState = maskUtils.processChange(currentState, previousState);
-    if (options.beforeMaskedStateChange) {
-      nextState = options.beforeMaskedStateChange({ currentState, previousState, nextState });
-    }
-    setInputState(nextState);
+    setInputState(decideChange(config, getInputState(), getLastInputState()));
   }
 
   function handleFocus(): void {
-    const currentValue = getInputState().value;
-    if (!maskUtils.isValueFilled(currentValue)) {
-      const newValue = maskUtils.formatValue(currentValue);
-      const newSelection = maskUtils.getDefaultSelectionForValue(newValue);
-      let nextState: InputState = { value: newValue, selection: newSelection };
-      if (options.beforeMaskedStateChange) {
-        nextState = options.beforeMaskedStateChange({ currentState: getInputState(), nextState });
-      }
+    tracker.start();
+    const nextState = decideFocus(config, getInputState());
+    if (nextState) {
       setInputState(nextState);
-      // Chrome resets selection after focus; restore on next frame.
       defer(() => {
         if (input && isInputFocused(input)) {
-          setInputSelection(input, lastSelection.start!, lastSelection.end!);
+          tracker.set(tracker.getLast());
         }
       });
     }
   }
 
   function handleBlur(): void {
-    const lastValueOnBlur = getLastInputState().value;
-    if (!options.alwaysShowMask && maskUtils.isValueEmpty(lastValueOnBlur)) {
-      let nextState: InputState = { value: "", selection: { start: null, end: null } };
-      if (options.beforeMaskedStateChange) {
-        nextState = options.beforeMaskedStateChange({ currentState: getInputState(), nextState });
-      }
+    tracker.stop();
+    const nextState = decideBlur(config, getInputState(), lastValue);
+    if (nextState) {
       setInputState(nextState);
     }
   }
@@ -108,37 +84,18 @@ export function createMaskController(
   function handleMouseDown(event: MouseEvent): void {
     if (!input) return;
     const { value } = getInputState();
-    const inputDocument = getElementDocument(input);
-    if (!isInputFocused(input) && !maskUtils.isValueFilled(value)) {
-      const mouseDownX = event.clientX;
-      const mouseDownY = event.clientY;
-      const mouseDownTime = new Date().getTime();
-      const mouseUpHandler = (mouseUpEvent: MouseEvent): void => {
-        inputDocument!.removeEventListener("mouseup", mouseUpHandler);
-        if (!input || !isInputFocused(input)) return;
-        const deltaX = Math.abs(mouseUpEvent.clientX - mouseDownX);
-        const deltaY = Math.abs(mouseUpEvent.clientY - mouseDownY);
-        const axisDelta = Math.max(deltaX, deltaY);
-        const timeDelta = new Date().getTime() - mouseDownTime;
-        if ((axisDelta <= 10 && timeDelta <= 200) || (axisDelta <= 5 && timeDelta <= 300)) {
-          const newSelection = maskUtils.getDefaultSelectionForValue(lastValue);
-          if (newSelection.start !== null && newSelection.end !== null) {
-            setInputSelection(input, newSelection.start, newSelection.end);
-            lastSelection = getInputSelection(input);
-          }
-        }
-      };
-      inputDocument!.addEventListener("mouseup", mouseUpHandler);
+    if (!isInputFocused(input) && !config.maskUtils.isValueFilled(value)) {
+      watchClick(input, event, () => {
+        tracker.set(decideClickSelection(config, lastValue));
+      });
     }
   }
 
   function bind(el: HTMLInputElement): void {
     input = el;
-    // Format any pre-existing (defaultValue) content.
     lastValue = el.value;
-    lastSelection = getInputSelection(el);
-    const formatted = maskUtils.formatValue(el.value);
-    if (!maskUtils.isValueEmpty(formatted) || options.alwaysShowMask) {
+    const formatted = config.maskUtils.formatValue(el.value);
+    if (!config.maskUtils.isValueEmpty(formatted) || config.alwaysShowMask) {
       setNativeValue(el, formatted);
       lastValue = formatted;
     }
@@ -146,9 +103,13 @@ export function createMaskController(
     el.addEventListener("focus", handleFocus);
     el.addEventListener("blur", handleBlur);
     el.addEventListener("mousedown", handleMouseDown);
+    if (isInputFocused(el)) {
+      tracker.start();
+    }
   }
 
   function unbind(): void {
+    tracker.stop();
     if (input) {
       input.removeEventListener("input", handleInput);
       input.removeEventListener("focus", handleFocus);
@@ -158,9 +119,8 @@ export function createMaskController(
     input = null;
   }
 
-  function update(nextMaskUtils: MaskUtils, nextOptions: MaskControllerOptions): void {
-    maskUtils = nextMaskUtils;
-    options = nextOptions;
+  function update(nextConfig: MaskConfig): void {
+    config = nextConfig;
   }
 
   return { bind, unbind, update };
