@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type React from "react";
 
-import { defer, cancelDefer } from "./utils/defer";
-import { setInputSelection, getInputSelection, isInputFocused } from "./utils/input";
+import { getInputSelection, isInputFocused } from "./utils/input";
+import { createSelectionTracker } from "./core/selection-tracker";
+import type { SelectionTracker } from "./core/selection-tracker";
 import { isDOMElement } from "./utils/helpers";
 import type { InputState, Selection } from "./types";
 
@@ -33,79 +34,25 @@ export function useInputElement(
   }, [inputRef]);
 }
 
-function useDeferLoop(callback: () => void): [() => void, () => void] {
-  const deferIdRef = useRef<number | null>(null);
-
-  const runLoop = useCallback(() => {
-    // If there are simulated focus events, runLoop could be
-    // called multiple times without blur or re-render
-    if (deferIdRef.current !== null) {
-      return;
-    }
-
-    function loop() {
-      callback();
-      deferIdRef.current = defer(loop);
-    }
-
-    loop();
-  }, [callback]);
-
-  const stopLoop = useCallback(() => {
-    cancelDefer(deferIdRef.current);
-    deferIdRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    if (deferIdRef.current) {
-      stopLoop();
-      runLoop();
-    }
-  }, [runLoop, stopLoop]);
-
-  useEffect(() => cancelDefer(deferIdRef.current), []);
-
-  return [runLoop, stopLoop];
-}
-
 function useSelection(
   inputRef: React.MutableRefObject<HTMLInputElement | null>,
   isMasked: boolean
 ) {
-  const selectionRef = useRef<Selection>({ start: null, end: null });
   const getInputElement = useInputElement(inputRef);
+  const trackerRef = useRef<SelectionTracker | null>(null);
+  if (trackerRef.current === null) {
+    trackerRef.current = createSelectionTracker(getInputElement);
+  }
+  const tracker = trackerRef.current;
 
   const getSelection = useCallback(() => {
     const input = getInputElement();
     return getInputSelection(input as HTMLInputElement);
   }, [getInputElement]);
 
-  const getLastSelection = useCallback(() => {
-    return selectionRef.current;
-  }, []);
+  const getLastSelection = useCallback(() => tracker.getLast(), [tracker]);
 
-  const setSelection = useCallback(
-    (selection: Selection) => {
-      const input = getInputElement();
-
-      // Don't change selection on unfocused input
-      // because Safari sets focus on selection change (#154)
-      if (!input || !isInputFocused(input)) {
-        return;
-      }
-
-      setInputSelection(input, selection.start!, selection.end!);
-
-      // Use actual selection in case the requested one was out of range
-      selectionRef.current = getSelection();
-    },
-    [getInputElement, getSelection]
-  );
-
-  const selectionLoop = useCallback(() => {
-    selectionRef.current = getSelection();
-  }, [getSelection]);
-  const [runSelectionLoop, stopSelectionLoop] = useDeferLoop(selectionLoop);
+  const setSelection = useCallback((selection: Selection) => tracker.set(selection), [tracker]);
 
   useLayoutEffect(() => {
     if (!isMasked) {
@@ -114,18 +61,18 @@ function useSelection(
 
     const input = getInputElement();
     if (!input) return;
-    input.addEventListener("focus", runSelectionLoop);
-    input.addEventListener("blur", stopSelectionLoop);
+    input.addEventListener("focus", tracker.start);
+    input.addEventListener("blur", tracker.stop);
 
     if (isInputFocused(input)) {
-      runSelectionLoop();
+      tracker.start();
     }
 
     return () => {
-      input.removeEventListener("focus", runSelectionLoop);
-      input.removeEventListener("blur", stopSelectionLoop);
+      input.removeEventListener("focus", tracker.start);
+      input.removeEventListener("blur", tracker.stop);
 
-      stopSelectionLoop();
+      tracker.stop();
     };
   });
 

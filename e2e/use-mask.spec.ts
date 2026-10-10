@@ -15,3 +15,15 @@ test("useMask fires consumer onChange with masked value (mirrored readout)", asy
   await input.pressSequentially("1234");
   await expect(page.getByTestId("usemask-readout")).toHaveText("12/34/____");
 });
+
+test("useMask select all + retype replaces the value", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("usemask");
+  await input.click();
+  await input.pressSequentially("12345678");
+  await expect(input).toHaveValue("12/34/5678");
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.waitForTimeout(50);
+  await input.pressSequentially("8765");
+  await expect(input).toHaveValue("87/65/____");
+});

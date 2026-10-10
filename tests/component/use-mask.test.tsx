@@ -11,7 +11,9 @@ import type { UseMaskOptions } from "../../src/types";
 function Harness({ mask, onChange }: { mask: string; onChange?: (v: string) => void }) {
   const ref = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
-    const controller = createMaskController(new MaskUtils({ mask, maskPlaceholder: "_" }), {
+    const controller = createMaskController({
+      maskUtils: new MaskUtils({ mask, maskPlaceholder: "_" }),
+      maskPlaceholder: "_",
       alwaysShowMask: false
     });
     controller.bind(ref.current!);
@@ -105,5 +107,16 @@ describe("useMask public export", () => {
   it("is exported from the package entry", async () => {
     const mod = await import("../../src/index");
     expect(typeof mod.useMask).toBe("function");
+  });
+});
+
+describe("useMask caret on focus", () => {
+  it("formats and places the caret on focusin, after Firefox's select-all on keyboard focus", () => {
+    render(<HookField mask="+7 (999) 999-99-99" />);
+    const input = screen.getByTestId("hook") as HTMLInputElement;
+    input.addEventListener("focus", () => input.setSelectionRange(0, input.value.length));
+    input.focus();
+    expect(input.value).toBe("+7 (___) ___-__-__");
+    expect([input.selectionStart, input.selectionEnd]).toEqual([4, 4]);
   });
 });
