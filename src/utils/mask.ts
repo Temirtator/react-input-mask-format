@@ -1,10 +1,18 @@
 import { findLastIndex, repeat } from "./helpers";
 import parseMask, { ParsedMaskOptions } from "./parse-mask";
+import {
+  PrefixHost,
+  normalizeUnprefixedValue,
+  sameFillingCharacters,
+  shouldInsertAfterPrefix,
+  trimOverflowingPrefix
+} from "../core/prefix";
 import type { FormatChars, InputState, Selection } from "../types";
 
 export default class MaskUtils {
   maskOptions: ParsedMaskOptions;
   transform?: (char: string, position: number) => string;
+  readonly prefixHost: PrefixHost;
 
   constructor(options: {
     mask?: string | Array<string | RegExp> | null;
@@ -14,6 +22,13 @@ export default class MaskUtils {
   }) {
     this.maskOptions = parseMask(options);
     this.transform = options.transform;
+    const prefix = this.maskOptions.prefix ?? "";
+    this.prefixHost = {
+      prefix,
+      slots: this.maskOptions.mask ? this.countEditablePositionsFrom(prefix.length) : 0,
+      fillingIndices: this.getFillingCharacterIndices,
+      fillingLengthAt: this.getStringFillingLengthAtPosition
+    };
   }
 
   isCharacterAllowedAtPosition = (character: string, position: number): boolean => {
@@ -144,101 +159,9 @@ export default class MaskUtils {
     return indices;
   };
 
-  // A mask that starts with fixed letters/digits (e.g. "+998 (", "KZ")
-  hasSignificantPrefix = (): boolean => {
-    const { prefix } = this.maskOptions;
-    return !!prefix && /[0-9A-Za-z]/.test(prefix);
-  };
-
-  // Text entered at or inside the prefix (position <= prefix length) of a prefixed mask that has more filling characters
-  // than the mask has slots carries its own country/trunk prefix
-  // ("+998 90 123 45 67", "8 912 …", "0555 …"): keep only the last characters that fit.
-  // Replacing text from inside a significant prefix (e.g. select all + paste) inserts after the
-  // prefix, unless the user is typing the prefix itself (the text's letters/digits continue the
-  // prefix's letters/digits from that position, case-insensitively; "+", "(" are skipped) or the
-  // text fills nothing after the prefix.
-  shouldInsertAfterPrefix = (string: string, position: number, wasTrimmed: boolean): boolean => {
-    const { prefix } = this.maskOptions;
-    if (!string || !this.hasSignificantPrefix() || position >= prefix!.length) {
-      return false;
-    }
-    if (!wasTrimmed) {
-      const remaining = prefix!.slice(position).replace(/[^0-9A-Za-z]/g, "");
-      const typed = string.replace(/[^0-9A-Za-z]/g, "").slice(0, remaining.length);
-      if (typed && remaining.toUpperCase().startsWith(typed.toUpperCase())) {
-        return false; // the user is typing the prefix itself
-      }
-    }
-    // redirect only if the text actually fills something after the prefix
-    return this.getStringFillingLengthAtPosition(string, prefix!.length) > 0;
-  };
-
-  trimOverflowingPrefix = (string: string, position: number): string => {
-    const { prefix } = this.maskOptions;
-    if (!this.hasSignificantPrefix() || position > prefix!.length) {
-      return string;
-    }
-    const slots = this.countEditablePositionsFrom(prefix!.length);
-    const indices = this.getFillingCharacterIndices(string);
-    if (indices.length <= slots) {
-      return string;
-    }
-    return string.slice(indices[indices.length - slots]);
-  };
-
-  // Letters/digits of the prefix: "998" for "+998 (", "77" for "+7 (7", "KZ" for "KZ"
-  getPrefixSignificantCharacters = (): string => {
-    return (this.maskOptions.prefix || "").replace(/[^0-9A-Za-z]/g, "");
-  };
-
-  // Whether the filling characters of `value` (at `indices`) start with `characters`, case-insensitively
-  startsWithCharacters = (value: string, indices: number[], characters: string): boolean => {
-    return (
-      indices.length >= characters.length &&
-      characters
-        .split("")
-        .every((character, k) => value[indices[k]].toUpperCase() === character.toUpperCase())
-    );
-  };
-
-  // A raw value that does not start with the literal mask prefix is placed after the prefix:
-  // - if its filling characters start with the prefix's letters/digits ("998…", "+998…", "kz…"),
-  //   those are dropped and the rest is used (its last N characters if it overflows);
-  // - otherwise, if it holds at least N filling characters ("901234567", "89123456789"),
-  //   its last N characters are used.
-  // Anything else keeps the old behaviour (null).
-  normalizeUnprefixedValue = (value: string): string | null => {
-    const { prefix } = this.maskOptions;
-    if (!this.hasSignificantPrefix() || !value || value.startsWith(prefix!)) {
-      return null;
-    }
-    const slots = this.countEditablePositionsFrom(prefix!.length);
-    const indices = this.getFillingCharacterIndices(value);
-    const significant = this.getPrefixSignificantCharacters();
-    // A complete number whose first characters are the prefix's last ones ("777 123 45 67" for
-    // "+7 (7"): the prefix part is already in the mask, so its last N characters are used.
-    for (let k = 1; k < significant.length; k++) {
-      if (indices.length === slots + k && this.startsWithCharacters(value, indices, significant.slice(-k))) {
-        return value.slice(indices[k]);
-      }
-    }
-    const startsWithPrefix = this.startsWithCharacters(value, indices, significant);
-    if (startsWithPrefix) {
-      const rest = indices.slice(significant.length);
-      if (rest.length === 0) {
-        return "";
-      }
-      return value.slice(rest[Math.max(0, rest.length - slots)]);
-    }
-    if (indices.length < slots) {
-      return null;
-    }
-    return value.slice(indices[indices.length - slots]);
-  };
-
   formatValue = (value: string): string => {
     const { maskPlaceholder, mask, prefix } = this.maskOptions;
-    const unprefixed = this.normalizeUnprefixedValue(value);
+    const unprefixed = normalizeUnprefixedValue(this.prefixHost, value);
     const start = unprefixed === null ? 0 : prefix!.length;
     if (unprefixed !== null) {
       value = unprefixed;
@@ -260,15 +183,15 @@ export default class MaskUtils {
     return this.insertStringAtPosition(maskPlaceholder, value, start);
   };
 
-  // A controlled value that holds the same letters/digits as the value already shown (e.g. the
-  // parent stored it digits-only) keeps the shown value instead of being read again.
   formatControlledValue = (value: string, shownValue: string): string => {
-    if (value && shownValue && value !== shownValue && this.formatValue(shownValue) === shownValue) {
-      const fillingCharacters = (string: string) =>
-        this.getFillingCharacterIndices(string).map(i => string[i]).join("").toUpperCase();
-      if (fillingCharacters(value) === fillingCharacters(shownValue)) {
-        return shownValue;
-      }
+    if (
+      value &&
+      shownValue &&
+      value !== shownValue &&
+      this.formatValue(shownValue) === shownValue &&
+      sameFillingCharacters(this.prefixHost, value, shownValue)
+    ) {
+      return shownValue;
     }
     return this.formatValue(value);
   };
@@ -394,8 +317,9 @@ export default class MaskUtils {
 
     if (selection.end! > previousSelection.start!) {
       const raw = newValue.slice(previousSelection.start!, selection.end!);
-      enteredString = this.trimOverflowingPrefix(raw, cursorPosition);
-      insertAfterPrefix = this.shouldInsertAfterPrefix(
+      enteredString = trimOverflowingPrefix(this.prefixHost, raw, cursorPosition);
+      insertAfterPrefix = shouldInsertAfterPrefix(
+        this.prefixHost,
         enteredString,
         cursorPosition,
         enteredString !== raw

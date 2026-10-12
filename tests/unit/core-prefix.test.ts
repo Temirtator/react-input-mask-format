@@ -17,12 +17,12 @@ type Subject = MaskUtils;
 const subject = (mask: Mask | null, maskPlaceholder: string | null = "_", transform?: Transform): Subject =>
   new MaskUtils({ mask, maskPlaceholder, transform: transform ? resolveTransform(transform) : undefined });
 
-const hasSignificant = (s: Subject) => s.hasSignificantPrefix();
-const significant = (s: Subject) => s.getPrefixSignificantCharacters();
-const trim = (s: Subject, string: string, position: number) => s.trimOverflowingPrefix(string, position);
+const hasSignificant = (s: Subject) => hasSignificantPrefix(s.prefixHost.prefix);
+const significant = (s: Subject) => prefixSignificantCharacters(s.prefixHost.prefix);
+const trim = (s: Subject, string: string, position: number) => trimOverflowingPrefix(s.prefixHost, string, position);
 const insertAfter = (s: Subject, string: string, position: number, wasTrimmed: boolean) =>
-  s.shouldInsertAfterPrefix(string, position, wasTrimmed);
-const normalize = (s: Subject, value: string) => s.normalizeUnprefixedValue(value);
+  shouldInsertAfterPrefix(s.prefixHost, string, position, wasTrimmed);
+const normalize = (s: Subject, value: string) => normalizeUnprefixedValue(s.prefixHost, value);
 
 const uz = () => subject("+\\9\\98 (99) 999-99-99");
 const uzNoPlaceholder = () => subject("+\\9\\98 (99) 999-99-99", null);
@@ -214,5 +214,28 @@ describe("prefix module on a hand-written host", () => {
     expect(normalizeUnprefixedValue(host, "9234")).toBe("234");
     expect(sameFillingCharacters(host, "2 3 4", "234")).toBe(true);
     expect(sameFillingCharacters(host, "235", "234")).toBe(false);
+  });
+});
+
+describe("sameFillingCharacters", () => {
+  it.each<[string, () => Subject, string, string, boolean]>([
+    ["kz: digits-only parent including the prefix digits", kz, "77771234567", "+7 (777) 123-45-67", true],
+    ["kz: national digits without the prefix digits", kz, "7771234567", "+7 (777) 123-45-67", false],
+    ["kz: one digit differs", kz, "77771234568", "+7 (777) 123-45-67", false],
+    ["kz: partial shown", kz, "7777123456", "+7 (777) 123-45-6_", true],
+    ["kzIban: letter case ignored", iban, "kz86125kzt5004100100", "KZ86 125K ZT50 0410 0100", true],
+    ["uz: partial vs full", uz, "90123456", "+998 (90) 123-45-67", false]
+  ])("%s", (_name, make, a, b, expected) => {
+    expect(sameFillingCharacters(make().prefixHost, a, b)).toBe(expected);
+  });
+});
+
+describe("MaskUtils without a mask", () => {
+  it("builds an empty host and the heuristics are no-ops", () => {
+    const utils = subject(null);
+    expect(utils.prefixHost).toEqual(expect.objectContaining({ prefix: "", slots: 0 }));
+    expect(trim(utils, "12345", 0)).toBe("12345");
+    expect(insertAfter(utils, "1", 0, false)).toBe(false);
+    expect(normalize(utils, "12345")).toBe(null);
   });
 });
