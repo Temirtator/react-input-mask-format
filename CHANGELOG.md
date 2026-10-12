@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Internal
+- Prefix heuristics for prefixed masks (`+998 (`, `+7 (7`, `KZ…`) moved from `MaskUtils` into
+  `src/core/prefix.ts` behind a small host interface, with a table test pinning every rule. Behavior unchanged.
+
 ## 2.7.2
 
 ### Fixed
