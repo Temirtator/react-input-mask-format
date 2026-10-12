@@ -2,6 +2,15 @@ import { describe, it, expect } from "vitest";
 import MaskUtils from "../../src/utils/mask";
 import { resolveTransform } from "../../src/utils/transform";
 import type { Mask, Transform } from "../../src/types";
+import {
+  PrefixHost,
+  hasSignificantPrefix,
+  prefixSignificantCharacters,
+  trimOverflowingPrefix,
+  shouldInsertAfterPrefix,
+  normalizeUnprefixedValue,
+  sameFillingCharacters
+} from "../../src/core/prefix";
 
 type Subject = MaskUtils;
 
@@ -176,5 +185,34 @@ describe("formatControlledValue keeps a shown value with the same filling charac
     ["kz: digits-only parent including the prefix digits is kept", kz, "77771234567", "+7 (777) 123-45-67", "+7 (777) 123-45-67"]
   ])("%s", (_name, make, value, shown, expected) => {
     expect(make().formatControlledValue(value, shown)).toBe(expected);
+  });
+});
+
+describe("prefix module on a hand-written host", () => {
+  const digits = (s: string) => s.split("").map((c, i) => (/[0-9]/.test(c) ? i : -1)).filter(i => i >= 0);
+  const host: PrefixHost = {
+    prefix: "+1 ",
+    slots: 3,
+    fillingIndices: digits,
+    fillingLengthAt: (s, position) => Math.min(digits(s).length, Math.max(0, 3 - (position - 3)))
+  };
+
+  it("depends only on the interface", () => {
+    expect(hasSignificantPrefix(host.prefix)).toBe(true);
+    expect(prefixSignificantCharacters(host.prefix)).toBe("1");
+    expect(trimOverflowingPrefix(host, "12345", 0)).toBe("345");
+    expect(trimOverflowingPrefix(host, "345", 0)).toBe("345");
+    expect(trimOverflowingPrefix(host, "12345", 4)).toBe("12345");
+    expect(shouldInsertAfterPrefix(host, "1", 0, false)).toBe(false);
+    expect(shouldInsertAfterPrefix(host, "5", 0, false)).toBe(true);
+    expect(shouldInsertAfterPrefix(host, "12", 0, true)).toBe(true);
+    expect(shouldInsertAfterPrefix(host, "5", 3, false)).toBe(false);
+    expect(normalizeUnprefixedValue(host, "+1 234")).toBe(null);
+    expect(normalizeUnprefixedValue(host, "1234")).toBe("234");
+    expect(normalizeUnprefixedValue(host, "1")).toBe("");
+    expect(normalizeUnprefixedValue(host, "12")).toBe("2");
+    expect(normalizeUnprefixedValue(host, "9234")).toBe("234");
+    expect(sameFillingCharacters(host, "2 3 4", "234")).toBe(true);
+    expect(sameFillingCharacters(host, "235", "234")).toBe(false);
   });
 });
