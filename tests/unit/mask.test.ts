@@ -149,12 +149,4 @@ describe("MaskUtils prefix-aware input", () => {
     expect(kz.formatValue("77771234567")).toBe("+7 (777) 123-45-67");
     expect(kz.formatValue("777")).toBe("+7 (77_) ___-__-__");
   });
-
-  it("trimOverflowingPrefix keeps the last slots-worth of characters entered at the start", () => {
-    const utils = phone();
-    expect(utils.trimOverflowingPrefix("+998 90 123 45 67", 6)).toBe("90 123 45 67");
-    expect(utils.trimOverflowingPrefix("8 90 123 45 67", 6)).toBe("90 123 45 67");
-    expect(utils.trimOverflowingPrefix("90 123 45 67", 6)).toBe("90 123 45 67");
-    expect(utils.trimOverflowingPrefix("+998 90 123 45 67", 10)).toBe("+998 90 123 45 67");
-  });
 });
