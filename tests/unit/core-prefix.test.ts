@@ -30,6 +30,8 @@ describe("hasSignificantPrefix", () => {
     ["uzPhone +998 (", uz, true],
     ["kzPhone +7 (7", kz, true],
     ["kzIban KZ", iban, true],
+    ["ruPhone +7 (", ru, true],
+    ["kgPhone +996 (", kg, true],
     ["US phone (", us, false],
     ["date, no prefix", date, false],
     ["card, no prefix", card, false],
@@ -44,6 +46,8 @@ describe("prefixSignificantCharacters", () => {
     ["uzPhone", uz, "998"],
     ["kzPhone", kz, "77"],
     ["kzIban", iban, "KZ"],
+    ["ruPhone", ru, "7"],
+    ["kgPhone", kg, "996"],
     ["US phone", us, ""],
     ["date", date, ""]
   ])("%s", (_name, make, expected) => {
@@ -83,6 +87,7 @@ describe("shouldInsertAfterPrefix", () => {
     ["uz: empty", uz, "", 0, false, false],
     ["uz: fills nothing", uz, "-", 0, false, false],
     ["uz: plus only", uz, "+", 0, false, false],
+    ["uz: letter fills nothing and is not the prefix", uz, "a", 0, false, false],
     ["uz: 9 at 5, inside the prefix after its digits", uz, "9", 5, false, true],
     ["uz: 0 at 5", uz, "0", 5, false, true],
     ["uz: at the prefix end", uz, "9", 6, false, false],
@@ -166,7 +171,9 @@ describe("formatControlledValue keeps a shown value with the same filling charac
     ["uz: digits-only parent", uz, "901234567", "+998 (90) 123-45-67", "+998 (90) 123-45-67"],
     ["uz: nothing shown yet", uz, "901234567", "", "+998 (90) 123-45-67"],
     ["uz: shown is partial", uz, "901234567", "+998 (90) 123-45-6_", "+998 (90) 123-45-67"],
-    ["kzIban: lowercase parent", iban, "kz86125kzt5004100100", "KZ86 125K ZT50 0410 0100", "KZ86 125K ZT50 0410 0100"]
+    ["kzIban: lowercase parent", iban, "kz86125kzt5004100100", "KZ86 125K ZT50 0410 0100", "KZ86 125K ZT50 0410 0100"],
+    ["kz: partial shown with the same filling characters is kept", kz, "7777123456", "+7 (777) 123-45-6_", "+7 (777) 123-45-6_"],
+    ["kz: digits-only parent including the prefix digits is kept", kz, "77771234567", "+7 (777) 123-45-67", "+7 (777) 123-45-67"]
   ])("%s", (_name, make, value, shown, expected) => {
     expect(make().formatControlledValue(value, shown)).toBe(expected);
   });
