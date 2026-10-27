@@ -22,10 +22,27 @@ function startsWithCharacters(value: string, indices: number[], characters: stri
   );
 }
 
+export function stripInternationalPrefix(host: PrefixHost, string: string): string | null {
+  const { prefix } = host;
+  if (!prefix.startsWith("+") || !string.trimStart().startsWith("+")) {
+    return null;
+  }
+  const significant = prefixSignificantCharacters(prefix);
+  const indices = host.fillingIndices(string);
+  if (!significant || !startsWithCharacters(string, indices, significant)) {
+    return null;
+  }
+  return indices.length > significant.length ? string.slice(indices[significant.length]) : "";
+}
+
 export function trimOverflowingPrefix(host: PrefixHost, string: string, position: number): string {
   const { prefix, slots } = host;
   if (!hasSignificantPrefix(prefix) || position > prefix.length) {
     return string;
+  }
+  const international = stripInternationalPrefix(host, string);
+  if (international !== null) {
+    return international;
   }
   const indices = host.fillingIndices(string);
   if (indices.length <= slots) {
@@ -58,6 +75,10 @@ export function normalizeUnprefixedValue(host: PrefixHost, value: string): strin
   const { prefix, slots } = host;
   if (!hasSignificantPrefix(prefix) || !value || value.startsWith(prefix)) {
     return null;
+  }
+  const international = stripInternationalPrefix(host, value);
+  if (international !== null) {
+    return international;
   }
   const indices = host.fillingIndices(value);
   const significant = prefixSignificantCharacters(prefix);
