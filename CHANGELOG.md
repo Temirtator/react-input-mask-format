@@ -5,6 +5,8 @@
 ### Internal
 - Prefix heuristics for prefixed masks (`+998 (`, `+7 (7`, `KZ…`) moved from `MaskUtils` into
   `src/core/prefix.ts` behind a small host interface, with a table test pinning every rule. Behavior unchanged.
+- The e2e suite runs in Chromium and Firefox. New paste and autofill coverage for the prefixed phone presets,
+  card, IBAN, a date mask and `useMask`.
 
 ## 2.7.2
 
