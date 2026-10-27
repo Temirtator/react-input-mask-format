@@ -132,7 +132,7 @@ for (const [name, autofill] of Object.entries(autofillHelpers)) {
     });
 
     test("kzPhone: typing continues after autofill", async ({ page }) => {
-      test.fixme(true, "+7 (777) 987-65-4_ but +7 (777) 798-76-54");
+      test.fixme(true, "+7 (777) 987-65-4_ but +7 (777) 798-76-54: 10 digits are read as a national number, the leading + is ignored");
       const input = await openField(page, kzPhone);
       await autofill(input, "+7 777 987 65 4");
       await expect(input).toHaveValue("+7 (777) 987-65-4_");
