@@ -274,9 +274,24 @@ describe("trimOverflowingPrefix with a leading plus", () => {
     ["kg partial", kg, "+996 555 12 34 5", "555 12 34 5"],
     ["kz partial", kz, "+7 777 987 65 4", "77 987 65 4"],
     ["kz overflow keeps the first digits", kz, "+7 701 123 45 678", "01 123 45 678"],
-    ["US +1 partial", usIntl, "+1 555 123 456", "555 123 456"]
+    ["US +1 partial", usIntl, "+1 555 123 456", "555 123 456"],
+    ["uz: bare country code falls through", uz, "+998", "+998"],
+    ["ru: bare country code falls through", ru, "+7", "+7"]
   ])("%s", (_name, make, string, expected) => {
     expect(trim(make(), string, 0)).toBe(expected);
+  });
+});
+
+describe("select all + paste of a bare country code clears the value", () => {
+  it.each<[string, () => Subject, string, string, string]>([
+    ["uz", uz, "+998 (90) 123-45-67", "+998", "+998 (__) ___-__-__"],
+    ["ru", ru, "+7 (912) 345-67-89", "+7", "+7 (___) ___-__-__"]
+  ])("%s", (_name, make, previous, pasted, expected) => {
+    const next = make().processChange(
+      { value: pasted, selection: { start: pasted.length, end: pasted.length } },
+      { value: previous, selection: { start: 0, end: previous.length, length: previous.length } }
+    );
+    expect(next.value).toBe(expected);
   });
 });
 

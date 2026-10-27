@@ -41,7 +41,7 @@ export function trimOverflowingPrefix(host: PrefixHost, string: string, position
     return string;
   }
   const international = stripInternationalPrefix(host, string);
-  if (international !== null) {
+  if (international) {
     return international;
   }
   const indices = host.fillingIndices(string);
