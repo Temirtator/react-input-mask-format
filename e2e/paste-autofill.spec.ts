@@ -1,9 +1,10 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { pasteInto, pasteOver, autofillFocused, autofillUnfocused } from "./helpers";
+import { Country } from "../demo/countries";
 
 type Field = {
   testid: string;
-  tab?: "ru" | "uz" | "kg";
+  tab?: Country;
   input: string;
   expected: string;
 };
@@ -14,9 +15,9 @@ const usemask: Field = { testid: "usemask", input: "31.12.2024", expected: "31/1
 
 const pasteCases: Field[] = [
   kzPhone,
-  { testid: "ruPhone", tab: "ru", input: "89123456789", expected: "+7 (912) 345-67-89" },
-  { testid: "uzPhone", tab: "uz", input: "+998 90 123 45 67", expected: "+998 (90) 123-45-67" },
-  { testid: "kgPhone", tab: "kg", input: "0555 12 34 56", expected: "+996 (555) 12-34-56" },
+  { testid: "ruPhone", tab: Country.Ru, input: "89123456789", expected: "+7 (912) 345-67-89" },
+  { testid: "uzPhone", tab: Country.Uz, input: "+998 90 123 45 67", expected: "+998 (90) 123-45-67" },
+  { testid: "kgPhone", tab: Country.Kg, input: "0555 12 34 56", expected: "+996 (555) 12-34-56" },
   card,
   { testid: "iban", input: "kz86125kzt5004100100", expected: "KZ86 125K ZT50 0410 0100" },
   { testid: "date", input: "31.12.2024", expected: "31/12/2024" },
@@ -96,7 +97,7 @@ test.describe("paste over a selection", () => {
 
 const autofillCases: Field[] = [
   kzPhone,
-  { testid: "ruPhone", tab: "ru", input: "89123456789", expected: "+7 (912) 345-67-89" },
+  { testid: "ruPhone", tab: Country.Ru, input: "89123456789", expected: "+7 (912) 345-67-89" },
   card,
   usemask
 ];
