@@ -25,6 +25,8 @@ export async function pasteOver(page: Page, target: Locator, text: string): Prom
 }
 
 export async function autofillFocused(target: Locator, text: string): Promise<void> {
+  await target.click();
+  await target.page().waitForTimeout(50);
   await target.fill(text);
 }
 

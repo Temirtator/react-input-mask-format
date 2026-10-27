@@ -118,10 +118,7 @@ for (const [name, autofill] of Object.entries(autofillHelpers)) {
       });
     }
 
-    test("kzPhone: partial value typed, field left, then autofilled", async ({ page, browserName }) => {
-      test.fixme(name === "unfocused", "+7 (777) 987-65-43 but +7 (701) 765-43-__");
-      test.fixme(name === "focused" && browserName === "chromium", "+7 (777) 987-65-43 but +7 (701) 777-79-87");
-      test.skip(name === "focused" && browserName === "firefox", "flaky in Firefox: +7 (701) 765-43-__");
+    test("kzPhone: partial value typed, field left, then autofilled", async ({ page }) => {
       const input = await openField(page, kzPhone);
       await input.click();
       await input.pressSequentially("01");
@@ -133,7 +130,6 @@ for (const [name, autofill] of Object.entries(autofillHelpers)) {
     });
 
     test("kzPhone: typing continues after autofill", async ({ page }) => {
-      test.fixme(true, "+7 (777) 987-65-4_ but +7 (777) 798-76-54: 10 digits are read as a national number, the leading + is ignored");
       const input = await openField(page, kzPhone);
       await autofill(input, "+7 777 987 65 4");
       await expect(input).toHaveValue("+7 (777) 987-65-4_");
