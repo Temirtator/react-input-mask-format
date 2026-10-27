@@ -50,7 +50,7 @@ function PresetField(
   const [v, setV] = useState("");
   const ok = validate && v.trim() ? validate(v) : null;
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
+    <div style={{ display: "flex", alignItems: "center" }} data-testid={`${testid}-state`} data-value={v}>
       <InputMask
         {...preset}
         value={v}
@@ -259,6 +259,9 @@ function App() {
           </Row>
           <Row label="Raw time hook" sub="useTimeFormat"><TimeHookField /></Row>
         </section>
+        {import.meta.env.DEV && (
+          <input data-testid="scratch" aria-label="scratch" style={{ ...fieldStyle, opacity: 0.35 }} />
+        )}
       </div>
     </main>
   );
