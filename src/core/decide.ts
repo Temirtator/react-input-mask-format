@@ -1,12 +1,14 @@
 import type { InputState, Selection } from "../types";
 import type { MaskConfig } from "./config";
+import { resolveStaleSelection } from "./stale-selection";
 
 export function decideChange(
   cfg: MaskConfig,
   currentState: InputState,
   previousState: InputState
 ): InputState {
-  const nextState: InputState = cfg.maskUtils.processChange(currentState, previousState);
+  const resolved = resolveStaleSelection(previousState, currentState);
+  const nextState: InputState = cfg.maskUtils.processChange(resolved.current, resolved.previous);
   if (cfg.beforeMaskedStateChange) {
     return cfg.beforeMaskedStateChange({ currentState, previousState, nextState });
   }
