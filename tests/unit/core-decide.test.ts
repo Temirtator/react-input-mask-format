@@ -114,6 +114,26 @@ describe("decideChange with a stale selection", () => {
       { value: "+7 (701) ___-__-__", selection: { start: 9, end: 9 } }
     );
     expect(next.value).toBe("+7 (705) 1__-__-__");
+    expect(next.selection).toEqual({ start: 10, end: 10 });
+    const caret = next.selection.start!;
+    const following = decideChange(
+      cfg(),
+      {
+        value: next.value.slice(0, caret) + "2" + next.value.slice(caret),
+        selection: { start: caret + 1, end: caret + 1 }
+      },
+      next
+    );
+    expect(following.value).toBe("+7 (705) 12_-__-__");
+  });
+
+  it("keeps the caret at the end of a filled value after a stale recovery", () => {
+    const next = decideChange(
+      cfg(),
+      { value: "+7 777 987 65 43", selection: { start: 16, end: 16 } },
+      { value: "+7 (701) ___-__-__", selection: { start: 9, end: 9 } }
+    );
+    expect(next.selection).toEqual({ start: 18, end: 18 });
   });
 
   it("still passes the original states to beforeMaskedStateChange", () => {

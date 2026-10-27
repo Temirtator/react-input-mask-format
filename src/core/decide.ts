@@ -8,7 +8,13 @@ export function decideChange(
   previousState: InputState
 ): InputState {
   const resolved = resolveStaleSelection(previousState, currentState);
-  const nextState: InputState = cfg.maskUtils.processChange(resolved.current, resolved.previous);
+  let nextState: InputState = cfg.maskUtils.processChange(resolved.current, resolved.previous);
+  if (resolved.previous !== previousState) {
+    const fallback = cfg.maskUtils.getDefaultSelectionForValue(nextState.value);
+    if (fallback.start !== null && fallback.start < nextState.selection.start!) {
+      nextState = { ...nextState, selection: fallback };
+    }
+  }
   if (cfg.beforeMaskedStateChange) {
     return cfg.beforeMaskedStateChange({ currentState, previousState, nextState });
   }
