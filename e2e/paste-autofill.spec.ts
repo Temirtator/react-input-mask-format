@@ -9,6 +9,7 @@ type Field = {
 };
 
 const kzPhone: Field = { testid: "kzPhone", input: "+7 701 123 45 67", expected: "+7 (701) 123-45-67" };
+const card: Field = { testid: "card", input: "4242 4242 4242 4242", expected: "4242 4242 4242 4242" };
 const usemask: Field = { testid: "usemask", input: "31.12.2024", expected: "31/12/2024" };
 
 const pasteCases: Field[] = [
@@ -16,7 +17,7 @@ const pasteCases: Field[] = [
   { testid: "ruPhone", tab: "ru", input: "89123456789", expected: "+7 (912) 345-67-89" },
   { testid: "uzPhone", tab: "uz", input: "+998 90 123 45 67", expected: "+998 (90) 123-45-67" },
   { testid: "kgPhone", tab: "kg", input: "0555 12 34 56", expected: "+996 (555) 12-34-56" },
-  { testid: "card", input: "4242 4242 4242 4242", expected: "4242 4242 4242 4242" },
+  card,
   { testid: "iban", input: "kz86125kzt5004100100", expected: "KZ86 125K ZT50 0410 0100" },
   { testid: "date", input: "31.12.2024", expected: "31/12/2024" },
   usemask
@@ -96,7 +97,7 @@ test.describe("paste over a selection", () => {
 const autofillCases: Field[] = [
   kzPhone,
   { testid: "ruPhone", tab: "ru", input: "89123456789", expected: "+7 (912) 345-67-89" },
-  { testid: "card", input: "4242 4242 4242 4242", expected: "4242 4242 4242 4242" },
+  card,
   usemask
 ];
 
@@ -141,6 +142,18 @@ for (const [name, autofill] of Object.entries(autofillHelpers)) {
       await input.pressSequentially("3");
       await expect(input).toHaveValue("+7 (777) 987-65-43");
       await expectState(page, kzPhone, "+7 (777) 987-65-43");
+    });
+
+    test("card: typing continues after autofill", async ({ page }) => {
+      const input = await openField(page, card);
+      await autofill(input, "4242 4242 4242 424");
+      await expect(input).toHaveValue("4242 4242 4242 424_");
+      await page.getByTestId("iban").click();
+      await input.click();
+      await page.waitForTimeout(50);
+      await input.pressSequentially("2");
+      await expect(input).toHaveValue("4242 4242 4242 4242");
+      await expectState(page, card, "4242 4242 4242 4242");
     });
   });
 }
