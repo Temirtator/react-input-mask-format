@@ -18,6 +18,7 @@ import {
 } from "react-input-mask-format/validators";
 import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
 import { TimeFormat, useTimeFormat } from "react-input-mask-format/time";
+import { Country } from "./countries";
 
 const bg = "#0e1420", panel = "#131c2c", line = "#223049", ink = "#f4f8ff", dim = "#6b7f9c", gold = "#FFC800";
 
@@ -50,7 +51,7 @@ function PresetField(
   const [v, setV] = useState("");
   const ok = validate && v.trim() ? validate(v) : null;
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
+    <div style={{ display: "flex", alignItems: "center" }} data-testid={`${testid}-state`} data-value={v}>
       <InputMask
         {...preset}
         value={v}
@@ -95,12 +96,11 @@ function TimeHookField() {
   return <input ref={ref} data-testid="time-hook" style={fieldStyle} />;
 }
 
-type Country = "kz" | "ru" | "uz" | "kg";
 const COUNTRIES: { id: Country; label: string }[] = [
-  { id: "kz", label: "KZ" },
-  { id: "ru", label: "RU" },
-  { id: "uz", label: "UZ" },
-  { id: "kg", label: "KG" }
+  { id: Country.Kz, label: "KZ" },
+  { id: Country.Ru, label: "RU" },
+  { id: Country.Uz, label: "UZ" },
+  { id: Country.Kg, label: "KG" }
 ];
 const DEMO_BIK = "044525225";
 
@@ -129,7 +129,7 @@ function CountryTabs({ value, onChange }: { value: Country; onChange: (c: Countr
 }
 
 function App() {
-  const [country, setCountry] = useState<Country>("kz");
+  const [country, setCountry] = useState<Country>(Country.Kz);
   const [hex, setHex] = useState("");
   const [up, setUp] = useState("");
   const [amount, setAmount] = useState<number | undefined>(undefined);
@@ -152,7 +152,7 @@ function App() {
             <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Country preset packs · /presets</div>
             <CountryTabs value={country} onChange={setCountry} />
           </div>
-          {country === "kz" && (
+          {country === Country.Kz && (
             <>
               <Row label="Телефон" sub="kzPhone"><PresetField preset={kzPhone} testid="kzPhone" /></Row>
               <Row label="ИИН" sub="kzIin · checksum"><PresetField preset={kzIin} testid="iin" validate={isValidIin} /></Row>
@@ -162,7 +162,7 @@ function App() {
               <Row label="Индекс" sub="kzPostal"><PresetField preset={kzPostal} testid="postal" /></Row>
             </>
           )}
-          {country === "ru" && (
+          {country === Country.Ru && (
             <>
               <Row label="Телефон" sub="ruPhone"><PresetField preset={ruPhone} testid="ruPhone" /></Row>
               <Row label="ИНН физлица" sub="ruInnPerson · checksum"><PresetField preset={ruInnPerson} testid="ruInnPerson" validate={isValidRuInn} /></Row>
@@ -179,7 +179,7 @@ function App() {
               <Row label="Паспорт" sub="ruPassport"><PresetField preset={ruPassport} testid="ruPassport" /></Row>
             </>
           )}
-          {country === "uz" && (
+          {country === Country.Uz && (
             <>
               <Row label="Телефон" sub="uzPhone"><PresetField preset={uzPhone} testid="uzPhone" /></Row>
               <Row label="ПИНФЛ" sub="uzPinfl · checksum"><PresetField preset={uzPinfl} testid="uzPinfl" validate={isValidUzPinfl} /></Row>
@@ -192,7 +192,7 @@ function App() {
               <Row label="Паспорт / ID" sub="uzPassport · UPPER"><PresetField preset={uzPassport} testid="uzPassport" /></Row>
             </>
           )}
-          {country === "kg" && (
+          {country === Country.Kg && (
             <>
               <Row label="Телефон" sub="kgPhone"><PresetField preset={kgPhone} testid="kgPhone" /></Row>
               <Row label="ИНН физлица" sub="kgInnPerson · structure"><PresetField preset={kgInnPerson} testid="kgInnPerson" validate={isValidKgInn} /></Row>
@@ -259,6 +259,9 @@ function App() {
           </Row>
           <Row label="Raw time hook" sub="useTimeFormat"><TimeHookField /></Row>
         </section>
+        {import.meta.env.DEV && (
+          <input data-testid="scratch" aria-label="scratch" style={{ ...fieldStyle, opacity: 0.35 }} />
+        )}
       </div>
     </main>
   );
