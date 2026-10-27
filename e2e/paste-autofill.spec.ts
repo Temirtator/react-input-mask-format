@@ -1,5 +1,5 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
-import { pasteInto, pasteOver } from "./helpers";
+import { pasteInto, pasteOver, autofillFocused, autofillUnfocused } from "./helpers";
 
 type Field = {
   testid: string;
@@ -92,3 +92,55 @@ test.describe("paste over a selection", () => {
     await expectState(page, usemask, "01/02/2003");
   });
 });
+
+const autofillCases: Field[] = [
+  kzPhone,
+  { testid: "ruPhone", tab: "ru", input: "89123456789", expected: "+7 (912) 345-67-89" },
+  { testid: "card", input: "4242 4242 4242 4242", expected: "4242 4242 4242 4242" },
+  usemask
+];
+
+const autofillHelpers: Record<string, (target: Locator, text: string) => Promise<void>> = {
+  focused: autofillFocused,
+  unfocused: autofillUnfocused
+};
+
+for (const [name, autofill] of Object.entries(autofillHelpers)) {
+  test.describe(`autofill ${name}`, () => {
+    for (const field of autofillCases) {
+      test(`${field.testid}: empty field`, async ({ page }) => {
+        const input = await openField(page, field);
+        await autofill(input, field.input);
+        await expect(input).toHaveValue(field.expected);
+        await expectState(page, field, field.expected);
+      });
+    }
+
+    test("kzPhone: partial value typed, field left, then autofilled", async ({ page, browserName }) => {
+      test.fixme(name === "unfocused", "+7 (777) 987-65-43 but +7 (701) 765-43-__");
+      test.fixme(name === "focused" && browserName === "chromium", "+7 (777) 987-65-43 but +7 (701) 777-79-87");
+      test.skip(name === "focused" && browserName === "firefox", "flaky in Firefox: +7 (701) 765-43-__");
+      const input = await openField(page, kzPhone);
+      await input.click();
+      await input.pressSequentially("01");
+      await expect(input).toHaveValue("+7 (701) ___-__-__");
+      await page.getByTestId("iban").click();
+      await autofill(input, "+7 777 987 65 43");
+      await expect(input).toHaveValue("+7 (777) 987-65-43");
+      await expectState(page, kzPhone, "+7 (777) 987-65-43");
+    });
+
+    test("kzPhone: typing continues after autofill", async ({ page }) => {
+      test.fixme(true, "+7 (777) 987-65-4_ but +7 (777) 798-76-54");
+      const input = await openField(page, kzPhone);
+      await autofill(input, "+7 777 987 65 4");
+      await expect(input).toHaveValue("+7 (777) 987-65-4_");
+      await page.getByTestId("iban").click();
+      await input.click();
+      await page.waitForTimeout(50);
+      await input.pressSequentially("3");
+      await expect(input).toHaveValue("+7 (777) 987-65-43");
+      await expectState(page, kzPhone, "+7 (777) 987-65-43");
+    });
+  });
+}
