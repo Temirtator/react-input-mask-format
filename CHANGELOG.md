@@ -5,10 +5,13 @@
 ### Fixed
 - Autofill (or any programmatic change) over a partly typed value now replaces it. Before, the new text was
   spliced in at the caret the field had when it was left (`+7 (701) ___…` + autofill → `+7 (701) 765-43-__`).
+  Edits the last selection cannot explain (an IME rewrite in the middle, drag-and-drop) are re-formatted as
+  a whole value, with the caret on the first empty slot.
 - A partial international number with a leading `+` fills the right slots in `uzPhone`, `kgPhone`, `kzPhone`
   and any custom `+` mask (`+998 90 123 45 6` → `+998 (90) 123-45-6_`, was `+998 (89) 012-34-56`).
-- Behavior change: with a leading `+`, extra trailing characters (an extension, a typo) are dropped from the end
-  instead of the start (`+7 701 123 45 67 доб. 12` → `+7 (701) 123-45-67`). Values without `+` are unchanged.
+- Behavior change: with a leading `+` and the country code, extra trailing characters (an extension, a typo)
+  are dropped from the end instead of the start (`+7 701 123 45 67 доб. 12` → `+7 (701) 123-45-67`). Values
+  without `+` are unchanged.
 
 ### Internal
 - Prefix heuristics for prefixed masks (`+998 (`, `+7 (7`, `KZ…`) moved from `MaskUtils` into
