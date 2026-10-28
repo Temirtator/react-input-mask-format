@@ -184,3 +184,36 @@ describe("MaskUtils partial number without + reads as national", () => {
     expect(make().formatValue(text)).toBe(expected);
   });
 });
+
+describe("MaskUtils text that fills no slot from the prefix", () => {
+  const uz = () => new MaskUtils({ mask: "+\\9\\98 (99) 999-99-99", maskPlaceholder: "_" });
+  const change = (utils: MaskUtils, before: string, start: number, end: number, text: string) =>
+    utils.processChange(
+      { value: before.slice(0, start) + text + before.slice(end), selection: { start: start + text.length, end: start + text.length } },
+      { value: before, selection: { start, end, length: end - start } }
+    );
+
+  it("keeps the value when junk replaces a selection that starts in the prefix", () => {
+    const utils = new MaskUtils({ mask: "+7 99", maskPlaceholder: "_" });
+    const result = change(utils, "+7 1_", 0, 5, "!");
+    expect(result.value).toBe("+7 1_");
+    expect(result.selection).toEqual({ start: 3, end: 3 });
+  });
+
+  it("puts the caret after the prefix once the country code is complete", () => {
+    const result = change(uz(), "+998 (__) ___-__-__", 0, 19, "+998");
+    expect(result.value).toBe("+998 (__) ___-__-__");
+    expect(result.selection).toEqual({ start: 6, end: 6 });
+  });
+
+  it("keeps the caret inside the prefix while the country code is being typed", () => {
+    const result = change(uz(), "+998 (90) 123-45-67", 0, 19, "+");
+    expect(result.value).toBe("+998 (__) ___-__-__");
+    expect(result.selection).toEqual({ start: 1, end: 1 });
+  });
+
+  it("puts the caret after the prefix when a character of the text is skipped", () => {
+    const result = change(uz(), "+998 (__) ___-__-__", 0, 19, "+a");
+    expect(result.selection).toEqual({ start: 6, end: 6 });
+  });
+});

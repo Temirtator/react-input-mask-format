@@ -1,4 +1,4 @@
-import { accepts, isFilledSlot, literalChars, slotIndices } from "./description";
+import { accepts, isFilledSlot, slotIndices } from "./description";
 import type { MaskDescription } from "./description";
 import type { Field } from "./driver";
 
@@ -12,14 +12,21 @@ export const known = {
     const slots = slotIndices(d);
     return literalsAfterFirstSlot(d).some(char => slots.some(i => accepts(d, i, char)));
   },
-  fillsNoSlotFromPrefix(d: MaskDescription, text: string, start: number): boolean {
-    const literals = literalChars(d);
-    const slots = slotIndices(d);
-    return (
-      start < d.prefix.length &&
-      text.length > 0 &&
-      text.split("").every(char => literals.includes(char) || (d.placeholder !== null && slots.some(i => d.placeholder![i] === char)))
-    );
+  entersPrefixStart(d: MaskDescription, text: string, start: number): boolean {
+    return [start, 0].some(from => {
+      if (from >= d.prefix.length || !text.length) {
+        return false;
+      }
+      let at = from;
+      for (const char of text.toUpperCase()) {
+        const found = d.prefix.slice(at).toUpperCase().indexOf(char);
+        if (found < 0) {
+          return false;
+        }
+        at += found + 1;
+      }
+      return /[0-9A-Za-z]/.test(d.prefix.slice(at));
+    });
   },
   containsPlaceholder(d: MaskDescription, text: string): boolean {
     return d.placeholder !== null && d.positions.some((position, i) => position.kind === "slot" && text.includes(d.placeholder![i]));
@@ -44,8 +51,5 @@ export const known = {
     const tail = previous.value.slice(previous.end);
     const explained = value.length >= head.length + tail.length && value.startsWith(head) && value.endsWith(tail);
     return explained && caret < value.length - tail.length;
-  },
-  selectionFromPrefix(d: MaskDescription, field: Field): boolean {
-    return field.start < d.prefix.length && field.end > field.start;
   }
 };

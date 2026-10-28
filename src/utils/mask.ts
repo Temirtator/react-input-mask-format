@@ -2,6 +2,7 @@ import { findLastIndex, repeat } from "./helpers";
 import parseMask, { ParsedMaskOptions } from "./parse-mask";
 import {
   PrefixHost,
+  hasSignificantPrefix,
   normalizeUnprefixedValue,
   readUnprefixedInput,
   sameFillingCharacters,
@@ -99,12 +100,27 @@ export default class MaskUtils {
   };
 
   getStringFillingLengthAtPosition = (string: string, position: number): number => {
-    const characters = string.split("");
-    const insertedValue = characters.reduce((value, character) => {
-      return this.insertCharacterAtPosition(value, character, value.length);
+    return this.placeString(string, position).length;
+  };
+
+  placeString = (string: string, position: number): { length: number; skipped: boolean } => {
+    let placedLength = position;
+    let skipped = false;
+    string.split("").reduce((value, character) => {
+      const next = this.insertCharacterAtPosition(value, character, value.length);
+      const appended = next.slice(value.length);
+      if (
+        appended &&
+        (this.isPositionEditable(next.length - 1) || appended.toUpperCase().includes(character.toUpperCase()))
+      ) {
+        placedLength = next.length;
+      } else {
+        skipped = true;
+      }
+      return next;
     }, repeat(" ", position));
 
-    return insertedValue.length - position;
+    return { length: placedLength - position, skipped };
   };
 
   getLeftEditablePosition = (position: number): number | null => {
@@ -314,6 +330,7 @@ export default class MaskUtils {
     let formattedEnteredStringLength = 0;
     let removedLength = 0;
     let insertAfterPrefix = false;
+    let enteredSkipped = false;
     let cursorPosition = Math.min(previousSelection.start!, selection.start!);
 
     if (selection.end! > previousSelection.start!) {
@@ -324,10 +341,9 @@ export default class MaskUtils {
         unprefixed === null
           ? shouldInsertAfterPrefix(this.prefixHost, enteredString, cursorPosition, enteredString !== raw)
           : this.getStringFillingLengthAtPosition(unprefixed, prefix!.length) > 0;
-      formattedEnteredStringLength = this.getStringFillingLengthAtPosition(
-        enteredString,
-        insertAfterPrefix ? prefix!.length : cursorPosition
-      );
+      const placed = this.placeString(enteredString, insertAfterPrefix ? prefix!.length : cursorPosition);
+      formattedEnteredStringLength = placed.length;
+      enteredSkipped = placed.skipped;
       if (!formattedEnteredStringLength) {
         removedLength = 0;
       } else {
@@ -367,7 +383,7 @@ export default class MaskUtils {
       cursorPosition = mask!.length;
     } else if (
       cursorPosition < prefix!.length &&
-      !formattedEnteredStringLength
+      (!formattedEnteredStringLength || enteredSkipped || !hasSignificantPrefix(prefix!.slice(cursorPosition)))
     ) {
       cursorPosition = prefix!.length;
     } else if (

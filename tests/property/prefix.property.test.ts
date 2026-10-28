@@ -47,7 +47,7 @@ describe("prefix masks", () => {
         ),
         ([c, plus, length, national]) => {
           const text = `${plus ? "+" : ""}${c.d.significant.slice(0, length)}${national}`;
-          fc.pre(!known.fillsNoSlotFromPrefix(c.d, text, 0));
+          fc.pre(!known.entersPrefixStart(c.d, text, 0));
           const pasted = pasteOverAll(c.subject, focus(c.subject), text);
           expect(pasted.start).toBeGreaterThanOrEqual(c.d.prefix.length);
         }
