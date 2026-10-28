@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createSubject, extendedFormatChars, isValidSetup, presets } from "./subject";
+import { createSubject, extendedFormatChars, presets } from "./subject";
 import { describeMask } from "./description";
 import { known } from "./known";
 import { caretAt, focus, insert, pasteOverAll, typeString } from "./driver";
@@ -13,12 +13,6 @@ describe("known divergences (pinned until fixed)", () => {
     const subject = createSubject(setup);
     expect(typeString(subject, focus(subject), "77462941").value).toBe("7774-");
     expect(subject.format("77462941")).toBe("7746-");
-  });
-
-  it("K3 a full maskPlaceholder for an escaped mask is validated against the raw string (expected: 9_ is valid)", () => {
-    expect(isValidSetup({ mask: "\\99", maskPlaceholder: "9_" })).toBe(false);
-    expect(isValidSetup({ mask: "\\99", maskPlaceholder: "9__" })).toBe(true);
-    expect(createSubject({ mask: "\\99", maskPlaceholder: "9__" }).format("5")).toBe("95_");
   });
 
   it("K4 (by design) text that types the beginning of the prefix leaves the caret before the rest of it", () => {

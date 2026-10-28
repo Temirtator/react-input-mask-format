@@ -93,7 +93,7 @@ export const generatedMask: fc.Arbitrary<GeneratedMask> = fc
   .map(({ plus, prefix, first, body, ...rest }) => {
     const parts: Part[] = [...(plus ? [{ kind: "literal", char: "+" } as Part] : []), ...prefix, first, ...body];
     const extended = parts.some(part => part.kind === "slot" && EXTENDED_TOKENS.includes(part.token));
-    return { parts, extended, ...rest, asArray: rest.asArray || rest.placeholder === "full" };
+    return { parts, extended, ...rest };
   });
 
 const curated: Array<{ name: string; setup: MaskSetup }> = [
