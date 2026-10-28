@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { resolveMaskConfig } from "../../src/core/config";
 import { decideChange, decideFocus, decideBlur, decideClickSelection } from "../../src/core/decide";
+import { kzPhone } from "../../src/presets";
 
 const empty = { start: null, end: null };
 
@@ -91,5 +92,59 @@ describe("decideClickSelection", () => {
   it("returns the default selection for the value", () => {
     const cfg = resolveMaskConfig({ mask: "99/99" });
     expect(decideClickSelection(cfg, "12/__")).toMatchObject({ start: 3, end: 3 });
+  });
+});
+
+describe("decideChange with a stale selection", () => {
+  const cfg = () => resolveMaskConfig({ ...kzPhone });
+
+  it("replaces a partly typed value instead of splicing at the old caret", () => {
+    const next = decideChange(
+      cfg(),
+      { value: "+7 777 987 65 43", selection: { start: 16, end: 16 } },
+      { value: "+7 (701) ___-__-__", selection: { start: 9, end: 9 } }
+    );
+    expect(next.value).toBe("+7 (777) 987-65-43");
+  });
+
+  it("keeps the text after the caret when a keystroke lands away from a stale caret", () => {
+    const next = decideChange(
+      cfg(),
+      { value: "+7 (7051) ___-__-__", selection: { start: 7, end: 7 } },
+      { value: "+7 (701) ___-__-__", selection: { start: 9, end: 9 } }
+    );
+    expect(next.value).toBe("+7 (705) 1__-__-__");
+    expect(next.selection).toEqual({ start: 10, end: 10 });
+    const caret = next.selection.start!;
+    const following = decideChange(
+      cfg(),
+      {
+        value: next.value.slice(0, caret) + "2" + next.value.slice(caret),
+        selection: { start: caret + 1, end: caret + 1 }
+      },
+      next
+    );
+    expect(following.value).toBe("+7 (705) 12_-__-__");
+  });
+
+  it("keeps the caret at the end of a filled value after a stale recovery", () => {
+    const next = decideChange(
+      cfg(),
+      { value: "+7 777 987 65 43", selection: { start: 16, end: 16 } },
+      { value: "+7 (701) ___-__-__", selection: { start: 9, end: 9 } }
+    );
+    expect(next.selection).toEqual({ start: 18, end: 18 });
+  });
+
+  it("still passes the original states to beforeMaskedStateChange", () => {
+    const before = vi.fn(({ nextState }) => nextState);
+    const config = resolveMaskConfig({ ...kzPhone, beforeMaskedStateChange: before });
+    const currentState = { value: "+7 777 987 65 43", selection: { start: 16, end: 16 } };
+    const previousState = { value: "+7 (701) ___-__-__", selection: { start: 9, end: 9 } };
+    decideChange(config, currentState, previousState);
+    const arg = before.mock.calls[0][0];
+    expect(arg.currentState).toBe(currentState);
+    expect(arg.previousState).toBe(previousState);
+    expect(arg.nextState.value).toBe("+7 (777) 987-65-43");
   });
 });

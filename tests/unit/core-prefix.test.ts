@@ -9,7 +9,8 @@ import {
   trimOverflowingPrefix,
   shouldInsertAfterPrefix,
   normalizeUnprefixedValue,
-  sameFillingCharacters
+  sameFillingCharacters,
+  stripInternationalPrefix
 } from "../../src/core/prefix";
 
 type Subject = MaskUtils;
@@ -33,6 +34,8 @@ const iban = () => subject("KZ99 999* **** **** ****", "_", "uppercase");
 const date = () => subject("99/99/9999");
 const card = () => subject("9999 9999 9999 9999");
 const us = () => subject("(999) 999-9999");
+const usIntl = () => subject("+1 (999) 999-9999");
+const strip = (s: Subject, string: string) => stripInternationalPrefix(s.prefixHost, string);
 
 describe("hasSignificantPrefix", () => {
   it.each<[string, () => Subject, boolean]>([
@@ -237,5 +240,90 @@ describe("MaskUtils without a mask", () => {
     expect(trim(utils, "12345", 0)).toBe("12345");
     expect(insertAfter(utils, "1", 0, false)).toBe(false);
     expect(normalize(utils, "12345")).toBe(null);
+  });
+});
+
+describe("stripInternationalPrefix", () => {
+  it.each<[string, () => Subject, string, string | null]>([
+    ["uz: partial", uz, "+998 90 123 45 6", "90 123 45 6"],
+    ["uz: exactly the country code", uz, "+998", ""],
+    ["uz: leading spaces", uz, "  +998 90 123 45 67", "90 123 45 67"],
+    ["uz: extra digit", uz, "+998 90 123 45 678", "90 123 45 678"],
+    ["uz: plus only", uz, "+", null],
+    ["uz: incomplete country code", uz, "+99", null],
+    ["uz: no plus", uz, "998 90 123 45 6", null],
+    ["kg: partial", kg, "+996 555 12 34 5", "555 12 34 5"],
+    ["kz: partial keeps the operator 7 out", kz, "+7 777 987 65 4", "77 987 65 4"],
+    ["kz: full", kz, "+7 701 123 45 67", "01 123 45 67"],
+    ["kz: extension", kz, "+7 701 123 45 67 доб. 12", "01 123 45 67 доб. 12"],
+    ["kz: no spaces", kz, "+7(701)1234567", "01)1234567"],
+    ["kz: Russian number does not match the operator 7", kz, "+7 912 345 67 89", null],
+    ["ru: partial", ru, "+7 912 345 67 8", "912 345 67 8"],
+    ["US +1: partial", usIntl, "+1 555 123 456", "555 123 456"],
+    ["US (: prefix without plus", us, "+1 555", null],
+    ["date: no prefix", date, "+12", null],
+    ["kzIban: prefix without plus", iban, "+KZ86", null]
+  ])("%s", (_name, make, string, expected) => {
+    expect(strip(make(), string)).toBe(expected);
+  });
+});
+
+describe("trimOverflowingPrefix with a leading plus", () => {
+  it.each<[string, () => Subject, string, string]>([
+    ["uz partial", uz, "+998 90 123 45 6", "90 123 45 6"],
+    ["kg partial", kg, "+996 555 12 34 5", "555 12 34 5"],
+    ["kz partial", kz, "+7 777 987 65 4", "77 987 65 4"],
+    ["kz overflow keeps the first digits", kz, "+7 701 123 45 678", "01 123 45 678"],
+    ["US +1 partial", usIntl, "+1 555 123 456", "555 123 456"],
+    ["uz: bare country code falls through", uz, "+998", "+998"],
+    ["ru: bare country code falls through", ru, "+7", "+7"]
+  ])("%s", (_name, make, string, expected) => {
+    expect(trim(make(), string, 0)).toBe(expected);
+  });
+});
+
+describe("select all + paste of a bare country code clears the value", () => {
+  it.each<[string, () => Subject, string, string, string]>([
+    ["uz", uz, "+998 (90) 123-45-67", "+998", "+998 (__) ___-__-__"],
+    ["ru", ru, "+7 (912) 345-67-89", "+7", "+7 (___) ___-__-__"]
+  ])("%s", (_name, make, previous, pasted, expected) => {
+    const next = make().processChange(
+      { value: pasted, selection: { start: pasted.length, end: pasted.length } },
+      { value: previous, selection: { start: 0, end: previous.length, length: previous.length } }
+    );
+    expect(next.value).toBe(expected);
+  });
+});
+
+describe("normalizeUnprefixedValue with a leading plus", () => {
+  it.each<[string, () => Subject, string, string]>([
+    ["uz partial", uz, "+998 90 123 45 6", "90 123 45 6"],
+    ["kz partial", kz, "+7 777 987 65 4", "77 987 65 4"],
+    ["kz no spaces", kz, "+7(701)1234567", "01)1234567"]
+  ])("%s", (_name, make, value, expected) => {
+    expect(normalize(make(), value)).toBe(expected);
+  });
+});
+
+describe("a leading plus formats the same through paste and value, idempotently", () => {
+  it.each<[string, () => Subject, string, string]>([
+    ["uz partial", uz, "+998 90 123 45 6", "+998 (90) 123-45-6_"],
+    ["kg partial", kg, "+996 555 12 34 5", "+996 (555) 12-34-5_"],
+    ["kz partial", kz, "+7 777 987 65 4", "+7 (777) 987-65-4_"],
+    ["kz overflow", kz, "+7 701 123 45 678", "+7 (701) 123-45-67"],
+    ["kz extension", kz, "+7 701 123 45 67 доб. 12", "+7 (701) 123-45-67"],
+    ["kz no spaces", kz, "+7(701)1234567", "+7 (701) 123-45-67"],
+    ["uz extra digit", uz, "+998 90 123 45 678", "+998 (90) 123-45-67"],
+    ["US +1 partial", usIntl, "+1 555 123 456", "+1 (555) 123-456_"],
+    ["US +1 full", usIntl, "+1 555 123 4567", "+1 (555) 123-4567"]
+  ])("%s", (_name, make, input, expected) => {
+    const utils = make();
+    const pasted = utils.processChange(
+      { value: input, selection: { start: input.length, end: input.length } },
+      { value: "", selection: { start: null, end: null } }
+    );
+    expect(pasted.value).toBe(expected);
+    expect(utils.formatValue(input)).toBe(expected);
+    expect(utils.formatValue(expected)).toBe(expected);
   });
 });

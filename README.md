@@ -265,10 +265,12 @@ programmatic `value`s with or without the prefix:
 | --- | --- |
 | `kzPhone` | `+7 701 …`, `7 701 …`, `"7011234567"`, `"7771234567"`, `"+77771234567"` |
 | `ruPhone` | `+7 912 …`, `8 912 …`, `"89123456789"` |
-| `uzPhone` | `+998 90 …`, `998 90 …`, `8 90 …`, `"901234567"`, `"+998901234567"` |
+| `uzPhone` | `+998 90 …`, `998 90 …`, `8 90 …`, `"901234567"`, `"+998901234567"`, `"+998 90 123 45 6"` |
 | `kgPhone` | `+996 555 …`, `0555 12 34 56`, `"555123456"`, `"+996555123456"` |
 
-- Pasted text longer than the mask keeps its **last** characters (the prefix part is dropped).
+- Pasted text longer than the mask keeps its **last** characters (the prefix part is dropped), unless it starts
+  with `+` and the country code: then extra characters at the end (an extension, a typo) are dropped
+  (`+7 701 123 45 67 доб. 12` → `+7 (701) 123-45-67`).
 - Typing over a selection continues the prefix when the first key matches it (`7 701 …` in `kzPhone`),
   otherwise it starts after the prefix (`33 …` in `uzPhone`).
 - Typed key by key, a number that starts with the prefix's own digits is read as the prefix: `uzPhone`
