@@ -12,20 +12,18 @@ export const known = {
     return literalsAfterFirstSlot(d).some(char => slots.some(i => accepts(d, i, char)));
   },
   entersPrefixStart(d: MaskDescription, text: string, start: number): boolean {
-    return [start, 0].some(from => {
-      if (from >= d.prefix.length || !text.length) {
+    if (start >= d.prefix.length || !text.length) {
+      return false;
+    }
+    let at = start;
+    for (const char of text.toUpperCase()) {
+      const found = d.prefix.slice(at).toUpperCase().indexOf(char);
+      if (found < 0) {
         return false;
       }
-      let at = from;
-      for (const char of text.toUpperCase()) {
-        const found = d.prefix.slice(at).toUpperCase().indexOf(char);
-        if (found < 0) {
-          return false;
-        }
-        at += found + 1;
-      }
-      return /[0-9A-Za-z]/.test(d.prefix.slice(at));
-    });
+      at += found + 1;
+    }
+    return /[0-9A-Za-z]/.test(d.prefix.slice(at));
   },
   containsPlaceholder(d: MaskDescription, text: string): boolean {
     return d.placeholder !== null && d.positions.some((position, i) => position.kind === "slot" && text.includes(d.placeholder![i]));

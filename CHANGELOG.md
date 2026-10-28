@@ -6,15 +6,16 @@
 - Behavior change: pasted text and a `value` without `+` that are shorter than a national number are read as
   the start of a national number in the prefixed phone presets and any custom `+` mask, and paste and
   `formatValue` now agree. Fixed: `uzPhone` `value="90"` → `+998 (90) ___-__-__` (was `+998 (0_) …`),
-  `kzPhone` paste `701` → `+7 (701) ___-__-__` (was `+7 (770) 1__-__-__`). Changed: a partial number that
+  `kzPhone` paste `701` into an empty field or over the whole value → `+7 (701) ___-__-__` (was
+  `+7 (770) 1__-__-__`). Changed: a partial number that
   starts with the country code is no longer read as code + rest (`uzPhone` `"99890"` → `+998 (99) 890-__-__`,
   was `+998 (90) …`; `kzPhone` `"777"` → `+7 (777) …`, was `+7 (77_) …`; `kgPhone` `"99655"` →
   `+996 (996) 55-__-__`, was `+996 (55_) …`). A single key that starts the country code still continues it,
   so typing `+998 90 …` or `998 90 …` key by key is unchanged. Full-length numbers are unchanged.
 
 ### Fixed
-- Text that fills no slot (`!`, a letter in a digit slot) typed or pasted over a selection that starts in the
-  prefix no longer clears the value; it is ignored, as in masks without a prefix.
+- Text with no character the mask accepts (`!`, a letter in a digit slot) typed or pasted over a selection that
+  starts in the prefix no longer clears the value; it is ignored, as in masks without a prefix.
 - After pasting a complete country code (`+998` into `uzPhone`) or text with characters the mask rejects, the
   caret lands after the prefix instead of inside it. While the code is still being typed key by key (`+`,
   `+9`), the caret stays inside the prefix so the next key continues it.

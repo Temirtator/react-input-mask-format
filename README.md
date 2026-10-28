@@ -276,9 +276,9 @@ programmatic `value`s with or without the prefix:
 - Typed key by key, a number that starts with the prefix's own digits is read as the prefix: `uzPhone`
   `90 …` and `kzPhone` `777 …` over a selection, a leading `8` in `ruPhone` (area code `8xx`), `998 …`
   in an empty `uzPhone`. Pasting these works.
-- Pasted text or a `value` without `+` that is shorter than a national number (9 digits in `uzPhone` and
-  `kgPhone`, 10 in `kzPhone` and `ruPhone`) is read as the start of a national number, even when it begins
-  with the country code: `uzPhone` `"90"` → `+998 (90) ___-__-__`, `"99890"` → `+998 (99) 890-__-__`;
+- Text without `+` pasted into an empty field or over the whole value, or a `value` without `+`, that is
+  shorter than a national number (9 digits in `uzPhone` and `kgPhone`, 10 in `kzPhone` and `ruPhone`) is
+  read as the start of a national number, even when it begins with the country code: `uzPhone` `"90"` → `+998 (90) ___-__-__`, `"99890"` → `+998 (99) 890-__-__`;
   `kzPhone` `"701"` → `+7 (701) ___-__-__`. Longer digit strings follow the rules above (`uzPhone`
   `"998901234"` → `+998 (90) 123-4_-__`). For a partial international number, pass `+` and the country code.
 

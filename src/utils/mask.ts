@@ -335,16 +335,19 @@ export default class MaskUtils {
 
     if (selection.end! > previousSelection.start!) {
       const raw = newValue.slice(previousSelection.start!, selection.end!);
-      const unprefixed = readUnprefixedInput(this.prefixHost, raw, cursorPosition);
+      const replacesAll =
+        !cursorPosition ||
+        (cursorPosition === prefix!.length && this.getFilledLength(previousValue) <= previousSelection.end!);
+      const unprefixed = readUnprefixedInput(this.prefixHost, raw, replacesAll);
       enteredString = unprefixed ?? trimOverflowingPrefix(this.prefixHost, raw, cursorPosition);
       insertAfterPrefix =
         unprefixed === null
           ? shouldInsertAfterPrefix(this.prefixHost, enteredString, cursorPosition, enteredString !== raw)
-          : this.getStringFillingLengthAtPosition(unprefixed, prefix!.length) > 0;
+          : !unprefixed || this.getStringFillingLengthAtPosition(unprefixed, prefix!.length) > 0;
       const placed = this.placeString(enteredString, insertAfterPrefix ? prefix!.length : cursorPosition);
       formattedEnteredStringLength = placed.length;
       enteredSkipped = placed.skipped;
-      if (!formattedEnteredStringLength) {
+      if (!formattedEnteredStringLength && unprefixed !== "") {
         removedLength = 0;
       } else {
         removedLength = previousSelection.length!;

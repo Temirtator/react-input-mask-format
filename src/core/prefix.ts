@@ -71,9 +71,12 @@ export function shouldInsertAfterPrefix(
   return host.fillingLengthAt(string, prefix.length) > 0;
 }
 
+function isPrefixKey(prefix: string, value: string, indices: number[]): boolean {
+  return indices.length === 1 && value[indices[0]].toUpperCase() === prefixSignificantCharacters(prefix)[0].toUpperCase();
+}
+
 function readNationalNumber(host: PrefixHost, value: string, indices: number[]): string | null {
   const { prefix, slots } = host;
-  const significant = prefixSignificantCharacters(prefix);
   const separator = prefix.search(/[^0-9A-Za-z][0-9A-Za-z]*$/);
   const head = separator > 0 ? prefixSignificantCharacters(prefix.slice(separator)) : "";
   if (
@@ -81,7 +84,7 @@ function readNationalNumber(host: PrefixHost, value: string, indices: number[]):
     value.trimStart().startsWith("+") ||
     !indices.length ||
     indices.length >= head.length + slots ||
-    (indices.length === 1 && value[indices[0]].toUpperCase() === significant[0].toUpperCase())
+    isPrefixKey(prefix, value, indices)
   ) {
     return null;
   }
@@ -134,8 +137,14 @@ export function sameFillingCharacters(host: PrefixHost, a: string, b: string): b
   return filling(a) === filling(b);
 }
 
-export function readUnprefixedInput(host: PrefixHost, string: string, position: number): string | null {
-  if (position || !host.prefix.startsWith("+") || string.trimStart().startsWith("+")) {
+export function readUnprefixedInput(host: PrefixHost, string: string, replacesAll: boolean): string | null {
+  if (
+    !replacesAll ||
+    !host.prefix.startsWith("+") ||
+    !hasSignificantPrefix(host.prefix) ||
+    string.trimStart().startsWith("+") ||
+    isPrefixKey(host.prefix, string, host.fillingIndices(string))
+  ) {
     return null;
   }
   return normalizeUnprefixedValue(host, string);

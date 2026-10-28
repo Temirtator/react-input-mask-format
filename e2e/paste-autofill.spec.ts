@@ -63,6 +63,13 @@ test.describe("paste into an empty field", () => {
   }
 });
 
+test("paste a partial national number into an empty kzPhone", async ({ page }) => {
+  const input = await openField(page, kzPhone);
+  await pasteInto(page, input, "701");
+  await expect(input).toHaveValue("+7 (701) ___-__-__");
+  await expectState(page, kzPhone, "+7 (701) ___-__-__");
+});
+
 test("paste into a partially filled kzPhone", async ({ page }) => {
   const input = await openField(page, kzPhone);
   await input.click();

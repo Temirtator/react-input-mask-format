@@ -217,3 +217,38 @@ describe("MaskUtils text that fills no slot from the prefix", () => {
     expect(result.selection).toEqual({ start: 6, end: 6 });
   });
 });
+
+describe("MaskUtils national reading at the start of the number", () => {
+  const change = (utils: MaskUtils, before: string, start: number, end: number, text: string) =>
+    utils.processChange(
+      { value: before.slice(0, start) + text + before.slice(end), selection: { start: start + text.length, end: start + text.length } },
+      { value: before, selection: { start, end, length: end - start } }
+    );
+
+  it("reads a paste at the caret of an empty kzPhone as national", () => {
+    const kz = new MaskUtils({ mask: "+7 (799) 999-99-99", maskPlaceholder: "_" });
+    const empty = kz.formatValue("");
+    expect(change(kz, empty, 5, 5, "701").value).toBe("+7 (701) ___-__-__");
+    expect(change(kz, empty, 5, 5, "7").value).toBe("+7 (77_) ___-__-__");
+  });
+
+  it("replaces the value with the prefix when the text is only the national part of it", () => {
+    const utils = new MaskUtils({ mask: "+7 (\\999) 999-99-99", maskPlaceholder: "_" });
+    const result = change(utils, "+7 (912) 345-__-__", 0, 18, "9");
+    expect(result.value).toBe("+7 (9__) ___-__-__");
+    expect(result.value).toBe(utils.formatValue("9"));
+    expect(result.selection).toEqual({ start: 5, end: 5 });
+  });
+
+  it("keeps a single key that starts the country code on the typing path", () => {
+    const us = new MaskUtils({ mask: "+1 (999) 999-9999", maskPlaceholder: "_" });
+    expect(change(us, us.formatValue(""), 4, 4, "1").value).toBe("+1 (1__) ___-____");
+    const ru = new MaskUtils({
+      mask: ["+", "7", " ", "(", /[3489]/, /\d/, /\d/, ")", " ", /\d/, /\d/, /\d/, "-", /\d/, /\d/, "-", /\d/, /\d/],
+      maskPlaceholder: "_"
+    });
+    const result = change(ru, "+7 (912) 345-67-89", 0, 18, "7");
+    expect(result.value).toBe("+7 (___) ___-__-__");
+    expect(result.selection).toEqual({ start: 4, end: 4 });
+  });
+});
