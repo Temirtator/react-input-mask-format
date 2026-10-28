@@ -1,6 +1,5 @@
 import { accepts, isFilledSlot, slotIndices } from "./description";
 import type { MaskDescription } from "./description";
-import type { Field } from "./driver";
 
 function literalsAfterFirstSlot(d: MaskDescription): string[] {
   const firstSlot = d.positions.findIndex(position => position.kind === "slot");
@@ -45,11 +44,5 @@ export const known = {
       text.startsWith(d.prefix) &&
       d.significant.length + filled > slots.length
     );
-  },
-  caretInsideInsertion(previous: Field, value: string, caret: number): boolean {
-    const head = previous.value.slice(0, previous.start);
-    const tail = previous.value.slice(previous.end);
-    const explained = value.length >= head.length + tail.length && value.startsWith(head) && value.endsWith(tail);
-    return explained && caret < value.length - tail.length;
   }
 };

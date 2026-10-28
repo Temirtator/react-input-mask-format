@@ -136,6 +136,15 @@ describe("decideChange with a stale selection", () => {
     expect(next.selection).toEqual({ start: 18, end: 18 });
   });
 
+  it("replaces the whole value when the caret sits before the end of an explained insertion", () => {
+    const next = decideChange(
+      cfg(),
+      { value: "+7 777 987 65 43", selection: { start: 10, end: 10 } },
+      { value: "+7 (701) ___-__-__", selection: { start: 0, end: 18, length: 18 } }
+    );
+    expect(next.value).toBe("+7 (777) 987-65-43");
+  });
+
   it("still passes the original states to beforeMaskedStateChange", () => {
     const before = vi.fn(({ nextState }) => nextState);
     const config = resolveMaskConfig({ ...kzPhone, beforeMaskedStateChange: before });

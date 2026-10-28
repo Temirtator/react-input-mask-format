@@ -46,17 +46,4 @@ describe("known divergences (pinned until fixed)", () => {
     expect(subject.format("")).toBe("97_");
     expect(pasteOverAll(subject, focus(subject), "97_").value).toBe("977");
   });
-
-  it("K8 a change explained as an insertion with the caret before its end drops the rest (expected: +7 (777) 987-65-43)", () => {
-    const kz = preset("kzPhone");
-    const typed = typeString(kz, focus(kz), "01");
-    expect(typed.value).toBe("+7 (701) ___-__-__");
-    const next = kz.change(
-      { value: "+7 777 987 65 43", selection: { start: 10, end: 10 } },
-      { value: typed.value, selection: { start: 0, end: typed.value.length, length: typed.value.length } }
-    );
-    expect(known.caretInsideInsertion({ value: typed.value, start: 0, end: typed.value.length }, "+7 777 987 65 43", 10)).toBe(true);
-    expect(next.value).toBe("+7 (777) 987-__-__");
-    expect(next.selection).toMatchObject({ start: 13, end: 13 });
-  });
 });

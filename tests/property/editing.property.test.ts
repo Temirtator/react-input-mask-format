@@ -168,7 +168,6 @@ describe("editing", () => {
           const start = Math.min(a, b) % (field.value.length + 1);
           const end = Math.min(field.value.length, start + (Math.max(a, b) % (field.value.length + 1)));
           const at = caret % (value.length + 1);
-          fc.pre(!known.caretInsideInsertion({ ...field, start, end }, value, at));
           const next = c.subject.change(
             { value, selection: { start: at, end: at } },
             { value: field.value, selection: { start, end, length: end - start } }
