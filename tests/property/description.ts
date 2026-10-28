@@ -10,7 +10,7 @@ export interface MaskDescription {
   transform: (char: string, position: number) => string;
 }
 
-const TOKENS: Record<string, RegExp> = { "9": /[0-9]/, a: /[A-Za-z]/, "*": /[A-Za-z0-9]/ };
+export const TOKENS: Record<string, RegExp> = { "9": /[0-9]/, a: /[A-Za-z]/, "*": /[A-Za-z0-9]/ };
 
 function parsePositions(setup: MaskSetup): Position[] {
   if (Array.isArray(setup.mask)) {

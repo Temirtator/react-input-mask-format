@@ -34,7 +34,12 @@ describe("formatValue", () => {
   });
 
   it("F2 returns a value of the mask's shape", () => {
-    holds(fc.property(caseWithText, ([c, text]) => hasShape(c.d, c.subject.format(text))));
+    holds(
+      fc.property(caseWithText, ([c, text]) => {
+        const formatted = c.subject.format(text);
+        expect(hasShape(c.d, formatted)).toBe(true);
+      })
+    );
   });
 
   it("F3 keeps a formatted controlled value and formats against an empty shown value", () => {

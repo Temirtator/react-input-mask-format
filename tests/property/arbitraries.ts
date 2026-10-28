@@ -1,7 +1,7 @@
 import { expect } from "vitest";
 import fc from "fast-check";
 import { createSubject, extendedFormatChars, presets, type MaskSetup, type Subject } from "./subject";
-import { accepts, describeMask, literalChars, type MaskDescription } from "./description";
+import { accepts, describeMask, literalChars, TOKENS, type MaskDescription } from "./description";
 import { describeAction, type Action } from "./driver";
 
 const env = process.env;
@@ -25,7 +25,6 @@ export type Part = { kind: "literal"; char: string } | { kind: "slot"; token: st
 const LITERALS = [" ", "-", "(", ")", "/", ".", "+", "K", "Z", "7", "9"];
 const BASIC_TOKENS = ["9", "a", "*"];
 const EXTENDED_TOKENS = ["A", "Я", "#"];
-const BASIC_FORMAT_CHARS: Record<string, RegExp> = { "9": /[0-9]/, a: /[A-Za-z]/, "*": /[A-Za-z0-9]/ };
 const PLACEHOLDER_CHARS = ["_", "•", " "];
 
 export interface GeneratedMask {
@@ -46,7 +45,7 @@ function toCase(name: string, setup: MaskSetup): MaskCase {
 }
 
 export function renderMask(mask: GeneratedMask): MaskSetup {
-  const tokens = mask.extended ? extendedFormatChars : BASIC_FORMAT_CHARS;
+  const tokens = mask.extended ? extendedFormatChars : TOKENS;
   const setup: MaskSetup = {
     mask: mask.asArray
       ? mask.parts.map(part => (part.kind === "literal" ? part.char : tokens[part.token]))
@@ -109,7 +108,7 @@ export const presetCase: fc.Arbitrary<MaskCase> = fc.constantFrom(...[...presets
 
 export const generatedCase: fc.Arbitrary<MaskCase> = generatedMask.map(mask => {
   const setup = renderMask(mask);
-  return toCase(`generated ${JSON.stringify({ ...setup, formatChars: setup.formatChars ? "extended" : undefined })}`, setup);
+  return toCase(`generated ${JSON.stringify({ ...setup, formatChars: setup.formatChars ? "extended" : undefined }, (_, v) => (v instanceof RegExp ? v.toString() : v))}`, setup);
 });
 
 export const maskCase: fc.Arbitrary<MaskCase> = fc.oneof(presetCase, generatedCase);
