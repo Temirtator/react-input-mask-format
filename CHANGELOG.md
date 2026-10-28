@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Internal
+- Property-based tests (fast-check) for the mask core: formatting, typing, paste, deletion, selections and the
+  caret on every preset, a curated set of international masks and generated masks. Known divergences are pinned in
+  `tests/property/known.test.ts` for a follow-up fix release.
+
 ## 2.8.0
 
 ### Fixed
