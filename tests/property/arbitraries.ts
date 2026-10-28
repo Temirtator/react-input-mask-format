@@ -124,7 +124,7 @@ export function textFor(c: MaskCase, maxLength = 25): fc.Arbitrary<string> {
 }
 
 export function acceptedCharFor(c: MaskCase, slot: number): fc.Arbitrary<string | null> {
-  const candidates = ALPHABET.filter(char => accepts(c.d, slot, char) && !literalChars(c.d).includes(char));
+  const candidates = ALPHABET.filter(char => accepts(c.d, slot, char));
   return candidates.length ? fc.constantFrom(...candidates) : fc.constant(null);
 }
 

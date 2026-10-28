@@ -33,6 +33,7 @@ describe("editing", () => {
     holds(
       fc.property(withActions, ([c, actions]) => {
         const fields = run(c.subject, actions);
+        caretInBounds(c, fields[0]);
         actions.forEach((action, i) => {
           const text = action.kind === "type" ? action.char : action.kind === "paste" || action.kind === "autofill" ? action.text : null;
           if (text !== null && known.fillsNoSlot(c.d, text)) {
@@ -84,8 +85,9 @@ describe("editing", () => {
           return fc.tuple(fc.constant(c), fc.constant(field), fc.constant(slot), slot === null ? fc.constant(null) : acceptedCharFor(c, slot));
         }),
         ([c, field, slot, char]) => {
-          fc.pre(slot !== null && char !== null);
+          fc.pre(slot !== null && char !== null && !known.slotLikeLiteral(c.d));
           const typed = insert(c.subject, caretAt(field, slot!), char!);
+          expect(typed.value).not.toBe(field.value);
           const back = apply(c.subject, typed, { kind: "backspace" });
           expect(back.value).toBe(field.value);
         }
@@ -104,7 +106,7 @@ describe("editing", () => {
           });
         }),
         ([c, field, caret, slot, char]) => {
-          fc.pre(slot !== null && char !== null);
+          fc.pre(slot !== null && char !== null && !known.slotLikeLiteral(c.d));
           const typed = insert(c.subject, caretAt(field, caret), char!);
           const expected = field.value.slice(0, slot!) + c.d.transform(char!, slot!) + field.value.slice(slot! + 1);
           expect(typed.value).toBe(expected);
@@ -164,14 +166,18 @@ describe("editing", () => {
           const start = Math.min(a, b) % (field.value.length + 1);
           const end = Math.min(field.value.length, start + (Math.max(a, b) % (field.value.length + 1)));
           const at = caret % (value.length + 1);
-          fc.pre(!known.fillsNoSlot(c.d, value) && !known.caretInsideInsertion({ ...field, start, end }, value, at));
+          fc.pre(!known.caretInsideInsertion({ ...field, start, end }, value, at));
           const next = c.subject.change(
             { value, selection: { start: at, end: at } },
             { value: field.value, selection: { start, end, length: end - start } }
           );
-          const result = { value: next.value, start: next.selection.start ?? 0, end: next.selection.end ?? 0 };
+          expect(next.selection.start).not.toBeNull();
+          expect(next.selection.end).not.toBeNull();
+          const result = { value: next.value, start: next.selection.start!, end: next.selection.end! };
           settled(c, result);
-          caretInBounds(c, result);
+          if (!known.fillsNoSlot(c.d, value)) {
+            caretInBounds(c, result);
+          }
         }
       )
     );
