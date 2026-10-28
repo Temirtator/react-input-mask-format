@@ -14,7 +14,8 @@ export type Action =
   | { kind: "moveCaret"; at: number }
   | { kind: "backspace" }
   | { kind: "del" }
-  | { kind: "autofill"; text: string };
+  | { kind: "autofill"; text: string }
+  | { kind: "focus" };
 
 export function describeAction(action: Action): string {
   switch (action.kind) {
@@ -77,6 +78,8 @@ export function apply(subject: Subject, field: Field, action: Action): Field {
       return insert(subject, field, action.text);
     case "autofill":
       return edit(subject, field, action.text, action.text.length);
+    case "focus":
+      return focus(subject, value);
     case "select": {
       const a = at(field, Math.min(action.from, action.to));
       const b = at(field, Math.max(action.from, action.to));

@@ -34,11 +34,11 @@ describe("known divergences (pinned until fixed)", () => {
 
   it("K4 text that fills no slot leaves the caret inside the prefix (expected: caret after the prefix)", () => {
     const kz = preset("kzPhone");
-    expect(known.fillsNoSlot(describeMask(presets.find(p => p.name === "kzPhone")!.setup), "7")).toBe(true);
+    expect(known.fillsNoSlotFromPrefix(describeMask(presets.find(p => p.name === "kzPhone")!.setup), "7", Math.min(0, 1))).toBe(true);
     const typed = insert(kz, caretAt(focus(kz), 0), "7");
     expect([typed.value, typed.start]).toEqual(["+7 (7__) ___-__-__", 2]);
     const uz = preset("uzPhone");
-    expect(known.fillsNoSlot(describeMask(presets.find(p => p.name === "uzPhone")!.setup), "+998")).toBe(true);
+    expect(known.fillsNoSlotFromPrefix(describeMask(presets.find(p => p.name === "uzPhone")!.setup), "+998", Math.min(0, "+998".length))).toBe(true);
     const pasted = pasteOverAll(uz, focus(uz), "+998");
     expect([pasted.value, pasted.start]).toEqual(["+998 (__) ___-__-__", 4]);
   });
@@ -81,5 +81,6 @@ describe("known divergences (pinned until fixed)", () => {
     );
     expect(known.caretInsideInsertion({ value: typed.value, start: 0, end: typed.value.length }, "+7 777 987 65 43", 10)).toBe(true);
     expect(next.value).toBe("+7 (777) 987-__-__");
+    expect(next.selection).toMatchObject({ start: 13, end: 13 });
   });
 });

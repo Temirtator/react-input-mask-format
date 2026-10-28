@@ -15,10 +15,11 @@ export const known = {
   overlapsCountryCode(d: MaskDescription, digits: string): boolean {
     return digits.length > 0 && d.significant.includes(digits[0]);
   },
-  fillsNoSlot(d: MaskDescription, text: string): boolean {
+  fillsNoSlotFromPrefix(d: MaskDescription, text: string, start: number): boolean {
     const literals = literalChars(d);
     const slots = slotIndices(d);
     return (
+      start < d.prefix.length &&
       text.length > 0 &&
       text.split("").every(char => literals.includes(char) || (d.placeholder !== null && slots.some(i => d.placeholder![i] === char)))
     );

@@ -12,6 +12,7 @@ type Step =
   | { type: string }
   | { paste: string }
   | { selectAll: true }
+  | { select: [number, number] }
   | { caret: number }
   | { backspace: true }
   | { del: true }
@@ -41,6 +42,9 @@ async function inComponent(setup: MaskSetup, steps: Step[]): Promise<Outcome> {
     } else if ("selectAll" in step) {
       input.setSelectionRange(0, input.value.length);
       await nextFrame();
+    } else if ("select" in step) {
+      input.setSelectionRange(step.select[0], step.select[1]);
+      await nextFrame();
     } else if ("caret" in step) {
       input.setSelectionRange(step.caret, step.caret);
       await nextFrame();
@@ -67,6 +71,8 @@ function inDriver(setup: MaskSetup, steps: Step[]): Outcome {
       field = apply(subject, field, { kind: "paste", text: step.paste });
     } else if ("selectAll" in step) {
       field = apply(subject, field, { kind: "selectAll" });
+    } else if ("select" in step) {
+      field = { ...field, start: step.select[0], end: step.select[1] };
     } else if ("caret" in step) {
       field = caretAt(field, step.caret);
     } else if ("backspace" in step) {
@@ -88,6 +94,7 @@ const sequences: Array<[string, MaskSetup, Step[]]> = [
   ["uzPhone international paste", presets.uzPhone, [{ paste: "+998 90 123 45 67" }]],
   ["kzPhone backspace", presets.kzPhone, [{ type: "701" }, { backspace: true }]],
   ["card overwrite in the middle", presets.card, [{ type: "1234" }, { caret: 2 }, { type: "9" }]],
+  ["card partial selection + type", presets.card, [{ type: "12345678" }, { select: [2, 7] }, { type: "9" }]],
   ["kzIban uppercase", presets.kzIban, [{ type: "12123abc" }]],
   ["ruPlate transform", presets.ruPlate, [{ type: "a123bc77" }]],
   ["kzPhone autofill after blur", presets.kzPhone, [{ type: "01" }, { blur: true }, { autofill: "+7 777 987 65 43" }]],

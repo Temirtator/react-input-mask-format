@@ -36,10 +36,13 @@ describe("editing", () => {
         caretInBounds(c, fields[0]);
         actions.forEach((action, i) => {
           const text = action.kind === "type" ? action.char : action.kind === "paste" || action.kind === "autofill" ? action.text : null;
-          if (text !== null && known.fillsNoSlot(c.d, text)) {
-            return;
+          if (text !== null) {
+            const caretAfterEvent = action.kind === "autofill" ? text.length : fields[i].start + text.length;
+            if (known.fillsNoSlotFromPrefix(c.d, text, Math.min(fields[i].start, caretAfterEvent))) {
+              return;
+            }
           }
-          if (["type", "paste", "autofill", "backspace", "del"].includes(action.kind) && fields[i + 1] !== fields[i]) {
+          if (["type", "paste", "autofill", "backspace", "del", "focus"].includes(action.kind) && fields[i + 1] !== fields[i]) {
             caretInBounds(c, fields[i + 1]);
           }
         });
@@ -175,7 +178,7 @@ describe("editing", () => {
           expect(next.selection.end).not.toBeNull();
           const result = { value: next.value, start: next.selection.start!, end: next.selection.end! };
           settled(c, result);
-          if (!known.fillsNoSlot(c.d, value)) {
+          if (!known.fillsNoSlotFromPrefix(c.d, value, Math.min(start, at))) {
             caretInBounds(c, result);
           }
         }

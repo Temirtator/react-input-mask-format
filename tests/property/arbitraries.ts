@@ -6,7 +6,7 @@ import { describeAction, type Action } from "./driver";
 
 const env = process.env;
 fc.configureGlobal({
-  numRuns: Number(env.FC_NUM_RUNS ?? 100),
+  numRuns: Number(env.FC_NUM_RUNS) || 100,
   ...(env.FC_SEED ? { seed: Number(env.FC_SEED) } : {}),
   ...(env.FC_PATH ? { path: env.FC_PATH } : {})
 });
@@ -142,7 +142,8 @@ export function actionFor(c: MaskCase): fc.Arbitrary<Action> {
       { weight: 1, arbitrary: fc.constant<Action>({ kind: "selectAll" }) },
       { weight: 1, arbitrary: fraction.map((at): Action => ({ kind: "moveCaret", at })) },
       { weight: 2, arbitrary: fc.constant<Action>({ kind: "backspace" }) },
-      { weight: 1, arbitrary: fc.constant<Action>({ kind: "del" }) }
+      { weight: 1, arbitrary: fc.constant<Action>({ kind: "del" }) },
+      { weight: 1, arbitrary: fc.constant<Action>({ kind: "focus" }) }
     )
     .map(action => named({ ...action }, describeAction(action)));
 }
