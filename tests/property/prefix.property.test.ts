@@ -4,17 +4,24 @@ import { known } from "./known";
 import { slotIndices } from "./description";
 import { focus, pasteOverAll, typeString } from "./driver";
 
-const plusCase = maskCase.filter(c => c.d.prefix.startsWith("+") && c.d.significant.length > 0);
-const prefixedCase = maskCase.filter(c => c.d.significant.length > 0);
+const plusCase = maskCase.filter(c => c.d.prefix.startsWith("+"));
+const prefixedCase = maskCase.filter(c => c.d.prefix.length > 0);
+const digitUnit = fc.constantFrom(..."0123456789".split(""));
 
 describe("prefix masks", () => {
   it("X1 pasting +<country code> <digits> equals typing the digits", () => {
     holds(
-      fc.property(plusCase.chain(c => fc.tuple(fc.constant(c), digits)), ([c, national]) => {
-        fc.pre(national.length <= slotIndices(c.d).length);
-        const pasted = pasteOverAll(c.subject, focus(c.subject), `+${c.d.significant} ${national}`);
-        expect(pasted.value).toBe(typeString(c.subject, focus(c.subject), national).value);
-      })
+      fc.property(
+        plusCase.chain(c =>
+          fc.tuple(fc.constant(c), fc.string({ unit: digitUnit, maxLength: slotIndices(c.d).length }))
+        ),
+        ([c, national]) => {
+          const text = `+${c.d.significant} ${national}`;
+          fc.pre(!known.slotLikeLiteral(c.d) && !known.containsPlaceholder(c.d, text));
+          const pasted = pasteOverAll(c.subject, focus(c.subject), text);
+          expect(pasted.value).toBe(typeString(c.subject, focus(c.subject), national).value);
+        }
+      )
     );
   });
 
@@ -34,7 +41,7 @@ describe("prefix masks", () => {
           fc.tuple(
             fc.constant(c),
             fc.boolean(),
-            fc.integer({ min: 1, max: c.d.significant.length }),
+            fc.integer({ min: 0, max: c.d.significant.length }),
             digits
           )
         ),
