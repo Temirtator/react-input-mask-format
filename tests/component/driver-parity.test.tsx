@@ -20,7 +20,9 @@ type Step =
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
-async function inComponent(setup: MaskSetup, steps: Step[]): Promise<string> {
+type Outcome = { value: string; caret: number | null };
+
+async function inComponent(setup: MaskSetup, steps: Step[]): Promise<Outcome> {
   const user = userEvent.setup();
   render(
     <>
@@ -48,14 +50,14 @@ async function inComponent(setup: MaskSetup, steps: Step[]): Promise<string> {
       await user.keyboard("{Delete}");
     } else if ("blur" in step) {
       await user.click(screen.getByRole("button"));
-    } else {
+    } else if ("autofill" in step) {
       fireEvent.input(input, { target: { value: step.autofill } });
     }
   }
-  return input.value;
+  return { value: input.value, caret: input.selectionStart };
 }
 
-function inDriver(setup: MaskSetup, steps: Step[]): string {
+function inDriver(setup: MaskSetup, steps: Step[]): Outcome {
   const subject = createSubject(setup);
   let field: Field = focus(subject);
   for (const step of steps) {
@@ -71,20 +73,22 @@ function inDriver(setup: MaskSetup, steps: Step[]): string {
       field = apply(subject, field, { kind: "backspace" });
     } else if ("del" in step) {
       field = apply(subject, field, { kind: "del" });
+    } else if ("blur" in step) {
+      continue;
     } else if ("autofill" in step) {
       field = apply(subject, field, { kind: "autofill", text: step.autofill });
     }
   }
-  return field.value;
+  return { value: field.value, caret: field.start };
 }
 
 const sequences: Array<[string, MaskSetup, Step[]]> = [
-  ["kzPhone typing", presets.kzPhone, [{ type: "7011234567" }]],
+  ["kzPhone typing with a leading 7", presets.kzPhone, [{ type: "7011234567" }]],
   ["card select all + type", presets.card, [{ type: "4111" }, { selectAll: true }, { type: "5" }]],
   ["uzPhone international paste", presets.uzPhone, [{ paste: "+998 90 123 45 67" }]],
   ["kzPhone backspace", presets.kzPhone, [{ type: "701" }, { backspace: true }]],
   ["card overwrite in the middle", presets.card, [{ type: "1234" }, { caret: 2 }, { type: "9" }]],
-  ["kzIban uppercase", presets.kzIban, [{ type: "12abc" }]],
+  ["kzIban uppercase", presets.kzIban, [{ type: "12123abc" }]],
   ["ruPlate transform", presets.ruPlate, [{ type: "a123bc77" }]],
   ["kzPhone autofill after blur", presets.kzPhone, [{ type: "01" }, { blur: true }, { autofill: "+7 777 987 65 43" }]],
   ["date delete in the middle", { mask: "99/99/9999" }, [{ type: "12312024" }, { caret: 3 }, { del: true }]],
@@ -93,6 +97,6 @@ const sequences: Array<[string, MaskSetup, Step[]]> = [
 
 describe("driver parity with InputMask", () => {
   it.each(sequences)("%s", async (_name, setup, steps) => {
-    expect(inDriver(setup, steps)).toBe(await inComponent(setup, steps));
+    expect(inDriver(setup, steps)).toEqual(await inComponent(setup, steps));
   });
 });
