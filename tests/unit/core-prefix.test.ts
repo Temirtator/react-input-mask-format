@@ -129,15 +129,15 @@ describe("normalizeUnprefixedValue", () => {
     ["uz: country code and spaces", uz, "998 90 123 45 67", "90 123 45 67"],
     ["uz: formatted value starts with the prefix", uz, "+998 (90) 123-45-67", null],
     ["uz: partial formatted value", uz, "+998 (90) 1__-__-__", null],
-    ["uz: prefix digits + partial", uz, "9989", "9"],
-    ["uz: prefix digits + partial 901", uz, "998901", "901"],
+    ["uz: partial with the code digits reads as national", uz, "9989", "9989"],
+    ["uz: partial 998901 reads as national", uz, "998901", "998901"],
     ["uz: +998 + partial", uz, "+998901234", "901234"],
     ["uz: 998 + partial", uz, "998901234", "901234"],
-    ["uz: exactly the prefix digits", uz, "998", ""],
+    ["uz: the code digits alone read as national", uz, "998", "998"],
     ["uz: +998 only", uz, "+998", ""],
     ["uz: overflow keeps the last nine", uz, "9989012345678", "012345678"],
     ["uz: empty", uz, "", null],
-    ["uz: too short, no prefix match", uz, "90", null],
+    ["uz: partial national", uz, "90", "90"],
     ["uz: prefix digits without plus and formatted rest", uz, "998 (90) 123-45-67", "90) 123-45-67"],
     ["uz: plus, space, country code", uz, "+ 998 90 123 45 67", "90 123 45 67"],
     ["uz no placeholder: bare national digits", uzNoPlaceholder, "901234567", "901234567"],
@@ -145,11 +145,11 @@ describe("normalizeUnprefixedValue", () => {
     ["kz: national 777… reads as prefix 7 + rest", kz, "7771234567", "771234567"],
     ["kz: national 771…", kz, "7712345678", "712345678"],
     ["kz: country code 7 + national 777…", kz, "77771234567", "771234567"],
-    ["kz: 777 partial", kz, "777", "7"],
+    ["kz: partial 777 drops the national 7", kz, "777", "77"],
     ["kz: national 701…", kz, "7011234567", "011234567"],
     ["kz: trunk 8 + national", kz, "87011234567", "011234567"],
     ["kz: +7 + national", kz, "+77011234567", "011234567"],
-    ["kz: 701 too short", kz, "701", null],
+    ["kz: partial 701 drops the national 7", kz, "701", "01"],
     ["kg: bare national", kg, "555123456", "555123456"],
     ["kg: trunk 0", kg, "0555123456", "555123456"],
     ["kg: country code", kg, "996555123456", "555123456"],
@@ -159,7 +159,7 @@ describe("normalizeUnprefixedValue", () => {
     ["ru: trunk 8", ru, "89123456789", "9123456789"],
     ["ru: country code 7", ru, "79123456789", "9123456789"],
     ["ru: +7", ru, "+79123456789", "9123456789"],
-    ["ru: too short", ru, "912", null],
+    ["ru: partial national", ru, "912", "912"],
     ["kzIban: uppercase starts with the literal prefix", iban, "KZ86125KZT5004100100", null],
     ["kzIban: lowercase kz is dropped", iban, "kz86125kzt5004100100", "86125kzt5004100100"],
     ["kzIban: digits only", iban, "86125KZT5004100100", "86125KZT5004100100"],
@@ -213,7 +213,7 @@ describe("prefix module on a hand-written host", () => {
     expect(normalizeUnprefixedValue(host, "+1 234")).toBe(null);
     expect(normalizeUnprefixedValue(host, "1234")).toBe("234");
     expect(normalizeUnprefixedValue(host, "1")).toBe("");
-    expect(normalizeUnprefixedValue(host, "12")).toBe("2");
+    expect(normalizeUnprefixedValue(host, "12")).toBe("12");
     expect(normalizeUnprefixedValue(host, "9234")).toBe("234");
     expect(sameFillingCharacters(host, "2 3 4", "234")).toBe(true);
     expect(sameFillingCharacters(host, "235", "234")).toBe(false);

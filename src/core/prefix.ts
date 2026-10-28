@@ -71,6 +71,26 @@ export function shouldInsertAfterPrefix(
   return host.fillingLengthAt(string, prefix.length) > 0;
 }
 
+function readNationalNumber(host: PrefixHost, value: string, indices: number[]): string | null {
+  const { prefix, slots } = host;
+  const significant = prefixSignificantCharacters(prefix);
+  const separator = prefix.search(/[^0-9A-Za-z][0-9A-Za-z]*$/);
+  const head = separator > 0 ? prefixSignificantCharacters(prefix.slice(separator)) : "";
+  if (
+    !prefix.startsWith("+") ||
+    value.trimStart().startsWith("+") ||
+    !indices.length ||
+    indices.length >= head.length + slots ||
+    (indices.length === 1 && value[indices[0]].toUpperCase() === significant[0].toUpperCase())
+  ) {
+    return null;
+  }
+  if (!startsWithCharacters(value, indices, head)) {
+    return value.slice(indices[0]);
+  }
+  return indices.length > head.length ? value.slice(indices[head.length]) : "";
+}
+
 export function normalizeUnprefixedValue(host: PrefixHost, value: string): string | null {
   const { prefix, slots } = host;
   if (!hasSignificantPrefix(prefix) || !value || value.startsWith(prefix)) {
@@ -81,6 +101,10 @@ export function normalizeUnprefixedValue(host: PrefixHost, value: string): strin
     return international;
   }
   const indices = host.fillingIndices(value);
+  const national = readNationalNumber(host, value, indices);
+  if (national !== null) {
+    return national;
+  }
   const significant = prefixSignificantCharacters(prefix);
   for (let k = 1; k < significant.length; k++) {
     if (indices.length === slots + k && startsWithCharacters(value, indices, significant.slice(-k))) {
@@ -108,4 +132,11 @@ export function sameFillingCharacters(host: PrefixHost, a: string, b: string): b
       .join("")
       .toUpperCase();
   return filling(a) === filling(b);
+}
+
+export function readUnprefixedInput(host: PrefixHost, string: string, position: number): string | null {
+  if (position || !host.prefix.startsWith("+") || string.trimStart().startsWith("+")) {
+    return null;
+  }
+  return normalizeUnprefixedValue(host, string);
 }

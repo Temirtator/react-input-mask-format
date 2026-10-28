@@ -12,9 +12,6 @@ export const known = {
     const slots = slotIndices(d);
     return literalsAfterFirstSlot(d).some(char => slots.some(i => accepts(d, i, char)));
   },
-  overlapsCountryCode(d: MaskDescription, digits: string): boolean {
-    return digits.length > 0 && d.significant.includes(digits[0]);
-  },
   fillsNoSlotFromPrefix(d: MaskDescription, text: string, start: number): boolean {
     const literals = literalChars(d);
     const slots = slotIndices(d);

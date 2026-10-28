@@ -15,17 +15,6 @@ describe("known divergences (pinned until fixed)", () => {
     expect(subject.format("77462941")).toBe("7746-");
   });
 
-  it("K2 digits starting with a country code digit: paste and formatValue disagree (expected: decided in the fix release)", () => {
-    const kz = preset("kzPhone");
-    expect(known.overlapsCountryCode(describeMask(presets.find(p => p.name === "kzPhone")!.setup), "70")).toBe(true);
-    expect(pasteOverAll(kz, focus(kz), "70").value).toBe("+7 (770) ___-__-__");
-    expect(kz.format("70")).toBe("+7 (70_) ___-__-__");
-    const uz = preset("uzPhone");
-    expect(known.overlapsCountryCode(describeMask(presets.find(p => p.name === "uzPhone")!.setup), "82")).toBe(true);
-    expect(pasteOverAll(uz, focus(uz), "82").value).toBe("+998 (82) ___-__-__");
-    expect(uz.format("82")).toBe("+998 (2_) ___-__-__");
-  });
-
   it("K3 a full maskPlaceholder for an escaped mask is validated against the raw string (expected: 9_ is valid)", () => {
     expect(isValidSetup({ mask: "\\99", maskPlaceholder: "9_" })).toBe(false);
     expect(isValidSetup({ mask: "\\99", maskPlaceholder: "9__" })).toBe(true);

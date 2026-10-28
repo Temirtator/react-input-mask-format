@@ -3,6 +3,7 @@ import parseMask, { ParsedMaskOptions } from "./parse-mask";
 import {
   PrefixHost,
   normalizeUnprefixedValue,
+  readUnprefixedInput,
   sameFillingCharacters,
   shouldInsertAfterPrefix,
   trimOverflowingPrefix
@@ -317,13 +318,12 @@ export default class MaskUtils {
 
     if (selection.end! > previousSelection.start!) {
       const raw = newValue.slice(previousSelection.start!, selection.end!);
-      enteredString = trimOverflowingPrefix(this.prefixHost, raw, cursorPosition);
-      insertAfterPrefix = shouldInsertAfterPrefix(
-        this.prefixHost,
-        enteredString,
-        cursorPosition,
-        enteredString !== raw
-      );
+      const unprefixed = readUnprefixedInput(this.prefixHost, raw, cursorPosition);
+      enteredString = unprefixed ?? trimOverflowingPrefix(this.prefixHost, raw, cursorPosition);
+      insertAfterPrefix =
+        unprefixed === null
+          ? shouldInsertAfterPrefix(this.prefixHost, enteredString, cursorPosition, enteredString !== raw)
+          : this.getStringFillingLengthAtPosition(unprefixed, prefix!.length) > 0;
       formattedEnteredStringLength = this.getStringFillingLengthAtPosition(
         enteredString,
         insertAfterPrefix ? prefix!.length : cursorPosition

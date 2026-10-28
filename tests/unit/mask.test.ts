@@ -120,12 +120,12 @@ describe("MaskUtils prefix-aware input", () => {
     expect(utils.formatValue("+998901234567")).toBe("+998 (90) 123-45-67");
   });
 
-  it("formatValue treats values starting with the prefix digits as prefix + partial input", () => {
-    expect(phone().formatValue("9989")).toBe("+998 (9_) ___-__-__");
-    expect(phone().formatValue("998901")).toBe("+998 (90) 1__-__-__");
+  it("formatValue reads a partial number without + as national and a complete one with the code", () => {
+    expect(phone().formatValue("9989")).toBe("+998 (99) 89_-__-__");
+    expect(phone().formatValue("998901")).toBe("+998 (99) 890-1_-__");
     expect(phone().formatValue("+998901234")).toBe("+998 (90) 123-4_-__");
     expect(phone().formatValue("998901234")).toBe("+998 (90) 123-4_-__");
-    expect(phone().formatValue("998")).toBe("+998 (__) ___-__-__");
+    expect(phone().formatValue("998")).toBe("+998 (99) 8__-__-__");
   });
 
   it("formatValue keeps the last characters of an overflowing unprefixed value", () => {
@@ -147,6 +147,40 @@ describe("MaskUtils prefix-aware input", () => {
     expect(kz.formatValue("7771234567")).toBe("+7 (777) 123-45-67");
     expect(kz.formatValue("7712345678")).toBe("+7 (771) 234-56-78");
     expect(kz.formatValue("77771234567")).toBe("+7 (777) 123-45-67");
-    expect(kz.formatValue("777")).toBe("+7 (77_) ___-__-__");
+    expect(kz.formatValue("777")).toBe("+7 (777) ___-__-__");
+  });
+});
+
+describe("MaskUtils partial number without + reads as national", () => {
+  const kz = () => new MaskUtils({ mask: "+7 (799) 999-99-99", maskPlaceholder: "_" });
+  const uz = () => new MaskUtils({ mask: "+\\9\\98 (99) 999-99-99", maskPlaceholder: "_" });
+  const kg = () => new MaskUtils({ mask: ["+", "9", "9", "6", " ", "(", /[2-9]/, /\d/, /\d/, ")", " ", /\d/, /\d/, "-", /\d/, /\d/, "-", /\d/, /\d/], maskPlaceholder: "_" });
+  const pasteOverAll = (utils: MaskUtils, text: string) => {
+    const empty = utils.formatValue("");
+    return utils.processChange(
+      { value: text, selection: { start: text.length, end: text.length } },
+      { value: empty, selection: { start: 0, end: empty.length, length: empty.length } }
+    ).value;
+  };
+
+  it.each<[string, () => MaskUtils, string, string]>([
+    ["kz 70", kz, "70", "+7 (70_) ___-__-__"],
+    ["kz 701", kz, "701", "+7 (701) ___-__-__"],
+    ["kz 70112", kz, "70112", "+7 (701) 12_-__-__"],
+    ["kz 777", kz, "777", "+7 (777) ___-__-__"],
+    ["kz 77012", kz, "77012", "+7 (770) 12_-__-__"],
+    ["kz 0555", kz, "0555", "+7 (705) 55_-__-__"],
+    ["kz single 7", kz, "7", "+7 (7__) ___-__-__"],
+    ["uz 90", uz, "90", "+998 (90) ___-__-__"],
+    ["uz 98", uz, "98", "+998 (98) ___-__-__"],
+    ["uz 881", uz, "881", "+998 (88) 1__-__-__"],
+    ["uz 99890", uz, "99890", "+998 (99) 890-__-__"],
+    ["uz single 9", uz, "9", "+998 (__) ___-__-__"],
+    ["uz complete with the code", uz, "998901234567", "+998 (90) 123-45-67"],
+    ["kg 99655", kg, "99655", "+996 (996) 55-__-__"],
+    ["kg 0555", kg, "0555", "+996 (555) __-__-__"]
+  ])("%s: paste and formatValue agree", (_name, make, text, expected) => {
+    expect(pasteOverAll(make(), text)).toBe(expected);
+    expect(make().formatValue(text)).toBe(expected);
   });
 });
