@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.10.0
+
+### Changed
+- Behavior change: in pasted text and `value`, a fixed character inside the mask that a slot also accepts is
+  read as the fixed character only when the text repeats the whole fixed run up to the next slot. With
+  `mask="99.99.2099"`, `"010124"` → `01.01.2024` (was `01.01.204_`); `"01012024"` and a formatted value are
+  unchanged. Typing is unchanged: each key goes to the next slot.
+- Behavior change: a placeholder character (`_`) in pasted text or `value` that lands on a fixed character is
+  kept as an empty slot, as when it is typed. Before, it was dropped and the next character took its slot
+  (`mask="99/99/9999"`, `"12_34"` → `12/_3/4___`, was `12/34/____`).
+
+### Fixed
+- Pasting a formatted value back into a mask with a fixed prefix of letters or digits without `+`
+  (`mask="\\979"`, paste `97_` over the whole value) keeps it. Before, the prefix was read as input
+  (`977`).
+
+### Internal
+- The property-test pins and exclusions for these cases are removed. Typing versus paste around a fixed
+  character that a slot accepts is pinned as by design.
+
 ## 2.9.0
 
 ### Changed

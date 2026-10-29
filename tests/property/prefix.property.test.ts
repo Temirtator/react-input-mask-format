@@ -16,8 +16,9 @@ describe("prefix masks", () => {
           fc.tuple(fc.constant(c), fc.string({ unit: digitUnit, maxLength: slotIndices(c.d).length }))
         ),
         ([c, national]) => {
-          const text = `+${c.d.significant} ${national}`;
-          fc.pre(!known.slotLikeLiteral(c.d) && !known.containsPlaceholder(c.d, text));
+          const separator = slotIndices(c.d).some(i => c.d.placeholder?.[i] === " ") ? "" : " ";
+          const text = `+${c.d.significant}${separator}${national}`;
+          fc.pre(!known.slotLikeLiteral(c.d));
           const pasted = pasteOverAll(c.subject, focus(c.subject), text);
           expect(pasted.value).toBe(typeString(c.subject, focus(c.subject), national).value);
         }

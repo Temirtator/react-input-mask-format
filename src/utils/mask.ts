@@ -106,8 +106,8 @@ export default class MaskUtils {
   placeString = (string: string, position: number): { length: number; skipped: boolean } => {
     let placedLength = position;
     let skipped = false;
-    string.split("").reduce((value, character) => {
-      const next = this.insertCharacterAtPosition(value, character, value.length);
+    string.split("").reduce((value, character, i) => {
+      const next = this.insertCharacterAtPosition(value, character, value.length, string.slice(i + 1));
       const appended = next.slice(value.length);
       if (
         appended &&
@@ -245,8 +245,21 @@ export default class MaskUtils {
     return this.formatValue(clearedValue);
   };
 
-  insertCharacterAtPosition = (value: string, character: string, position: number): string => {
-    const { mask, maskPlaceholder } = this.maskOptions;
+  repeatsLiteral = (text: string, position: number): boolean => {
+    const { mask } = this.maskOptions;
+    for (let k = 0; position + k < mask!.length && !this.isPositionEditable(position + k); k++) {
+      if (k >= text.length) {
+        return true;
+      }
+      if (text[k] !== mask![position + k]) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  insertCharacterAtPosition = (value: string, character: string, position: number, rest?: string): string => {
+    const { mask, prefix } = this.maskOptions;
     if (position >= mask!.length) {
       return value;
     }
@@ -256,13 +269,10 @@ export default class MaskUtils {
         ? this.transform(character, position)
         : character;
 
-    const isAllowed = this.isCharacterAllowedAtPosition(transformedCharacter, position);
     const isEditable = this.isPositionEditable(position);
-    const nextEditablePosition = this.getRightEditablePosition(position);
-    const isNextPlaceholder =
-      maskPlaceholder && nextEditablePosition
-        ? transformedCharacter === maskPlaceholder[nextEditablePosition]
-        : null;
+    const isAllowed =
+      this.isCharacterAllowedAtPosition(transformedCharacter, position) &&
+      (isEditable || rest === undefined || position < prefix!.length || this.repeatsLiteral(character + rest, position));
     const valueBefore = value.slice(0, position);
 
     if (isAllowed || !isEditable) {
@@ -270,8 +280,8 @@ export default class MaskUtils {
       value = valueBefore + insertedCharacter;
     }
 
-    if (!isAllowed && !isEditable && !isNextPlaceholder) {
-      value = this.insertCharacterAtPosition(value, character, position + 1);
+    if (!isAllowed && !isEditable) {
+      value = this.insertCharacterAtPosition(value, character, position + 1, rest);
     }
 
     return value;
@@ -287,8 +297,8 @@ export default class MaskUtils {
     const isFixedLength = this.isValueFilled(value) || !!maskPlaceholder;
     const valueAfter = value.slice(position);
 
-    value = characters.reduce((value, character) => {
-      return this.insertCharacterAtPosition(value, character, value.length);
+    value = characters.reduce((value, character, i) => {
+      return this.insertCharacterAtPosition(value, character, value.length, string.slice(i + 1));
     }, value.slice(0, position));
 
     if (isFixedLength) {

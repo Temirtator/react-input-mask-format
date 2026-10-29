@@ -44,7 +44,11 @@ export function trimOverflowingPrefix(host: PrefixHost, string: string, position
   if (international) {
     return international;
   }
-  const indices = host.fillingIndices(string);
+  let indices = host.fillingIndices(string);
+  if (indices.length > slots && string.toUpperCase().startsWith(prefix.toUpperCase())) {
+    string = string.slice(prefix.length);
+    indices = host.fillingIndices(string);
+  }
   if (indices.length <= slots) {
     return string;
   }
