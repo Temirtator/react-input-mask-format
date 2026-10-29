@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import MaskUtils from "../../src/utils/mask";
+import MaskUtils from "../../src/core/mask";
 import { resolveTransform } from "../../src/utils/transform";
 import {
   card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Internal
+- The mask engine moved from `src/utils/mask.ts` to `src/core/mask.ts`, next to the other core modules. No API or
+  behavior change.
+
 ## 2.10.0
 
 ### Changed

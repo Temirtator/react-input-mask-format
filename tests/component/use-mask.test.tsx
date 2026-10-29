@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import MaskUtils from "../../src/utils/mask";
+import MaskUtils from "../../src/core/mask";
 import { createMaskController } from "../../src/bind-mask";
 import { useMask } from "../../src/use-mask";
 import type { UseMaskOptions } from "../../src/types";
