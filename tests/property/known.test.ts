@@ -1,18 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { createSubject, extendedFormatChars, presets } from "./subject";
+import { createSubject, presets } from "./subject";
 import { describeMask } from "./description";
 import { known } from "./known";
-import { caretAt, focus, insert, pasteOverAll, typeString } from "./driver";
+import { caretAt, focus, insert, typeString } from "./driver";
 
 const preset = (name: string) => createSubject(presets.find(p => p.name === name)!.setup);
 
-describe("known divergences (pinned until fixed)", () => {
-  it("K1 typing over a literal a slot would accept differs from formatValue (expected: typing gives 7746-)", () => {
-    const setup = { mask: "*7*9-", maskPlaceholder: null };
+describe("known divergences (by design)", () => {
+  it("K1 (by design) typing puts each key in the next slot, paste reads a literal the text repeats in full", () => {
+    const setup = { mask: "99.99.2099" };
     expect(known.slotLikeLiteral(describeMask(setup))).toBe(true);
     const subject = createSubject(setup);
-    expect(typeString(subject, focus(subject), "77462941").value).toBe("7774-");
-    expect(subject.format("77462941")).toBe("7746-");
+    expect(typeString(subject, focus(subject), "010124").value).toBe("01.01.2024");
+    expect(typeString(subject, focus(subject), "01012024").value).toBe("01.01.2020");
+    expect(subject.format("010124")).toBe("01.01.2024");
+    expect(subject.format("01012024")).toBe("01.01.2024");
   });
 
   it("K4 (by design) text that types the beginning of the prefix leaves the caret before the rest of it", () => {
@@ -23,21 +25,5 @@ describe("known divergences (pinned until fixed)", () => {
     expect([typed.value, typed.start]).toEqual(["+7 (7__) ___-__-__", 2]);
     const continued = typeString(kz, typed, "7011234567");
     expect(continued.value).toBe("+7 (701) 123-45-67");
-  });
-
-  it("K5 text with the placeholder character: typing and formatValue disagree (expected: formatValue keeps the 0)", () => {
-    const setup = { mask: " .+aA)Я9#", formatChars: extendedFormatChars, transform: "uppercase" as const };
-    expect(known.containsPlaceholder(describeMask(setup), "zy_0")).toBe(true);
-    const subject = createSubject(setup);
-    expect(typeString(subject, focus(subject), "zy_0").value).toBe(" .+ZY)_0_");
-    expect(subject.format(" .+zy_0")).toBe(" .+ZY)___");
-  });
-
-  it("K7 pasting a formatted value back re-reads a +-less letter/digit prefix as input (expected: 97_)", () => {
-    const setup = { mask: "\\979" };
-    expect(known.prefixOverflows(describeMask(setup), "97_")).toBe(true);
-    const subject = createSubject(setup);
-    expect(subject.format("")).toBe("97_");
-    expect(pasteOverAll(subject, focus(subject), "97_").value).toBe("977");
   });
 });

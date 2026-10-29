@@ -73,7 +73,13 @@ A string or an array of characters and regular expressions.
 | `a` | a-z, A-Z |
 | `*` | 0-9, a-z, A-Z |
 
-Escape a format character with a backslash (`"+\\9\\98 (99) 999-99-99"`). Array masks allow any per-position rule:
+Escape a format character with a backslash (`"+\\9\\98 (99) 999-99-99"`).
+
+A typed key goes to the next slot, past the fixed characters before it. Pasted text and `value` read a fixed
+character as itself only when the text repeats the whole fixed run up to the next slot. With
+`mask="99.99.2099"`, `"010124"` and `"01012024"` both give `01.01.2024`, and typing `24` gives `2024`.
+
+Array masks allow any per-position rule:
 
 ```jsx
 // Canadian postal code

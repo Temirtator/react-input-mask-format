@@ -54,7 +54,7 @@ describe("editing", () => {
   it("E3 typing from focus equals formatting the prefix and the typed text", () => {
     holds(
       fc.property(maskCase.chain(c => fc.tuple(fc.constant(c), textFor(c))), ([c, text]) => {
-        fc.pre(!known.slotLikeLiteral(c.d) && !known.containsPlaceholder(c.d, text));
+        fc.pre(!known.slotLikeLiteral(c.d));
         expect(typeString(c.subject, focus(c.subject), text).value).toBe(c.subject.format(c.d.prefix + text));
       })
     );
@@ -147,8 +147,7 @@ describe("editing", () => {
           fc.pre(
             isGapFree(c.d, formatted) &&
               slotIndices(c.d).some(i => isFilledSlot(c.d, formatted, i)) &&
-              !known.slotLikeLiteral(c.d) &&
-              !known.prefixOverflows(c.d, formatted)
+              !known.slotLikeLiteral(c.d)
           );
           const fields = run(c.subject, actions);
           expect(pasteOverAll(c.subject, fields[fields.length - 1], formatted).value).toBe(formatted);

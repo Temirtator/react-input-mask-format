@@ -252,3 +252,59 @@ describe("MaskUtils national reading at the start of the number", () => {
     expect(result.selection).toEqual({ start: 4, end: 4 });
   });
 });
+
+describe("MaskUtils literals inside the mask", () => {
+  const change = (utils: MaskUtils, before: string, start: number, end: number, text: string) =>
+    utils.processChange(
+      { value: before.slice(0, start) + text + before.slice(end), selection: { start: start + text.length, end: start + text.length } },
+      { value: before, selection: { start, end, length: end - start } }
+    );
+  const century = () => new MaskUtils({ mask: "99.99.2099", maskPlaceholder: "_" });
+
+  it.each([
+    ["010124", "01.01.2024"],
+    ["01012024", "01.01.2024"],
+    ["01.01.2024", "01.01.2024"],
+    ["01.01.20__", "01.01.20__"],
+    ["01012", "01.01.20__"],
+    ["0101202", "01.01.202_"]
+  ])("formatValue reads a literal only when the text repeats it in full: %s", (text, expected) => {
+    expect(century().formatValue(text)).toBe(expected);
+  });
+
+  it("reads a pasted value the same way", () => {
+    const utils = century();
+    const empty = utils.formatValue("");
+    expect(change(utils, empty, 0, empty.length, "010124").value).toBe("01.01.2024");
+    expect(change(utils, empty, 0, empty.length, "01012024").value).toBe("01.01.2024");
+  });
+
+  it("keeps a placeholder character that lands on a literal as an empty slot", () => {
+    expect(date().formatValue("12_34")).toBe("12/_3/4___");
+  });
+});
+
+describe("MaskUtils pasting a formatted value back over a prefix", () => {
+  const pasteAll = (utils: MaskUtils, text: string) => {
+    const empty = utils.formatValue("");
+    return utils.processChange(
+      { value: text, selection: { start: text.length, end: text.length } },
+      { value: empty, selection: { start: 0, end: empty.length, length: empty.length } }
+    );
+  };
+
+  it.each([
+    ["97_", "97_"],
+    ["975", "975"],
+    ["5", "975"],
+    ["9797", "977"]
+  ])("strips the prefix it starts with before keeping the last characters: %s", (text, expected) => {
+    expect(pasteAll(new MaskUtils({ mask: "\\979", maskPlaceholder: "_" }), text).value).toBe(expected);
+  });
+
+  it("does not change a paste that fits the slots", () => {
+    expect(pasteAll(new MaskUtils({ mask: "DE99 9999 9999 9999 9999 99", maskPlaceholder: "_" }), "de89370400440532013000").value).toBe(
+      "DE89 3704 0044 0532 0130 00"
+    );
+  });
+});
