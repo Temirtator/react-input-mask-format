@@ -38,7 +38,8 @@ describe("editing", () => {
           const text = action.kind === "type" ? action.char : action.kind === "paste" || action.kind === "autofill" ? action.text : null;
           if (text !== null) {
             const caretAfterEvent = action.kind === "autofill" ? text.length : fields[i].start + text.length;
-            if (known.fillsNoSlotFromPrefix(c.d, text, Math.min(fields[i].start, caretAfterEvent))) {
+            const start = Math.min(fields[i].start, caretAfterEvent);
+            if (known.entersPrefixStart(c.d, text, start) || (action.kind === "autofill" && known.entersPrefixStart(c.d, text, 0))) {
               return;
             }
           }
@@ -72,7 +73,6 @@ describe("editing", () => {
         ([c, actions, text]) => {
           const fields = run(c.subject, actions);
           const field = fields[fields.length - 1];
-          fc.pre(!known.selectionFromPrefix(c.d, field));
           expect(insert(c.subject, field, text).value).toBe(field.value);
         }
       )
@@ -169,7 +169,6 @@ describe("editing", () => {
           const start = Math.min(a, b) % (field.value.length + 1);
           const end = Math.min(field.value.length, start + (Math.max(a, b) % (field.value.length + 1)));
           const at = caret % (value.length + 1);
-          fc.pre(!known.caretInsideInsertion({ ...field, start, end }, value, at));
           const next = c.subject.change(
             { value, selection: { start: at, end: at } },
             { value: field.value, selection: { start, end, length: end - start } }
@@ -178,7 +177,7 @@ describe("editing", () => {
           expect(next.selection.end).not.toBeNull();
           const result = { value: next.value, start: next.selection.start!, end: next.selection.end! };
           settled(c, result);
-          if (!known.fillsNoSlotFromPrefix(c.d, value, Math.min(start, at))) {
+          if (!known.entersPrefixStart(c.d, value, Math.min(start, at)) && !known.entersPrefixStart(c.d, value, 0)) {
             caretInBounds(c, result);
           }
         }

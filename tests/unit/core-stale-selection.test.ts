@@ -26,7 +26,8 @@ describe("resolveStaleSelection widens a stale selection to the whole value", ()
     ["autofill over a partly typed value, caret left at 9", state("+7 (701) ___-__-__", caret(9)), state("+7 777 987 65 43", caret(16))],
     ["focused fill on an empty prefixed field, caret 5", state("+7 (7__) ___-__-__", caret(5)), state("+7 701 123 45 67", caret(16))],
     ["controlled value replaced while the selection is unknown", state("+7 (701) 123-45-67", { start: null, end: null }), state("+7 777 987 65 43", caret(16))],
-    ["IME rewrite in the middle", state("+7 (701) 123-45-67", caret(12)), state("+7 (701) 199-45-67", caret(12))]
+    ["IME rewrite in the middle", state("+7 (701) 123-45-67", caret(12)), state("+7 (701) 199-45-67", caret(12))],
+    ["autofill explained as an insertion but the caret before its end", state("+7 (701) ___-__-__", { start: 0, end: 18 }), state("+7 777 987 65 43", caret(10))]
   ])("%s", (_name, previous, current) => {
     const resolved = resolveStaleSelection(previous, current);
     expect(resolved.previous).toEqual({

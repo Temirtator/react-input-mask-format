@@ -63,6 +63,13 @@ test.describe("paste into an empty field", () => {
   }
 });
 
+test("paste a partial national number into an empty kzPhone", async ({ page }) => {
+  const input = await openField(page, kzPhone);
+  await pasteInto(page, input, "701");
+  await expect(input).toHaveValue("+7 (701) ___-__-__");
+  await expectState(page, kzPhone, "+7 (701) ___-__-__");
+});
+
 test("paste into a partially filled kzPhone", async ({ page }) => {
   const input = await openField(page, kzPhone);
   await input.click();
@@ -92,6 +99,33 @@ test.describe("paste over a selection", () => {
     await pasteOver(page, input, "01.02.2003");
     await expect(input).toHaveValue("01/02/2003");
     await expectState(page, usemask, "01/02/2003");
+  });
+});
+
+test.describe("paste a partial number without + over a filled field", () => {
+  const cases: Array<Field & { typed: string; filled: string }> = [
+    { ...kzPhone, typed: "011234567", filled: "+7 (701) 123-45-67", input: "701", expected: "+7 (701) ___-__-__" },
+    { testid: "uzPhone", tab: Country.Uz, typed: "901234567", filled: "+998 (90) 123-45-67", input: "90", expected: "+998 (90) ___-__-__" }
+  ];
+  for (const field of cases) {
+    test(`${field.testid}: ${field.input}`, async ({ page }) => {
+      const input = await openField(page, field);
+      await input.click();
+      await input.pressSequentially(field.typed);
+      await expect(input).toHaveValue(field.filled);
+      await pasteOver(page, input, field.input);
+      await expect(input).toHaveValue(field.expected);
+      await expectState(page, field, field.expected);
+    });
+  }
+
+  test("uzPhone: a bare country code puts the caret after the prefix", async ({ page }) => {
+    const input = await openField(page, { testid: "uzPhone", tab: Country.Uz, input: "", expected: "" });
+    await input.click();
+    await input.pressSequentially("901234567");
+    await pasteOver(page, input, "+998");
+    await expect(input).toHaveValue("+998 (__) ___-__-__");
+    await expect.poll(() => input.evaluate(element => (element as HTMLInputElement).selectionStart)).toBe(6);
   });
 });
 

@@ -28,7 +28,7 @@ export function validateMaskPlaceholder(props: InputMaskProps & { maskPlaceholde
     !mask ||
       !maskPlaceholder ||
       maskPlaceholder.length === 1 ||
-      maskPlaceholder.length === mask.length,
+      maskPlaceholder.length === (typeof mask === "string" ? mask.replace(/\\([\s\S]?)/g, "$1") : mask).length,
     "maskPlaceholder should either be a single character or have the same length as the mask:\n" +
       `mask: ${mask}\n` +
       `maskPlaceholder: ${maskPlaceholder}`

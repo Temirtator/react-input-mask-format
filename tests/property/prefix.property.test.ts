@@ -28,7 +28,7 @@ describe("prefix masks", () => {
   it("X2 select all and paste of digits equals formatting them", () => {
     holds(
       fc.property(prefixedCase.chain(c => fc.tuple(fc.constant(c), digits)), ([c, text]) => {
-        fc.pre(!known.overlapsCountryCode(c.d, text) && !known.slotLikeLiteral(c.d));
+        fc.pre(!known.slotLikeLiteral(c.d));
         expect(pasteOverAll(c.subject, focus(c.subject), text).value).toBe(c.subject.format(text));
       })
     );
@@ -47,7 +47,7 @@ describe("prefix masks", () => {
         ),
         ([c, plus, length, national]) => {
           const text = `${plus ? "+" : ""}${c.d.significant.slice(0, length)}${national}`;
-          fc.pre(!known.fillsNoSlotFromPrefix(c.d, text, 0));
+          fc.pre(!known.entersPrefixStart(c.d, text, 0));
           const pasted = pasteOverAll(c.subject, focus(c.subject), text);
           expect(pasted.start).toBeGreaterThanOrEqual(c.d.prefix.length);
         }
