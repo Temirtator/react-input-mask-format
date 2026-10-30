@@ -1,8 +1,22 @@
 # Changelog
 
-## Unreleased
+## 2.11.0
+
+### Added
+- `react-input-mask-format/date`: `DateFormat`, `useDateFormat`, `formatDate` and `parseDate` for day, month and
+  year in `dmy`, `mdy` or `ymd` order with any separator. Complete days and months are clamped, `value` is the
+  ISO `YYYY-MM-DD` date once it is complete and exists in the calendar, and an ISO or differently laid out
+  date (`2024-05-12`, `1.5.2024`) passed as `value`, pasted or autofilled lands in the right fields.
+
+### Fixed
+- `TimeFormat` and `useTimeFormat` with a separator longer than one character (`separator=" : "`): Backspace
+  right after the separator now deletes it together with the last hour digit, as with `:`. Before, the
+  deleted separator character was put back and Backspace had no effect.
+- `TimeFormat`: after the parent showed another value, resetting `value` to `""` no longer brings back an
+  earlier partly typed time. Changing `separator` after an edit re-lays out the shown time.
 
 ### Internal
+- `./time` and `./date` share the input, caret and Backspace handling.
 - The mask engine moved from `src/utils/mask.ts` to `src/core/mask.ts`, next to the other core modules. No API or
   behavior change.
 

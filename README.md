@@ -49,6 +49,7 @@ The original `react-input-mask` has been unmaintained since 2021. This fork is:
 - [Properties](#properties) · [`useMask`](#usemask-hook)
 - [Presets](#presets) · [Masks with a fixed prefix](#masks-with-a-fixed-prefix) · [Validators](#validators)
 - [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) · [Time](#time--react-input-mask-formattime)
+  · [Date](#date--react-input-mask-formatdate)
 - [Known issues](#known-issues) · [Migration](#migration)
 
 ## Properties
@@ -359,6 +360,39 @@ parseTime("14:30");  // { value: "14:30", formattedValue: "14:30", hours: 14, mi
 - `onValueChange` receives `{ value, formattedValue, hours, minutes }`. `value` is `""` until the time is
   complete and always uses `:`, whatever the `separator` option (default `:`).
 - Complete hours are clamped to ≤ 23, complete minutes to ≤ 59; a single digit is never clamped.
+- Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
+
+## Date — `react-input-mask-format/date`
+
+Day, month and year with clamping, calendar checks and an ISO value.
+
+```tsx
+import { DateFormat, useDateFormat, formatDate, parseDate } from "react-input-mask-format/date";
+
+<DateFormat value={date} onValueChange={(v) => setDate(v.value)} />            // DD.MM.YYYY
+<DateFormat order="mdy" separator="/" value={date} onValueChange={(v) => setDate(v.value)} />
+const ref = useDateFormat({ order: "ymd", separator: "-" }); // <input ref={ref} />
+
+formatDate("12052024");    // "12.05.2024"
+formatDate("2024-05-12");  // "12.05.2024"
+parseDate("12.05.2024");   // { value: "2024-05-12", formattedValue: "12.05.2024", day: 12, month: 5, year: 2024 }
+```
+
+- `order` is `"dmy"` (default), `"mdy"` or `"ymd"`; `separator` defaults to `.`.
+- `onValueChange` receives `{ value, formattedValue, day, month, year }`. `value` is the ISO `YYYY-MM-DD`
+  date, whatever `order` and `separator` are, and is `""` until the date is complete and exists:
+  `31.04.2024` and `29.02.2023` keep their parts but have no `value`.
+- A day is clamped to 01–31 and a month to 01–12 when a key completes it, or when the whole value is set,
+  pasted or autofilled; a single digit is never clamped and the year is not clamped. Typing a later field
+  never changes an earlier one.
+- Deleting or typing a digit in the middle shifts the digits after it; the shifted fields are not clamped,
+  so retyping the digit restores the date (`12.05.2024`, Backspace the `5` → `12.02.024`, type `5` →
+  `12.05.2024`). Until then `value` is `""`.
+- Text written with separators in another layout is read by fields, so an ISO `value` from your state, a
+  pasted `2024-05-12` or an autofilled `1.5.2024` lands in the right fields. A 4-digit group first is read
+  as year-month-day; a 4-digit group last as day-month (month-day with `order="mdy"`). Other text is read
+  as a stream of digits in the configured order.
+- Changing `order` or `separator` re-lays out the shown date.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Known issues

@@ -120,3 +120,37 @@ describe("TimeFormat", () => {
     expect(input).toHaveValue("");
   });
 });
+
+describe("TimeFormat with a multi-character separator", () => {
+  it("steps back over the separator with one Backspace", async () => {
+    const user = userEvent.setup();
+    render(<HookField separator=" : " />);
+    const input = screen.getByTestId("t");
+    await user.click(input);
+    await user.keyboard("22");
+    expect(input).toHaveValue("22 : ");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("2");
+  });
+});
+
+describe("TimeFormat props changes", () => {
+  it("shows the new separator when it changes", () => {
+    const { rerender } = render(<TimeFormat value="09:05" onValueChange={() => {}} data-testid="p" />);
+    rerender(<TimeFormat value="09:05" separator="." onValueChange={() => {}} data-testid="p" />);
+    expect(screen.getByTestId("p")).toHaveValue("09.05");
+  });
+
+  it("clears the field when the parent resets after showing another value", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<TimeFormat value="" onValueChange={() => {}} data-testid="z" />);
+    const input = screen.getByTestId("z");
+    await user.click(input);
+    await user.keyboard("22");
+    expect(input).toHaveValue("22:");
+    rerender(<TimeFormat value="09:05" onValueChange={() => {}} data-testid="z" />);
+    expect(input).toHaveValue("09:05");
+    rerender(<TimeFormat value="" onValueChange={() => {}} data-testid="z" />);
+    expect(input).toHaveValue("");
+  });
+});

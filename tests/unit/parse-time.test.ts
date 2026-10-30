@@ -80,4 +80,11 @@ describe("collapseTrailingSeparator", () => {
   it("supports a custom separator", () => {
     expect(collapseTrailingSeparator("22", "22.", ".")).toBe("2");
   });
+  it("drops the digit when one character of a multi-character separator is deleted", () => {
+    expect(collapseTrailingSeparator("22 :", "22 : ", " : ")).toBe("2");
+    expect(collapseTrailingSeparator("22", "22 : ", " : ")).toBe("2");
+  });
+  it("does not trigger for an empty separator", () => {
+    expect(collapseTrailingSeparator("2", "22", "")).toBe("2");
+  });
 });
