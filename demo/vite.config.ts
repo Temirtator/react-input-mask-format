@@ -16,6 +16,7 @@ export default defineConfig({
       { find: /^react-input-mask-format\/validators$/, replacement: path.resolve(dirname, "../src/validators/index.ts") },
       { find: /^react-input-mask-format\/number$/, replacement: path.resolve(dirname, "../src/number/index.ts") },
       { find: /^react-input-mask-format\/time$/, replacement: path.resolve(dirname, "../src/time/index.ts") },
+      { find: /^react-input-mask-format\/date$/, replacement: path.resolve(dirname, "../src/date/index.ts") },
       { find: /^react-input-mask-format$/, replacement: path.resolve(dirname, "../src/index.tsx") }
     ]
   }

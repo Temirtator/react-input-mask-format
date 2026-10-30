@@ -120,3 +120,16 @@ describe("TimeFormat", () => {
     expect(input).toHaveValue("");
   });
 });
+
+describe("TimeFormat with a multi-character separator", () => {
+  it("steps back over the separator with one Backspace", async () => {
+    const user = userEvent.setup();
+    render(<HookField separator=" : " />);
+    const input = screen.getByTestId("t");
+    await user.click(input);
+    await user.keyboard("22");
+    expect(input).toHaveValue("22 : ");
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("2");
+  });
+});

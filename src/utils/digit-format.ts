@@ -19,8 +19,10 @@ export function collapseTrailingSeparator(
   previous: string,
   separator: string
 ): string {
-  return previous.endsWith(separator) && raw === previous.slice(0, -separator.length)
-    ? raw.slice(0, -1)
+  if (!separator || !previous.endsWith(separator)) return raw;
+  const body = previous.slice(0, -separator.length);
+  return raw.length >= body.length && raw.length < previous.length && previous.startsWith(raw)
+    ? body.slice(0, -1)
     : raw;
 }
 

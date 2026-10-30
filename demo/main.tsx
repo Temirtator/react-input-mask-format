@@ -18,6 +18,7 @@ import {
 } from "react-input-mask-format/validators";
 import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
 import { TimeFormat, useTimeFormat } from "react-input-mask-format/time";
+import { DateFormat, useDateFormat } from "react-input-mask-format/date";
 import { Country } from "./countries";
 
 const bg = "#0e1420", panel = "#131c2c", line = "#223049", ink = "#f4f8ff", dim = "#6b7f9c", gold = "#FFC800";
@@ -96,6 +97,11 @@ function TimeHookField() {
   return <input ref={ref} data-testid="time-hook" style={fieldStyle} />;
 }
 
+function DateHookField() {
+  const ref = useDateFormat({ order: "ymd", separator: "-" });
+  return <input ref={ref} data-testid="date-format-hook" style={fieldStyle} />;
+}
+
 const COUNTRIES: { id: Country; label: string }[] = [
   { id: Country.Kz, label: "KZ" },
   { id: Country.Ru, label: "RU" },
@@ -134,6 +140,7 @@ function App() {
   const [up, setUp] = useState("");
   const [amount, setAmount] = useState<number | undefined>(undefined);
   const [time, setTime] = useState("");
+  const [date, setDate] = useState("");
 
   return (
     <main style={{ background: bg, minHeight: "100vh", color: ink, fontFamily: "system-ui, sans-serif", margin: 0 }}>
@@ -258,6 +265,18 @@ function App() {
             />
           </Row>
           <Row label="Raw time hook" sub="useTimeFormat"><TimeHookField /></Row>
+        </section>
+
+        <section style={{ display: "grid", gap: 9 }}>
+          <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Date · /date</div>
+          <Row label="Date" sub={`DateFormat · DD.MM.YYYY → ${date || "—"}`}>
+            <DateFormat
+              value={date}
+              onValueChange={v => setDate(v.value)}
+              data-testid="date-format" style={fieldStyle}
+            />
+          </Row>
+          <Row label="Raw date hook" sub="useDateFormat · YYYY-MM-DD"><DateHookField /></Row>
         </section>
         {import.meta.env.DEV && (
           <input data-testid="scratch" aria-label="scratch" style={{ ...fieldStyle, opacity: 0.35 }} />

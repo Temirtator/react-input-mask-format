@@ -20,7 +20,8 @@
     "kazakhstan",
     "uzbekistan",
     "pinfl",
-    "kyrgyzstan"
+    "kyrgyzstan",
+    "date"
   ],
   "peerDependencies": {
     "react": ">=16.8.0"
@@ -106,6 +107,16 @@
         "default": "./dist/time.cjs"
       }
     },
+    "./date": {
+      "import": {
+        "types": "./dist/date.d.ts",
+        "default": "./dist/date.js"
+      },
+      "require": {
+        "types": "./dist/date.d.cts",
+        "default": "./dist/date.cjs"
+      }
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -131,6 +142,10 @@
     },
     {
       "path": "dist/time.js",
+      "limit": "2 KB"
+    },
+    {
+      "path": "dist/date.js",
       "limit": "2 KB"
     }
   ],
