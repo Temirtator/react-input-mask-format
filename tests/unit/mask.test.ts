@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import MaskUtils from "../../src/utils/mask";
+import MaskUtils from "../../src/core/mask";
 
 const date = () => new MaskUtils({ mask: "99/99/9999", maskPlaceholder: "_" });
 

@@ -1,20 +1,20 @@
-import { findLastIndex, repeat } from "./helpers";
-import parseMask, { ParsedMaskOptions } from "./parse-mask";
+import { findLastIndex, repeat } from "../utils/helpers";
+import parseMask, { type ParsedMaskOptions } from "../utils/parse-mask";
 import {
-  PrefixHost,
+  type PrefixHost,
   hasSignificantPrefix,
   normalizeUnprefixedValue,
   readUnprefixedInput,
   sameFillingCharacters,
   shouldInsertAfterPrefix,
   trimOverflowingPrefix
-} from "../core/prefix";
+} from "./prefix";
 import type { FormatChars, InputState, Selection } from "../types";
 
 export default class MaskUtils {
   maskOptions: ParsedMaskOptions;
   transform?: (char: string, position: number) => string;
-  readonly prefixHost: PrefixHost;
+  readonly prefixHost: Readonly<PrefixHost>;
 
   constructor(options: {
     mask?: string | Array<string | RegExp> | null;

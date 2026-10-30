@@ -1,4 +1,4 @@
-import MaskUtils from "../utils/mask";
+import MaskUtils from "./mask";
 import {
   resolveMaskPlaceholder,
   normalizeFormatChars,

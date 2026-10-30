@@ -128,7 +128,7 @@ describe("Uzbekistan presets on InputMask", () => {
     }
   });
 
-  it("uzPhone KNOWN LIMITATION: typing the country code key by key fills the operator code", async () => {
+  it("uzPhone by design: typing the country code key by key fills the operator code", async () => {
     // Without look-ahead a typed 9 cannot be told apart from an operator-code 9. README documents it.
     const user = userEvent.setup();
     render(<InputMask {...uzPhone} data-testid="uz-phone" />);
@@ -297,7 +297,7 @@ describe("prefix-aware paste across presets", () => {
     ["kgPhone with country code", kgPhone, "555123456", "996700987654", "+996 (700) 98-76-54"],
     ["uzPhone national not starting with 9", uzPhone, "901234567", "331234567", "+998 (33) 123-45-67"]
   ];
-  it("KNOWN LIMITATION: select all + typing a national number that starts with the prefix's next digit", async () => {
+  it("by design: select all + typing a national number that starts with the prefix's next digit", async () => {
     // Key by key, uzPhone "9…" and kzPhone "77…" cannot be told apart from the country code; same as 2.6.0.
     // README documents it; paste and programmatic values are not affected.
     const user = userEvent.setup();

@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import MaskUtils from "../../src/utils/mask";
+import MaskUtils from "../../src/core/mask";
 import { resolveTransform } from "../../src/utils/transform";
 import type { Mask, Transform } from "../../src/types";
 import {
-  PrefixHost,
+  type PrefixHost,
   hasSignificantPrefix,
   prefixSignificantCharacters,
   trimOverflowingPrefix,
@@ -51,6 +51,10 @@ describe("hasSignificantPrefix", () => {
   ])("%s", (_name, make, expected) => {
     expect(hasSignificant(make())).toBe(expected);
   });
+
+  it.each([null, ""])("is false for %j", prefix => {
+    expect(hasSignificantPrefix(prefix)).toBe(false);
+  });
 });
 
 describe("prefixSignificantCharacters", () => {
@@ -89,13 +93,14 @@ describe("trimOverflowingPrefix", () => {
 
 describe("shouldInsertAfterPrefix", () => {
   it.each<[string, () => Subject, string, number, boolean, boolean]>([
-    ["uz KNOWN LIMITATION: typing 9 at 0 continues the prefix", uz, "9", 0, false, false],
+    ["uz by design: typing 9 at 0 continues the prefix", uz, "9", 0, false, false],
     ["uz: typing 99 at 0 continues the prefix", uz, "99", 0, false, false],
     ["uz: typing 998 at 0 continues the prefix", uz, "998", 0, false, false],
     ["uz: national number at 0", uz, "901234567", 0, false, true],
     ["uz: 90 at 0", uz, "90", 0, false, true],
     ["uz: 3 at 0", uz, "3", 0, false, true],
-    ["uz: trimmed text with a prefix-like start", uz, "90 123 45 67", 0, true, true],
+    ["uz: trimmed text whose start is not the prefix", uz, "90 123 45 67", 0, true, true],
+    ["uz: untrimmed text whose start is not the prefix", uz, "90 123 45 67", 0, false, true],
     ["uz: empty", uz, "", 0, false, false],
     ["uz: fills nothing", uz, "-", 0, false, false],
     ["uz: plus only", uz, "+", 0, false, false],
@@ -103,8 +108,8 @@ describe("shouldInsertAfterPrefix", () => {
     ["uz: 9 at 5, inside the prefix after its digits", uz, "9", 5, false, true],
     ["uz: 0 at 5", uz, "0", 5, false, true],
     ["uz: at the prefix end", uz, "9", 6, false, false],
-    ["kz KNOWN LIMITATION: typing 7 at 0", kz, "7", 0, false, false],
-    ["kz KNOWN LIMITATION: typing 77 at 0", kz, "77", 0, false, false],
+    ["kz by design: typing 7 at 0", kz, "7", 0, false, false],
+    ["kz by design: typing 77 at 0", kz, "77", 0, false, false],
     ["kz: 777 at 0", kz, "777", 0, false, false],
     ["kz: 701 at 0", kz, "701", 0, false, true],
     ["kz: 7 at 4 continues the operator 7", kz, "7", 4, false, false],
