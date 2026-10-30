@@ -1,15 +1,8 @@
 import type { TimeFormatOptions, TimeFormatValues } from "./types";
 import { tokenizeTime, buildFormatted } from "./format-time";
+import { resolveDigitCaret } from "../utils/digit-format";
 
-export function collapseTrailingSeparator(
-  raw: string,
-  previous: string,
-  separator: string
-): string {
-  return previous.endsWith(separator) && raw === previous.slice(0, -separator.length)
-    ? raw.slice(0, -1)
-    : raw;
-}
+export { collapseTrailingSeparator, digitsBeforeCaret } from "../utils/digit-format";
 
 export function parseTime(formatted: string, options?: TimeFormatOptions): TimeFormatValues {
   const separator = options?.separator ?? ":";
@@ -22,38 +15,10 @@ export function parseTime(formatted: string, options?: TimeFormatOptions): TimeF
   return { value, formattedValue, hours, minutes };
 }
 
-export function digitsBeforeCaret(value: string, caret: number): number {
-  let count = 0;
-  for (let i = 0; i < caret && i < value.length; i++) {
-    if (value[i] >= "0" && value[i] <= "9") count++;
-  }
-  return count;
-}
-
-function caretAfterDigits(formatted: string, digitsBefore: number): number {
-  if (digitsBefore <= 0) {
-    const first = formatted.search(/\d/);
-    return first === -1 ? formatted.length : first;
-  }
-  let seen = 0;
-  for (let i = 0; i < formatted.length; i++) {
-    if (formatted[i] >= "0" && formatted[i] <= "9") {
-      seen++;
-      if (seen === digitsBefore) return i + 1;
-    }
-  }
-  return formatted.length;
-}
-
 export function resolveCaret(
   values: TimeFormatValues,
   digitsBefore: number,
   options?: TimeFormatOptions
 ): number {
-  const separator = options?.separator ?? ":";
-  const caret = caretAfterDigits(values.formattedValue, digitsBefore);
-  if (separator && values.formattedValue.slice(caret, caret + separator.length) === separator) {
-    return caret + separator.length;
-  }
-  return caret;
+  return resolveDigitCaret(values.formattedValue, digitsBefore, options?.separator ?? ":");
 }
