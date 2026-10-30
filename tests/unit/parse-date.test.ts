@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { parseDate, daysInMonth } from "../../src/date/parse-date";
+import { parseDate, parseDateEdit, daysInMonth } from "../../src/date/parse-date";
+import { isSingleKeystroke } from "../../src/date/format-date";
 
 describe("parseDate", () => {
   it("has no value or parts when empty", () => {
@@ -71,5 +72,38 @@ describe("daysInMonth", () => {
     [2024, 12, 31],
   ])("%i-%i → %i", (year, month, days) => {
     expect(daysInMonth(year, month)).toBe(days);
+  });
+});
+
+describe("parseDateEdit", () => {
+  it.each<[string, string, number, string, string]>([
+    ["1.05.2024", "12.05.2024", 1, "10.52.024", ""],
+    ["120.52.024", "10.52.024", 2, "12.05.2024", "2024-05-12"],
+    ["12.0.2024", "12.05.2024", 3, "12.02.024", ""],
+    ["12.052.024", "12.02.024", 4, "12.05.2024", "2024-05-12"],
+    ["4", "", 1, "4", ""],
+    ["45", "4", 2, "31.", ""],
+    ["12.05.2024", "", 8, "12.05.2024", "2024-05-12"],
+    ["1.5.2024", "", 6, "01.05.2024", "2024-05-01"],
+    ["1.5.2024", "12.05.2024", 6, "01.05.2024", "2024-05-01"],
+  ])("%j after %j with %i digits before the caret → %j", (raw, previous, digits, formatted, value) => {
+    const values = parseDateEdit(raw, {}, previous, digits);
+    expect(values.formattedValue).toBe(formatted);
+    expect(values.value).toBe(value);
+  });
+});
+
+describe("isSingleKeystroke", () => {
+  it.each<[string, string, boolean]>([
+    ["", "1", true],
+    ["12.", "12.0", true],
+    ["12.05.2024", "12.0.2024", true],
+    ["12.05.2024", "12.7.2024", true],
+    ["12.05.2024", "12.2024", true],
+    ["", "2024-05-12", false],
+    ["12.05.2024", "2024-05-12", false],
+    ["12.05.2024", "1.5.2024", false],
+  ])("%j → %j: %j", (previous, raw, expected) => {
+    expect(isSingleKeystroke(previous, raw)).toBe(expected);
   });
 });

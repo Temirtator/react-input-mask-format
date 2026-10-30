@@ -146,7 +146,7 @@
     },
     {
       "path": "dist/date.js",
-      "limit": "2 KB"
+      "limit": "2.5 KB"
     }
   ],
   "scripts": {

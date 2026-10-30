@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/react-input-mask-format.svg)](https://www.npmjs.com/package/react-input-mask-format)
 [![CI](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml/badge.svg)](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml)
 
-Input masking for React — dates, phones, cards, custom tokens, numbers, time, dates, and ready-made
+Input masking for React — dates, phones, cards, custom tokens, numbers, time, and ready-made
 country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan). A maintained fork of
 [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
@@ -382,12 +382,17 @@ parseDate("12.05.2024");   // { value: "2024-05-12", formattedValue: "12.05.2024
 - `onValueChange` receives `{ value, formattedValue, day, month, year }`. `value` is the ISO `YYYY-MM-DD`
   date, whatever `order` and `separator` are, and is `""` until the date is complete and exists:
   `31.04.2024` and `29.02.2023` keep their parts but have no `value`.
-- A complete day is clamped to 01–31 and a complete month to 01–12; a single digit is never clamped and
-  the year is not clamped. Typing a later field never changes an earlier one.
+- A day is clamped to 01–31 and a month to 01–12 when a key completes it, or when the whole value is set,
+  pasted or autofilled; a single digit is never clamped and the year is not clamped. Typing a later field
+  never changes an earlier one.
+- Deleting or typing a digit in the middle shifts the digits after it; the shifted fields are not clamped,
+  so retyping the digit restores the date (`12.05.2024`, Backspace the `5` → `12.02.024`, type `5` →
+  `12.05.2024`). Until then `value` is `""`.
 - Text written with separators in another layout is read by fields, so an ISO `value` from your state, a
   pasted `2024-05-12` or an autofilled `1.5.2024` lands in the right fields. A 4-digit group first is read
   as year-month-day; a 4-digit group last as day-month (month-day with `order="mdy"`). Other text is read
   as a stream of digits in the configured order.
+- Changing `order` or `separator` re-lays out the shown date.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Known issues

@@ -12,6 +12,8 @@
 - `TimeFormat` and `useTimeFormat` with a separator longer than one character (`separator=" : "`): Backspace
   right after the separator now deletes it together with the last hour digit, as with `:`. Before, the
   deleted separator character was put back and Backspace had no effect.
+- `TimeFormat`: after the parent showed another value, resetting `value` to `""` no longer brings back an
+  earlier partly typed time. Changing `separator` after an edit re-lays out the shown time.
 
 ### Internal
 - `./time` and `./date` share the input, caret and Backspace handling.

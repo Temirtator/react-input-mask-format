@@ -43,19 +43,43 @@ function readFields(raw: string, fields: Field[]): string | undefined {
   return fields.map((field) => parts[field]).join("");
 }
 
-export function tokenizeDate(raw: string | number, options?: DateFormatOptions): DateParts {
+export function tokenizeDate(
+  raw: string | number,
+  options?: DateFormatOptions,
+  keystrokeDigits?: number
+): DateParts {
   const fields = FIELDS[options?.order ?? "dmy"];
   const text = String(raw ?? "");
-  const digits = (readFields(text, fields) ?? text.replace(/\D/g, "")).slice(0, 8);
+  const digits = (
+    (keystrokeDigits === undefined ? readFields(text, fields) : undefined) ??
+    text.replace(/\D/g, "")
+  ).slice(0, 8);
   const parts: DateParts = { day: "", month: "", year: "" };
   let start = 0;
   for (const field of fields) {
     parts[field] = digits.slice(start, start + LENGTH[field]);
     start += LENGTH[field];
+    if (keystrokeDigits === undefined || keystrokeDigits === start) {
+      if (field === "day") parts.day = clamp(parts.day, 31);
+      if (field === "month") parts.month = clamp(parts.month, 12);
+    }
   }
-  parts.day = clamp(parts.day, 31);
-  parts.month = clamp(parts.month, 12);
   return parts;
+}
+
+export function isSingleKeystroke(previous: string, raw: string): boolean {
+  const shortest = Math.min(previous.length, raw.length);
+  let prefix = 0;
+  while (prefix < shortest && previous[prefix] === raw[prefix]) prefix++;
+  let suffix = 0;
+  while (
+    suffix < shortest - prefix &&
+    previous[previous.length - 1 - suffix] === raw[raw.length - 1 - suffix]
+  ) {
+    suffix++;
+  }
+  const inserted = raw.slice(prefix, raw.length - suffix);
+  return inserted === "" || /^\d$/.test(inserted);
 }
 
 export function buildFormattedDate(parts: DateParts, options?: DateFormatOptions): string {

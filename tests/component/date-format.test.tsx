@@ -132,3 +132,87 @@ describe("DateFormat", () => {
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
   });
 });
+
+describe("editing a complete date", () => {
+  it("shifts digits on Backspace in the middle and restores the date on retype", async () => {
+    const user = userEvent.setup();
+    render(<HookField />);
+    const input = screen.getByTestId("d") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("12052024");
+    input.setSelectionRange(5, 5);
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("12.02.024");
+    await user.keyboard("5");
+    expect(input).toHaveValue("12.05.2024");
+  });
+
+  it("does not pad a field emptied in the middle of a controlled date", async () => {
+    const user = userEvent.setup();
+    render(<Controlled initial="2024-05-12" />);
+    const input = screen.getByTestId("c") as HTMLInputElement;
+    await user.click(input);
+    input.setSelectionRange(2, 2);
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("10.52.024");
+    expect(screen.getByTestId("iso")).toHaveTextContent("");
+    await user.keyboard("2");
+    expect(input).toHaveValue("12.05.2024");
+  });
+
+  it("puts the caret at the end after pasting a date that gets padded", async () => {
+    const user = userEvent.setup();
+    render(<HookField />);
+    const input = screen.getByTestId("d") as HTMLInputElement;
+    await user.click(input);
+    await user.paste("1.5.2024");
+    expect(input).toHaveValue("01.05.2024");
+    expect(input.selectionStart).toBe(10);
+  });
+});
+
+describe("DateFormat props changes", () => {
+  it("shows the new layout when order and separator change", () => {
+    const { rerender } = render(
+      <DateFormat value="2024-05-12" onValueChange={() => {}} data-testid="p" />
+    );
+    expect(screen.getByTestId("p")).toHaveValue("12.05.2024");
+    rerender(
+      <DateFormat value="2024-05-12" order="mdy" separator="/" onValueChange={() => {}} data-testid="p" />
+    );
+    expect(screen.getByTestId("p")).toHaveValue("05/12/2024");
+  });
+
+  it("re-lays out an emitted value when the order changes", async () => {
+    const user = userEvent.setup();
+    function Switch() {
+      const [v, setV] = React.useState("");
+      const [order, setOrder] = React.useState<"dmy" | "mdy">("dmy");
+      return (
+        <>
+          <DateFormat value={v} order={order} onValueChange={(vals) => setV(vals.value)} data-testid="s" />
+          <button onClick={() => setOrder("mdy")}>mdy</button>
+        </>
+      );
+    }
+    render(<Switch />);
+    const input = screen.getByTestId("s");
+    await user.click(input);
+    await user.keyboard("12052024");
+    await user.click(screen.getByText("mdy"));
+    expect(input).toHaveValue("05.12.2024");
+  });
+
+  it("clears the field when the parent resets after showing another value", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<DateFormat value="" onValueChange={() => {}} data-testid="z" />);
+    const input = screen.getByTestId("z");
+    await user.click(input);
+    await user.keyboard("1205");
+    expect(input).toHaveValue("12.05.");
+    rerender(<DateFormat value="2024-06-01" onValueChange={() => {}} data-testid="z" />);
+    expect(input).toHaveValue("01.06.2024");
+    rerender(<DateFormat value="" onValueChange={() => {}} data-testid="z" />);
+    expect(input).toHaveValue("");
+  });
+});

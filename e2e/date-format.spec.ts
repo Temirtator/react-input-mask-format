@@ -50,3 +50,23 @@ test("an autofilled date without leading zeros is padded", async ({ page }) => {
   await autofillFocused(input, "1.5.2024");
   await expect(input).toHaveValue("01.05.2024");
 });
+
+test("Backspace and retype in the middle restore the date", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("date-format");
+  await input.click();
+  await input.pressSequentially("12052024");
+  await input.evaluate((el: HTMLInputElement) => el.setSelectionRange(5, 5));
+  await input.press("Backspace");
+  await expect(input).toHaveValue("12.02.024");
+  await input.press("5");
+  await expect(input).toHaveValue("12.05.2024");
+});
+
+test("the caret is at the end after pasting a date that gets padded", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("date-format");
+  await pasteInto(page, input, "1.5.2024");
+  await expect(input).toHaveValue("01.05.2024");
+  await expect.poll(() => input.evaluate((el: HTMLInputElement) => el.selectionStart)).toBe(10);
+});

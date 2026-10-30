@@ -11,7 +11,7 @@ export interface DigitValues {
 export interface DigitFormatKind<O, V extends DigitValues> {
   separator(options: O): string;
   format(raw: string, options: O): string;
-  parse(raw: string, options: O): V;
+  parse(raw: string, options: O, previous: string, digitsBefore: number): V;
 }
 
 export function collapseTrailingSeparator(
@@ -61,6 +61,13 @@ export function resolveDigitCaret(
   return caret;
 }
 
+function sameOptions<O>(a: O, b: O): boolean {
+  const x = a as Record<string, unknown>;
+  const y = b as Record<string, unknown>;
+  const keys = Object.keys(x);
+  return keys.length === Object.keys(y).length && keys.every((key) => x[key] === y[key]);
+}
+
 const IS_JSDOM =
   typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom");
 
@@ -83,11 +90,14 @@ export function useDigitFormat<O, V extends DigitValues>(
         const caret = el.selectionStart ?? el.value.length;
         const raw = collapseTrailingSeparator(el.value, previous, separator);
         const digits = digitsBeforeCaret(raw, caret);
-        const values = kind.parse(raw, opts);
+        const values = kind.parse(raw, opts, previous, digits);
+        const atEnd = caret >= el.value.length;
         setNativeValue(el, values.formattedValue);
         previous = values.formattedValue;
         if (isInputFocused(el)) {
-          const next = resolveDigitCaret(values.formattedValue, digits, separator);
+          const next = atEnd
+            ? values.formattedValue.length
+            : resolveDigitCaret(values.formattedValue, digits, separator);
           setInputSelection(el, next, next);
         }
         // JSDOM-ONLY: resync @testing-library/user-event v14's shadow-value cache.
@@ -103,7 +113,9 @@ export function useDigitFormat<O, V extends DigitValues>(
             if (el.value !== values.formattedValue) return;
             el.value = values.formattedValue;
             if (isInputFocused(el)) {
-              const c = resolveDigitCaret(values.formattedValue, digits, separator);
+              const c = atEnd
+                ? values.formattedValue.length
+                : resolveDigitCaret(values.formattedValue, digits, separator);
               setInputSelection(el, c, c);
             }
           });
@@ -141,14 +153,18 @@ export function useDigitInput<O, V extends DigitValues>(
   const innerRef = useRef<HTMLInputElement | null>(null);
   const caretRef = useRef<number | null>(null);
   const lastValuesRef = useRef<V | null>(null);
+  const lastOptionsRef = useRef<O>(options);
 
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
 
   const last = lastValuesRef.current;
+  const echo = last !== null && (value === last.value || value === last.formattedValue);
   const formatted =
-    last !== null && (value === last.value || value === last.formattedValue)
-      ? last.formattedValue
-      : kind.format(value ?? "", options);
+    last === null || !echo
+      ? kind.format(value ?? "", options)
+      : sameOptions(options, lastOptionsRef.current)
+        ? last.formattedValue
+        : kind.format(value || last.formattedValue, options);
 
   function onChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const el = event.target;
@@ -156,14 +172,19 @@ export function useDigitInput<O, V extends DigitValues>(
     const caret = el.selectionStart ?? el.value.length;
     const raw = collapseTrailingSeparator(el.value, formatted, separator);
     const digits = digitsBeforeCaret(raw, caret);
-    const values = kind.parse(raw, options);
-    caretRef.current = resolveDigitCaret(values.formattedValue, digits, separator);
+    const values = kind.parse(raw, options, formatted, digits);
+    caretRef.current =
+      caret >= el.value.length
+        ? values.formattedValue.length
+        : resolveDigitCaret(values.formattedValue, digits, separator);
     lastValuesRef.current = values;
+    lastOptionsRef.current = options;
     forceUpdate();
     onValueChange?.(values);
   }
 
   useLayoutEffect(() => {
+    if (!echo) lastValuesRef.current = null;
     const el = innerRef.current;
     if (el && caretRef.current !== null && isInputFocused(el)) {
       setInputSelection(el, caretRef.current, caretRef.current);
