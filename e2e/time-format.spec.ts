@@ -39,3 +39,13 @@ test("Backspace over the auto-inserted separator deletes the preceding hour digi
   await input.press("Backspace");
   await expect(input).toHaveValue("2");
 });
+
+test("Backspace right after the separator in a full time deletes the hour digit", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("time");
+  await input.click();
+  await input.pressSequentially("1230");
+  await input.evaluate((el: HTMLInputElement) => el.setSelectionRange(3, 3));
+  await input.press("Backspace");
+  await expect(input).toHaveValue("13:0");
+});

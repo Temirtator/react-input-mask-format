@@ -1,7 +1,7 @@
 {
   "name": "react-input-mask-format",
   "description": "Masked input component for React",
-  "version": "2.11.0",
+  "version": "2.12.0",
   "type": "module",
   "homepage": "https://github.com/Temirtator/react-input-mask-format",
   "license": "MIT",
@@ -21,7 +21,9 @@
     "uzbekistan",
     "pinfl",
     "kyrgyzstan",
-    "date"
+    "date",
+    "card",
+    "credit-card"
   ],
   "peerDependencies": {
     "react": ">=16.8.0"

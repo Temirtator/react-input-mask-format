@@ -70,3 +70,15 @@ test("the caret is at the end after pasting a date that gets padded", async ({ p
   await expect(input).toHaveValue("01.05.2024");
   await expect.poll(() => input.evaluate((el: HTMLInputElement) => el.selectionStart)).toBe(10);
 });
+
+test("Backspace right after a separator in the middle deletes the digit before it", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("date-format");
+  await input.click();
+  await input.pressSequentially("12052024");
+  await input.evaluate((el: HTMLInputElement) => el.setSelectionRange(3, 3));
+  await input.press("Backspace");
+  await expect(input).toHaveValue("10.52.024");
+  await input.press("2");
+  await expect(input).toHaveValue("12.05.2024");
+});
