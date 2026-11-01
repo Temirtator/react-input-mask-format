@@ -7,6 +7,7 @@ import { TimeFormat } from "../../src/time/time-format";
 import { DateFormat } from "../../src/date/date-format";
 import { CardNumberFormat } from "../../src/card/card-number-format";
 import { CardExpiryFormat } from "../../src/card/card-expiry-format";
+import { CardCvcFormat } from "../../src/card/card-cvc-format";
 
 describe("server render", () => {
   it("renders to string with formatted value", () => {
@@ -51,5 +52,12 @@ describe("server render — card", () => {
       <CardExpiryFormat value="12/26" onValueChange={() => {}} />
     );
     expect(html).toContain("12/26");
+  });
+
+  it("renders CardCvcFormat cut to the brand's length", () => {
+    const html = ReactDOMServer.renderToString(
+      <CardCvcFormat value="1234" brand="visa" onValueChange={() => {}} />
+    );
+    expect(html).toContain('value="123"');
   });
 });

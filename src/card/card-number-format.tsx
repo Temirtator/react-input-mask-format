@@ -1,7 +1,7 @@
-import React, { forwardRef } from "react";
+import type React from "react";
 import type { CardNumberOptions, CardNumberValues } from "./card-number";
 import { cardNumberKind } from "./use-card-number-format";
-import { useDigitInput } from "../utils/digit-format";
+import { cardInput } from "./card-input";
 
 export interface CardNumberFormatProps
   extends CardNumberOptions,
@@ -10,12 +10,10 @@ export interface CardNumberFormatProps
   onValueChange?: (values: CardNumberValues) => void;
 }
 
-export const CardNumberFormat = forwardRef<HTMLInputElement, CardNumberFormatProps>(
-  function CardNumberFormat(props, forwardedRef) {
-    const { value = "", onValueChange, separator, ...domProps } = props;
-    const input = useDigitInput(cardNumberKind, value, { separator }, onValueChange, forwardedRef);
-    return <input inputMode="numeric" autoComplete="cc-number" {...domProps} {...input} />;
-  }
+export const CardNumberFormat = cardInput<CardNumberOptions, CardNumberValues, CardNumberFormatProps>(
+  cardNumberKind,
+  "separator",
+  "cc-number"
 );
 
 CardNumberFormat.displayName = "CardNumberFormat";

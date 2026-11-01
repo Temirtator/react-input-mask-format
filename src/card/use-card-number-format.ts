@@ -11,7 +11,7 @@ export interface UseCardNumberFormatOptions extends CardNumberOptions {
 export const cardNumberKind: DigitFormatKind<CardNumberOptions, CardNumberValues> = {
   separator: (options) => options.separator ?? " ",
   format: formatCardNumber,
-  parse: (raw, options) => parseCardNumber(raw, options),
+  parse: parseCardNumber,
 };
 
 export function useCardNumberFormat(
