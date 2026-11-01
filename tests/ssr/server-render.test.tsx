@@ -6,6 +6,7 @@ import InputMask from "../../src/index";
 import { TimeFormat } from "../../src/time/time-format";
 import { DateFormat } from "../../src/date/date-format";
 import { CardNumberFormat } from "../../src/card/card-number-format";
+import { CardExpiryFormat } from "../../src/card/card-expiry-format";
 
 describe("server render", () => {
   it("renders to string with formatted value", () => {
@@ -43,5 +44,12 @@ describe("server render — card", () => {
     );
     expect(html).toContain("4111 1111 1111 1111");
     expect(html).toContain('autoComplete="cc-number"');
+  });
+
+  it("renders CardExpiryFormat with the stored value", () => {
+    const html = ReactDOMServer.renderToString(
+      <CardExpiryFormat value="12/26" onValueChange={() => {}} />
+    );
+    expect(html).toContain("12/26");
   });
 });
