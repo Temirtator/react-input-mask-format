@@ -257,3 +257,69 @@ describe("deleting next to a separator in the middle of a date", () => {
     expect(input).toHaveValue("01 / 22 / 024");
   });
 });
+
+function Stored(props: UseDateFormatOptions & { onValueChange: (values: DateFormatValues) => void }) {
+  const { onValueChange, ...options } = props;
+  const [v, setV] = React.useState("");
+  return (
+    <DateFormat
+      {...options}
+      value={v}
+      onValueChange={(vals) => {
+        onValueChange(vals);
+        setV(vals.value);
+      }}
+      data-testid="o"
+    />
+  );
+}
+
+describe("option changes report the reformatted date", () => {
+  it("calls onValueChange once when the component re-lays out a typed date", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(<Stored onValueChange={onValueChange} />);
+    const input = screen.getByTestId("o");
+    await user.click(input);
+    await user.keyboard("12052024");
+    const calls = onValueChange.mock.calls.length;
+    rerender(<Stored order="ymd" separator="-" onValueChange={onValueChange} />);
+    expect(input).toHaveValue("2024-05-12");
+    expect(onValueChange).toHaveBeenCalledTimes(calls + 1);
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({
+      value: "2024-05-12",
+      formattedValue: "2024-05-12",
+    });
+  });
+
+  it("reformats the hook's input from the ISO value and calls onValueChange once", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(<HookField onValueChange={onValueChange} />);
+    const input = screen.getByTestId("d");
+    await user.click(input);
+    await user.keyboard("12052024");
+    const calls = onValueChange.mock.calls.length;
+    rerender(<HookField order="ymd" separator="-" onValueChange={onValueChange} />);
+    expect(input).toHaveValue("2024-05-12");
+    expect(onValueChange).toHaveBeenCalledTimes(calls + 1);
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({
+      value: "2024-05-12",
+      formattedValue: "2024-05-12",
+    });
+  });
+
+  it("emits nothing when the order changes on an empty field", () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(<Stored onValueChange={onValueChange} />);
+    rerender(<Stored order="ymd" onValueChange={onValueChange} />);
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("emits nothing when the order changes on an empty hook field", () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(<HookField onValueChange={onValueChange} />);
+    rerender(<HookField order="ymd" onValueChange={onValueChange} />);
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+});

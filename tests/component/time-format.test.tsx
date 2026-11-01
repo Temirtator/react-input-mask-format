@@ -202,3 +202,80 @@ describe("deleting next to a separator in the middle of a time", () => {
     expect(input).toHaveValue("12:0");
   });
 });
+
+function Stored(props: UseTimeFormatOptions & { onValueChange: (values: TimeFormatValues) => void }) {
+  const { onValueChange, ...options } = props;
+  const [v, setV] = React.useState("");
+  return (
+    <TimeFormat
+      {...options}
+      value={v}
+      onValueChange={(vals) => {
+        onValueChange(vals);
+        setV(vals.value);
+      }}
+      data-testid="o"
+    />
+  );
+}
+
+describe("option changes report the reformatted time", () => {
+  it("new callback identity emits nothing in the component", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(<Stored onValueChange={(v) => onValueChange(v)} />);
+    const input = screen.getByTestId("o");
+    await user.click(input);
+    await user.keyboard("1230");
+    const calls = onValueChange.mock.calls.length;
+    rerender(<Stored onValueChange={(v) => onValueChange(v)} />);
+    expect(input).toHaveValue("12:30");
+    expect(onValueChange).toHaveBeenCalledTimes(calls);
+  });
+
+  it("new callback identity emits nothing in the hook", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(<HookField onValueChange={(v) => onValueChange(v)} />);
+    const input = screen.getByTestId("t");
+    await user.click(input);
+    await user.keyboard("1230");
+    const calls = onValueChange.mock.calls.length;
+    rerender(<HookField onValueChange={(v) => onValueChange(v)} />);
+    expect(input).toHaveValue("12:30");
+    expect(onValueChange).toHaveBeenCalledTimes(calls);
+  });
+
+  it("calls onValueChange once when the component's separator changes", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(<Stored onValueChange={onValueChange} />);
+    const input = screen.getByTestId("o");
+    await user.click(input);
+    await user.keyboard("1230");
+    const calls = onValueChange.mock.calls.length;
+    rerender(<Stored separator="." onValueChange={onValueChange} />);
+    expect(input).toHaveValue("12.30");
+    expect(onValueChange).toHaveBeenCalledTimes(calls + 1);
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toEqual({
+      value: "12:30",
+      formattedValue: "12.30",
+      hours: 12,
+      minutes: 30,
+    });
+  });
+
+  it("calls onValueChange once when the hook's separator changes", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(<HookField onValueChange={onValueChange} />);
+    const input = screen.getByTestId("t");
+    await user.click(input);
+    await user.keyboard("1230");
+    const calls = onValueChange.mock.calls.length;
+    rerender(<HookField separator="." onValueChange={onValueChange} />);
+    expect(input).toHaveValue("12.30");
+    expect(onValueChange).toHaveBeenCalledTimes(calls + 1);
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ value: "12:30" });
+  });
+});
