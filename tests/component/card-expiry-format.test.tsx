@@ -116,3 +116,14 @@ describe("useCardExpiryFormat", () => {
     expect(input).toHaveValue("1");
   });
 });
+
+describe("uncontrolled CardExpiryFormat", () => {
+  it("keeps a complete date without a value prop", async () => {
+    const user = userEvent.setup();
+    render(<CardExpiryFormat data-testid="u" />);
+    const input = screen.getByTestId("u");
+    await user.click(input);
+    await user.keyboard("1226");
+    expect(input).toHaveValue("12/26");
+  });
+});

@@ -106,3 +106,30 @@ describe("useCardCvcFormat", () => {
     expect(onValueChange).toHaveBeenCalledTimes(calls);
   });
 });
+
+describe("useCardCvcFormat after an outside write", () => {
+  it("does not bring back a cleared value when the brand changes", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(<HookField brand="amex" onValueChange={onValueChange} />);
+    const input = screen.getByTestId("h") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("1234");
+    input.value = "";
+    const calls = onValueChange.mock.calls.length;
+    rerender(<HookField onValueChange={onValueChange} />);
+    expect(input).toHaveValue("");
+    expect(onValueChange).toHaveBeenCalledTimes(calls);
+  });
+});
+
+describe("uncontrolled CardCvcFormat", () => {
+  it("keeps typed digits without a value prop", async () => {
+    const user = userEvent.setup();
+    render(<CardCvcFormat data-testid="u" />);
+    const input = screen.getByTestId("u");
+    await user.click(input);
+    await user.keyboard("1234");
+    expect(input).toHaveValue("123");
+  });
+});

@@ -191,3 +191,16 @@ describe("useCardNumberFormat", () => {
     expect(input.selectionStart).toBe(19);
   });
 });
+
+describe("uncontrolled CardNumberFormat", () => {
+  it("keeps typed digits without a value prop and still reports the brand", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<CardNumberFormat onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    await user.click(input);
+    await user.keyboard("378282246310005");
+    expect(input).toHaveValue("3782 822463 10005");
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ brand: "amex", valid: true });
+  });
+});

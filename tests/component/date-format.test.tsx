@@ -323,3 +323,34 @@ describe("option changes report the reformatted date", () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 });
+
+function DefaultField(props: UseDateFormatOptions & { defaultValue?: string }) {
+  const { defaultValue, ...options } = props;
+  const ref = useDateFormat(options);
+  return <input ref={ref} defaultValue={defaultValue} data-testid="dv" />;
+}
+
+describe("useDateFormat option changes read the shown date", () => {
+  it("re-lays out a date that came from defaultValue", () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(
+      <DefaultField defaultValue="12.05.2024" onValueChange={onValueChange} />
+    );
+    const input = screen.getByTestId("dv");
+    rerender(<DefaultField defaultValue="12.05.2024" order="mdy" onValueChange={onValueChange} />);
+    expect(input).toHaveValue("05.12.2024");
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange.mock.calls[0][0]).toMatchObject({ value: "2024-05-12" });
+  });
+
+  it("re-lays out a date written from outside instead of the last typed one", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<HookField />);
+    const input = screen.getByTestId("d") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("12052024");
+    input.value = "01.01.2030";
+    rerender(<HookField order="ymd" separator="-" />);
+    expect(input).toHaveValue("2030-01-01");
+  });
+});

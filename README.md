@@ -486,6 +486,8 @@ const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir
   to another brand, a 4-digit CVC is cut to 3 and `onValueChange` is called with the shorter value.
 - Components default to `inputMode="numeric"` and `autoComplete` `cc-number`, `cc-exp` or `cc-csc`; your
   props override them.
+- `value` is optional: without it a card field keeps what the user types and only reports it through
+  `onValueChange`.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Known issues

@@ -129,7 +129,7 @@ export function useDigitFormat<O, V extends DigitValues>(
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handlerRef = useRef<((event: Event) => void) | null>(null);
-  const lastRef = useRef<DigitValues>({ value: "", formattedValue: "" });
+  const previousRef = useRef("");
   const appliedRef = useRef(options);
 
   useLayoutEffect(() => {
@@ -137,24 +137,25 @@ export function useDigitFormat<O, V extends DigitValues>(
     appliedRef.current = options;
     const el = inputRef.current;
     if (!el || sameOptions(options, applied)) return;
-    const values = kind.parse(lastRef.current.value || el.value, options, "", 0);
+    const source = kind.parse(el.value, applied, "", 0).value || el.value;
+    const values = kind.parse(source, options, "", 0);
     if (values.formattedValue === el.value) return;
     const caret = el.selectionStart ?? el.value.length;
     const atEnd = caret >= el.value.length;
     const digits = digitsBeforeCaret(el.value, caret);
     setNativeValue(el, values.formattedValue);
-    lastRef.current = values;
+    previousRef.current = values.formattedValue;
     placeCaret(el, values.formattedValue, atEnd, digits, kind.separator(options));
     options.onValueChange?.(values);
   });
 
   return useCallback((el: HTMLInputElement | null) => {
     if (el) {
-      lastRef.current = { value: "", formattedValue: el.value };
+      previousRef.current = el.value;
       const handler = (event: Event): void => {
         const opts = optionsRef.current;
         const separator = kind.separator(opts);
-        const previous = lastRef.current.formattedValue;
+        const previous = previousRef.current;
         const { raw, caret } = deleteAcrossSeparator(
           collapseTrailingSeparator(el.value, previous, separator),
           previous,
@@ -165,7 +166,7 @@ export function useDigitFormat<O, V extends DigitValues>(
         const values = kind.parse(raw, opts, previous, digits);
         const atEnd = caret >= el.value.length;
         setNativeValue(el, values.formattedValue);
-        lastRef.current = values;
+        previousRef.current = values.formattedValue;
         placeCaret(el, values.formattedValue, atEnd, digits, separator);
         // JSDOM-ONLY: resync @testing-library/user-event v14's shadow-value cache.
         // setNativeValue above bypasses React's value tracker; under jsdom that
@@ -189,7 +190,7 @@ export function useDigitFormat<O, V extends DigitValues>(
       inputRef.current = el;
       if (el.value) {
         setNativeValue(el, kind.format(el.value, optionsRef.current));
-        lastRef.current.formattedValue = el.value;
+        previousRef.current = el.value;
       }
     } else {
       if (inputRef.current && handlerRef.current) {
@@ -203,7 +204,7 @@ export function useDigitFormat<O, V extends DigitValues>(
 
 export function useDigitInput<O, V extends DigitValues>(
   kind: DigitFormatKind<O, V>,
-  value: string,
+  value: string | undefined,
   options: O,
   onValueChange: ((values: V) => void) | undefined,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
@@ -220,7 +221,8 @@ export function useDigitInput<O, V extends DigitValues>(
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
 
   const last = lastValuesRef.current;
-  const echo = last !== null && (value === last.value || value === last.formattedValue);
+  const echo =
+    last !== null && (value === undefined || value === last.value || value === last.formattedValue);
   const formatted =
     last === null || !echo
       ? kind.format(value ?? "", options)

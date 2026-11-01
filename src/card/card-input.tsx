@@ -9,7 +9,7 @@ export function cardInput<O, V extends DigitValues, P>(
 ): React.ForwardRefExoticComponent<React.PropsWithoutRef<P> & React.RefAttributes<HTMLInputElement>> {
   return forwardRef<HTMLInputElement, P>(function CardInput(props, forwardedRef) {
     const {
-      value = "",
+      value,
       onValueChange,
       [option]: setting,
       ...domProps
