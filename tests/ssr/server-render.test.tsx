@@ -5,6 +5,7 @@ import ReactDOMServer from "react-dom/server";
 import InputMask from "../../src/index";
 import { TimeFormat } from "../../src/time/time-format";
 import { DateFormat } from "../../src/date/date-format";
+import { CardNumberFormat } from "../../src/card/card-number-format";
 
 describe("server render", () => {
   it("renders to string with formatted value", () => {
@@ -32,5 +33,15 @@ describe("server render — date", () => {
       <DateFormat value="2024-05-12" onValueChange={() => {}} />
     );
     expect(html).toContain("12.05.2024");
+  });
+});
+
+describe("server render — card", () => {
+  it("renders CardNumberFormat with the digits grouped", () => {
+    const html = ReactDOMServer.renderToString(
+      <CardNumberFormat value="4111111111111111" onValueChange={() => {}} />
+    );
+    expect(html).toContain("4111 1111 1111 1111");
+    expect(html).toContain('autoComplete="cc-number"');
   });
 });

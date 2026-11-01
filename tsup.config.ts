@@ -7,7 +7,8 @@ export default defineConfig({
     validators: "src/validators/index.ts",
     number: "src/number/index.ts",
     time: "src/time/index.ts",
-    date: "src/date/index.ts"
+    date: "src/date/index.ts",
+    card: "src/card/index.ts"
   },
   format: ["esm", "cjs"],
   dts: true,

@@ -41,40 +41,24 @@ export function isSingleKeystroke(previous: string, raw: string): boolean {
   return inserted === "" || /^\d$/.test(inserted);
 }
 
-function isDigit(char: string | undefined): boolean {
-  return char !== undefined && char >= "0" && char <= "9";
-}
-
 export function deleteAcrossSeparator(
   raw: string,
   previous: string,
   caret: number,
   forward: boolean
 ): { raw: string; caret: number } {
-  if (raw.length >= previous.length) return { raw, caret };
-  let prefix = 0;
-  while (prefix < raw.length && previous[prefix] === raw[prefix]) prefix++;
-  let suffix = 0;
-  while (
-    suffix < raw.length - prefix &&
-    previous[previous.length - 1 - suffix] === raw[raw.length - 1 - suffix]
-  ) {
-    suffix++;
-  }
-  if (prefix + suffix !== raw.length) return { raw, caret };
-  const end = previous.length - suffix;
-  for (let i = prefix; i < end; i++) {
-    if (isDigit(previous[i])) return { raw, caret };
-  }
-  let digit = forward ? end : prefix - 1;
-  while (digit >= 0 && digit < previous.length && !isDigit(previous[digit])) {
-    digit += forward ? 1 : -1;
-  }
-  if (digit < 0 || digit >= previous.length) return { raw, caret };
-  return {
-    raw: previous.slice(0, digit) + previous.slice(digit + 1),
-    caret: forward ? prefix : digit,
-  };
+  let start = 0;
+  while (start < raw.length && previous[start] === raw[start]) start++;
+  const end = start + previous.length - raw.length;
+  const digit = forward
+    ? end + previous.slice(end).search(/\d/)
+    : previous.slice(0, start).search(/\d\D*$/);
+  return end > start &&
+    /\d/.test(previous[digit]) &&
+    !/\d/.test(previous.slice(start, end)) &&
+    previous.slice(0, start) + previous.slice(end) === raw
+    ? { raw: previous.slice(0, digit) + previous.slice(digit + 1), caret: forward ? start : digit }
+    : { raw, caret };
 }
 
 export function digitsBeforeCaret(value: string, caret: number): number {
@@ -115,11 +99,22 @@ export function resolveDigitCaret(
 function sameOptions<O>(a: O, b: O): boolean {
   const x = a as Record<string, unknown>;
   const y = b as Record<string, unknown>;
-  const keys = Object.keys(x).filter((key) => key !== "onValueChange");
-  return (
-    keys.length === Object.keys(y).filter((key) => key !== "onValueChange").length &&
-    keys.every((key) => x[key] === y[key])
-  );
+  return Object.keys(x)
+    .concat(Object.keys(y))
+    .every((key) => key === "onValueChange" || x[key] === y[key]);
+}
+
+function placeCaret(
+  el: HTMLInputElement,
+  formatted: string,
+  atEnd: boolean,
+  digits: number,
+  separator: string
+): void {
+  if (isInputFocused(el)) {
+    const caret = atEnd ? formatted.length : resolveDigitCaret(formatted, digits, separator);
+    setInputSelection(el, caret);
+  }
 }
 
 const IS_JSDOM =
@@ -134,8 +129,7 @@ export function useDigitFormat<O, V extends DigitValues>(
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handlerRef = useRef<((event: Event) => void) | null>(null);
-  const previousRef = useRef("");
-  const lastValuesRef = useRef<V | null>(null);
+  const lastRef = useRef<DigitValues>({ value: "", formattedValue: "" });
   const appliedRef = useRef(options);
 
   useLayoutEffect(() => {
@@ -143,54 +137,36 @@ export function useDigitFormat<O, V extends DigitValues>(
     appliedRef.current = options;
     const el = inputRef.current;
     if (!el || sameOptions(options, applied)) return;
-    const next = kind.format(lastValuesRef.current?.value || el.value, options);
-    if (next === el.value) return;
+    const values = kind.parse(lastRef.current.value || el.value, options, "", 0);
+    if (values.formattedValue === el.value) return;
     const caret = el.selectionStart ?? el.value.length;
     const atEnd = caret >= el.value.length;
     const digits = digitsBeforeCaret(el.value, caret);
-    const values = kind.parse(next, options, "", 0);
     setNativeValue(el, values.formattedValue);
-    previousRef.current = values.formattedValue;
-    lastValuesRef.current = values;
-    if (isInputFocused(el)) {
-      const c = atEnd
-        ? values.formattedValue.length
-        : resolveDigitCaret(values.formattedValue, digits, kind.separator(options));
-      setInputSelection(el, c, c);
-    }
+    lastRef.current = values;
+    placeCaret(el, values.formattedValue, atEnd, digits, kind.separator(options));
     options.onValueChange?.(values);
   });
 
   return useCallback((el: HTMLInputElement | null) => {
     if (el) {
-      previousRef.current = el.value;
-      lastValuesRef.current = null;
+      lastRef.current = { value: "", formattedValue: el.value };
       const handler = (event: Event): void => {
         const opts = optionsRef.current;
         const separator = kind.separator(opts);
-        const previous = previousRef.current;
-        const collapsed = collapseTrailingSeparator(el.value, previous, separator);
-        const { raw, caret } =
-          collapsed === el.value
-            ? deleteAcrossSeparator(
-                collapsed,
-                previous,
-                el.selectionStart ?? el.value.length,
-                (event as InputEvent).inputType === "deleteContentForward"
-              )
-            : { raw: collapsed, caret: el.selectionStart ?? el.value.length };
+        const previous = lastRef.current.formattedValue;
+        const { raw, caret } = deleteAcrossSeparator(
+          collapseTrailingSeparator(el.value, previous, separator),
+          previous,
+          el.selectionStart ?? el.value.length,
+          (event as InputEvent).inputType === "deleteContentForward"
+        );
         const digits = digitsBeforeCaret(raw, caret);
         const values = kind.parse(raw, opts, previous, digits);
         const atEnd = caret >= el.value.length;
         setNativeValue(el, values.formattedValue);
-        previousRef.current = values.formattedValue;
-        lastValuesRef.current = values;
-        if (isInputFocused(el)) {
-          const next = atEnd
-            ? values.formattedValue.length
-            : resolveDigitCaret(values.formattedValue, digits, separator);
-          setInputSelection(el, next, next);
-        }
+        lastRef.current = values;
+        placeCaret(el, values.formattedValue, atEnd, digits, separator);
         // JSDOM-ONLY: resync @testing-library/user-event v14's shadow-value cache.
         // setNativeValue above bypasses React's value tracker; under jsdom that
         // leaves user-event's per-input shadow value stale, corrupting masking from
@@ -203,12 +179,7 @@ export function useDigitFormat<O, V extends DigitValues>(
           queueMicrotask(() => {
             if (el.value !== values.formattedValue) return;
             el.value = values.formattedValue;
-            if (isInputFocused(el)) {
-              const c = atEnd
-                ? values.formattedValue.length
-                : resolveDigitCaret(values.formattedValue, digits, separator);
-              setInputSelection(el, c, c);
-            }
+            placeCaret(el, values.formattedValue, atEnd, digits, separator);
           });
         }
         opts.onValueChange?.(values);
@@ -218,7 +189,7 @@ export function useDigitFormat<O, V extends DigitValues>(
       inputRef.current = el;
       if (el.value) {
         setNativeValue(el, kind.format(el.value, optionsRef.current));
-        previousRef.current = el.value;
+        lastRef.current.formattedValue = el.value;
       }
     } else {
       if (inputRef.current && handlerRef.current) {
@@ -246,8 +217,6 @@ export function useDigitInput<O, V extends DigitValues>(
   const lastValuesRef = useRef<V | null>(null);
   const lastOptionsRef = useRef<O>(options);
 
-  const shownRef = useRef<{ options: O; text: string } | null>(null);
-
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
 
   const last = lastValuesRef.current;
@@ -258,20 +227,17 @@ export function useDigitInput<O, V extends DigitValues>(
       : sameOptions(options, lastOptionsRef.current)
         ? last.formattedValue
         : kind.format(value || last.formattedValue, options);
+  const shownRef = useRef({ options, text: formatted });
 
   function onChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const el = event.target;
     const separator = kind.separator(options);
-    const collapsed = collapseTrailingSeparator(el.value, formatted, separator);
-    const { raw, caret } =
-      collapsed === el.value
-        ? deleteAcrossSeparator(
-            collapsed,
-            formatted,
-            el.selectionStart ?? el.value.length,
-            (event.nativeEvent as InputEvent).inputType === "deleteContentForward"
-          )
-        : { raw: collapsed, caret: el.selectionStart ?? el.value.length };
+    const { raw, caret } = deleteAcrossSeparator(
+      collapseTrailingSeparator(el.value, formatted, separator),
+      formatted,
+      el.selectionStart ?? el.value.length,
+      (event.nativeEvent as InputEvent).inputType === "deleteContentForward"
+    );
     const digits = digitsBeforeCaret(raw, caret);
     const values = kind.parse(raw, options, formatted, digits);
     caretRef.current =
@@ -288,7 +254,7 @@ export function useDigitInput<O, V extends DigitValues>(
     if (!echo) lastValuesRef.current = null;
     const shown = shownRef.current;
     shownRef.current = { options, text: formatted };
-    if (shown && !sameOptions(options, shown.options) && formatted !== shown.text) {
+    if (!sameOptions(options, shown.options) && formatted !== shown.text) {
       const values = kind.parse(formatted, options, "", 0);
       lastValuesRef.current = values;
       lastOptionsRef.current = options;
@@ -296,7 +262,7 @@ export function useDigitInput<O, V extends DigitValues>(
     }
     const el = innerRef.current;
     if (el && caretRef.current !== null && isInputFocused(el)) {
-      setInputSelection(el, caretRef.current, caretRef.current);
+      setInputSelection(el, caretRef.current);
       caretRef.current = null;
     }
   });

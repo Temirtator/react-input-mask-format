@@ -117,6 +117,16 @@
         "default": "./dist/date.cjs"
       }
     },
+    "./card": {
+      "import": {
+        "types": "./dist/card.d.ts",
+        "default": "./dist/card.js"
+      },
+      "require": {
+        "types": "./dist/card.d.cts",
+        "default": "./dist/card.cjs"
+      }
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -147,6 +157,10 @@
     {
       "path": "dist/date.js",
       "limit": "2.5 KB"
+    },
+    {
+      "path": "dist/card.js",
+      "limit": "3 KB"
     }
   ],
   "scripts": {
