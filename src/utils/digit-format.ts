@@ -26,6 +26,57 @@ export function collapseTrailingSeparator(
     : raw;
 }
 
+export function isSingleKeystroke(previous: string, raw: string): boolean {
+  const shortest = Math.min(previous.length, raw.length);
+  let prefix = 0;
+  while (prefix < shortest && previous[prefix] === raw[prefix]) prefix++;
+  let suffix = 0;
+  while (
+    suffix < shortest - prefix &&
+    previous[previous.length - 1 - suffix] === raw[raw.length - 1 - suffix]
+  ) {
+    suffix++;
+  }
+  const inserted = raw.slice(prefix, raw.length - suffix);
+  return inserted === "" || /^\d$/.test(inserted);
+}
+
+function isDigit(char: string | undefined): boolean {
+  return char !== undefined && char >= "0" && char <= "9";
+}
+
+export function deleteAcrossSeparator(
+  raw: string,
+  previous: string,
+  caret: number,
+  forward: boolean
+): { raw: string; caret: number } {
+  if (raw.length >= previous.length) return { raw, caret };
+  let prefix = 0;
+  while (prefix < raw.length && previous[prefix] === raw[prefix]) prefix++;
+  let suffix = 0;
+  while (
+    suffix < raw.length - prefix &&
+    previous[previous.length - 1 - suffix] === raw[raw.length - 1 - suffix]
+  ) {
+    suffix++;
+  }
+  if (prefix + suffix !== raw.length) return { raw, caret };
+  const end = previous.length - suffix;
+  for (let i = prefix; i < end; i++) {
+    if (isDigit(previous[i])) return { raw, caret };
+  }
+  let digit = forward ? end : prefix - 1;
+  while (digit >= 0 && digit < previous.length && !isDigit(previous[digit])) {
+    digit += forward ? 1 : -1;
+  }
+  if (digit < 0 || digit >= previous.length) return { raw, caret };
+  return {
+    raw: previous.slice(0, digit) + previous.slice(digit + 1),
+    caret: forward ? prefix : digit,
+  };
+}
+
 export function digitsBeforeCaret(value: string, caret: number): number {
   let count = 0;
   for (let i = 0; i < caret && i < value.length; i++) {
@@ -84,11 +135,19 @@ export function useDigitFormat<O, V extends DigitValues>(
   return useCallback((el: HTMLInputElement | null) => {
     if (el) {
       let previous = el.value;
-      const handler = (): void => {
+      const handler = (event: Event): void => {
         const opts = optionsRef.current;
         const separator = kind.separator(opts);
-        const caret = el.selectionStart ?? el.value.length;
-        const raw = collapseTrailingSeparator(el.value, previous, separator);
+        const collapsed = collapseTrailingSeparator(el.value, previous, separator);
+        const { raw, caret } =
+          collapsed === el.value
+            ? deleteAcrossSeparator(
+                collapsed,
+                previous,
+                el.selectionStart ?? el.value.length,
+                (event as InputEvent).inputType === "deleteContentForward"
+              )
+            : { raw: collapsed, caret: el.selectionStart ?? el.value.length };
         const digits = digitsBeforeCaret(raw, caret);
         const values = kind.parse(raw, opts, previous, digits);
         const atEnd = caret >= el.value.length;
@@ -169,8 +228,16 @@ export function useDigitInput<O, V extends DigitValues>(
   function onChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const el = event.target;
     const separator = kind.separator(options);
-    const caret = el.selectionStart ?? el.value.length;
-    const raw = collapseTrailingSeparator(el.value, formatted, separator);
+    const collapsed = collapseTrailingSeparator(el.value, formatted, separator);
+    const { raw, caret } =
+      collapsed === el.value
+        ? deleteAcrossSeparator(
+            collapsed,
+            formatted,
+            el.selectionStart ?? el.value.length,
+            (event.nativeEvent as InputEvent).inputType === "deleteContentForward"
+          )
+        : { raw: collapsed, caret: el.selectionStart ?? el.value.length };
     const digits = digitsBeforeCaret(raw, caret);
     const values = kind.parse(raw, options, formatted, digits);
     caretRef.current =

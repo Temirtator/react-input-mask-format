@@ -154,3 +154,51 @@ describe("TimeFormat props changes", () => {
     expect(input).toHaveValue("");
   });
 });
+
+describe("deleting next to a separator in the middle of a time", () => {
+  it("removes the hour digit before the separator on Backspace in the hook", async () => {
+    const user = userEvent.setup();
+    render(<HookField />);
+    const input = screen.getByTestId("t") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("1230");
+    input.setSelectionRange(3, 3);
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("13:0");
+    expect(input.selectionStart).toBe(1);
+  });
+
+  it("removes the hour digit before the separator on Backspace in the component", async () => {
+    const user = userEvent.setup();
+    render(<Controlled />);
+    const input = screen.getByTestId("c") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("1230");
+    input.setSelectionRange(3, 3);
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("13:0");
+    expect(input.selectionStart).toBe(1);
+  });
+
+  it("removes the minute digit after the separator on Delete in the hook", async () => {
+    const user = userEvent.setup();
+    render(<HookField />);
+    const input = screen.getByTestId("t") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("1230");
+    input.setSelectionRange(2, 2);
+    await user.keyboard("{Delete}");
+    expect(input).toHaveValue("12:0");
+  });
+
+  it("removes the minute digit after the separator on Delete in the component", async () => {
+    const user = userEvent.setup();
+    render(<Controlled />);
+    const input = screen.getByTestId("c") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("1230");
+    input.setSelectionRange(2, 2);
+    await user.keyboard("{Delete}");
+    expect(input).toHaveValue("12:0");
+  });
+});

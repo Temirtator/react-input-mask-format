@@ -216,3 +216,44 @@ describe("DateFormat props changes", () => {
     expect(input).toHaveValue("");
   });
 });
+
+describe("deleting next to a separator in the middle of a date", () => {
+  it("removes the day digit before the separator on Backspace in the hook", async () => {
+    const user = userEvent.setup();
+    render(<HookField />);
+    const input = screen.getByTestId("d") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("12052024");
+    input.setSelectionRange(3, 3);
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("10.52.024");
+    await user.keyboard("2");
+    expect(input).toHaveValue("12.05.2024");
+  });
+
+  it("removes the day digit before the separator on Backspace in the component", async () => {
+    const user = userEvent.setup();
+    render(<Controlled />);
+    const input = screen.getByTestId("c") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("12052024");
+    input.setSelectionRange(3, 3);
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("10.52.024");
+    await user.keyboard("2");
+    expect(input).toHaveValue("12.05.2024");
+    expect(screen.getByTestId("iso")).toHaveTextContent("2024-05-12");
+  });
+
+  it("works with a multi-character separator", async () => {
+    const user = userEvent.setup();
+    render(<HookField order="mdy" separator=" / " />);
+    const input = screen.getByTestId("d") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("05122024");
+    expect(input).toHaveValue("05 / 12 / 2024");
+    input.setSelectionRange(5, 5);
+    await user.keyboard("{Backspace}");
+    expect(input).toHaveValue("01 / 22 / 024");
+  });
+});

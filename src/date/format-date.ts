@@ -1,5 +1,7 @@
 import type { DateFormatOptions, DateOrder } from "./types";
 
+export { isSingleKeystroke } from "../utils/digit-format";
+
 export interface DateParts {
   day: string;
   month: string;
@@ -65,21 +67,6 @@ export function tokenizeDate(
     }
   }
   return parts;
-}
-
-export function isSingleKeystroke(previous: string, raw: string): boolean {
-  const shortest = Math.min(previous.length, raw.length);
-  let prefix = 0;
-  while (prefix < shortest && previous[prefix] === raw[prefix]) prefix++;
-  let suffix = 0;
-  while (
-    suffix < shortest - prefix &&
-    previous[previous.length - 1 - suffix] === raw[raw.length - 1 - suffix]
-  ) {
-    suffix++;
-  }
-  const inserted = raw.slice(prefix, raw.length - suffix);
-  return inserted === "" || /^\d$/.test(inserted);
 }
 
 export function buildFormattedDate(parts: DateParts, options?: DateFormatOptions): string {
