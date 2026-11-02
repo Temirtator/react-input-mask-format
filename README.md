@@ -49,7 +49,7 @@ The original `react-input-mask` has been unmaintained since 2021. This fork is:
 - [Properties](#properties) · [`useMask`](#usemask-hook)
 - [Presets](#presets) · [Masks with a fixed prefix](#masks-with-a-fixed-prefix) · [Validators](#validators)
 - [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) · [Time](#time--react-input-mask-formattime)
-  · [Date](#date--react-input-mask-formatdate)
+  · [Date](#date--react-input-mask-formatdate) · [Cards](#cards--react-input-mask-formatcard)
 - [Known issues](#known-issues) · [Migration](#migration)
 
 ## Properties
@@ -197,6 +197,9 @@ Masks are shown as users see them. PRs adding other countries are welcome.
 | export | mask | example |
 | --- | --- | --- |
 | `card` | `9999 9999 9999 9999` | `4242 4242 4242 4242` |
+
+`card` is a fixed 16-digit mask. For Amex, 19-digit numbers and brand detection, use
+[`react-input-mask-format/card`](#cards--react-input-mask-formatcard).
 
 ### Kazakhstan
 
@@ -360,6 +363,9 @@ parseTime("14:30");  // { value: "14:30", formattedValue: "14:30", hours: 14, mi
 - `onValueChange` receives `{ value, formattedValue, hours, minutes }`. `value` is `""` until the time is
   complete and always uses `:`, whatever the `separator` option (default `:`).
 - Complete hours are clamped to ≤ 23, complete minutes to ≤ 59; a single digit is never clamped.
+- Backspace right after the separator in a full time deletes the hour digit before it (`12:|30` → `13:0`);
+  Delete right before it deletes the minute digit after it.
+- Changing `separator` re-lays out the shown time and calls `onValueChange` with the new values.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Date — `react-input-mask-format/date`
@@ -392,7 +398,96 @@ parseDate("12.05.2024");   // { value: "2024-05-12", formattedValue: "12.05.2024
   pasted `2024-05-12` or an autofilled `1.5.2024` lands in the right fields. A 4-digit group first is read
   as year-month-day; a 4-digit group last as day-month (month-day with `order="mdy"`). Other text is read
   as a stream of digits in the configured order.
-- Changing `order` or `separator` re-lays out the shown date.
+- Backspace right after a separator deletes the digit before it, and Delete right before a separator the
+  digit after it, with the same shift (`12.|05.2024`, Backspace → `10.52.024`).
+- Changing `order` or `separator` re-lays out the shown date and calls `onValueChange` once with the new
+  values; an empty field emits nothing.
+- Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
+
+## Cards — `react-input-mask-format/card`
+
+Card number with brand detection and per-brand grouping, expiry `MM/YY` and CVC.
+
+```tsx
+import {
+  CardNumberFormat,
+  CardExpiryFormat,
+  CardCvcFormat,
+  isCardExpired,
+} from "react-input-mask-format/card";
+import type { CardBrand } from "react-input-mask-format/card";
+
+const [number, setNumber] = useState("");
+const [brand, setBrand] = useState<CardBrand>();
+const [expiry, setExpiry] = useState("");
+const [cvc, setCvc] = useState("");
+
+<CardNumberFormat
+  value={number}
+  onValueChange={(v) => {
+    setNumber(v.value);
+    setBrand(v.brand);
+  }}
+/>
+<CardExpiryFormat value={expiry} onValueChange={(v) => setExpiry(v.value)} />
+<CardCvcFormat brand={brand} value={cvc} onValueChange={(v) => setCvc(v.value)} />
+```
+
+Each field also has a ref hook (`useCardNumberFormat`, `useCardExpiryFormat`, `useCardCvcFormat`) and pure
+functions:
+
+```ts
+formatCardNumber("378282246310005");    // "3782 822463 10005"
+parseCardNumber("4111 1111 1111 1111"); // { value: "4111111111111111", formattedValue: "4111 1111 1111 1111",
+                                        //   brand: "visa", complete: true, valid: true }
+detectCardBrand("2200");                // "mir"
+formatCardExpiry("12/2026");            // "12/26"
+parseCardExpiry("12/26");               // { value: "12/26", formattedValue: "12/26", month: 12, year: 2026 }
+isCardExpired(10, 2026, new Date(2026, 9, 31)); // false: valid through the last day of the month
+formatCardCvc("12345", { brand: "amex" });      // "1234"
+```
+
+The module reports the brand as a string and ships no logos. Map it to your own icons:
+
+```tsx
+const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir: "/icons/mir.svg" };
+{brand && icons[brand] && <img src={icons[brand]} alt={brand} />}
+```
+
+| brand | starts with | lengths | groups | CVC |
+| --- | --- | --- | --- | --- |
+| `visa` | 4 | 13, 16, 19 | 4-4-4-4-3 | 3 |
+| `mastercard` | 51–55, 2221–2720 | 16 | 4-4-4-4 | 3 |
+| `amex` | 34, 37 | 15 | 4-6-5 | 4 |
+| `diners` | 300–305, 36, 38–39 | 14–19 | 4-6-4 at 14, else 4-4-4-4-3 | 3 |
+| `discover` | 6011, 644–659 | 16–19 | 4-4-4-4-3 | 3 |
+| `unionpay` | 62, 81 | 16–19 | 4-4-4-4-3 | 3 |
+| `jcb` | 3528–3589 | 16–19 | 4-4-4-4-3 | 3 |
+| `maestro` | 50, 5600–5613, 5615–5899, 63, 67 | 12–19 | 4-4-4-4-3 | 3 |
+| `mir` | 2200–2204 | 16–19 | 4-4-4-4-3 | 3 |
+| `uzcard` | 8600, 5614 | 16 | 4-4-4-4 | 3 |
+| `humo` | 9860 | 16 | 4-4-4-4 | 3 |
+| `belkart` | 9112 | 16 | 4-4-4-4 | 3 |
+| `elcart` | 9417 | 16 | 4-4-4-4 | 3 |
+
+- `brand` is set as soon as the typed prefix fits only one brand: `4` is Visa, `2` and `22` are still
+  undefined (Mir or Mastercard), `220` is Mir, `222` is Mastercard. A prefix outside the table can still be
+  typed up to 19 digits, grouped 4-4-4-4-3, with `brand: undefined`.
+- `complete` means the brand is known and the digit count is one of its lengths. `valid` is `complete` plus
+  the Luhn check, except for UnionPay, which does not require Luhn. For an unknown brand both are `false`;
+  call `luhn` from `react-input-mask-format/validators` if you accept such numbers.
+- Typing or pasting past the brand's longest length drops the extra digits. Backspace right after a group
+  separator deletes the digit before it and regroups (`4111 |1111` → `4111 111`).
+- Expiry: `value` is `MM/YY` with `/` whatever the `separator` option (default `/`), and `""` until month and
+  year are complete. The month is clamped to 01–12 when a key completes it; the year is not clamped, and
+  `year` is `2000 + YY`. A pasted or autofilled `12/2026` or `1/26` lands in the right fields.
+  `isCardExpired(month, year, now = new Date())` uses local time.
+- CVC: 4 digits for `amex`, otherwise 3 (also when `brand` is undefined). When `brand` changes from `amex`
+  to another brand, a 4-digit CVC is cut to 3 and `onValueChange` is called with the shorter value.
+- Components default to `inputMode="numeric"` and `autoComplete` `cc-number`, `cc-exp` or `cc-csc`; your
+  props override them.
+- `value` is optional: without it a card field keeps what the user types and only reports it through
+  `onValueChange`.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Known issues

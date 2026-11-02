@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.12.0
+
+### Added
+- `react-input-mask-format/card`: `CardNumberFormat`, `CardExpiryFormat`, `CardCvcFormat`, their ref hooks
+  (`useCardNumberFormat`, `useCardExpiryFormat`, `useCardCvcFormat`), `formatCardNumber` / `parseCardNumber`,
+  `formatCardExpiry` / `parseCardExpiry`, `formatCardCvc` / `parseCardCvc`, `detectCardBrand` and
+  `isCardExpired`. The number is grouped by brand (Amex `3782 822463 10005`, Diners 4-6-4, up to 19 digits for
+  Visa, Mir, UnionPay and others) and reports `brand`, `complete` and `valid` (Luhn, skipped for UnionPay).
+  Brands: Visa, Mastercard, Amex, UnionPay, JCB, Maestro, Diners, Discover, Mir, Humo, UzCard, Elcart and
+  Belkart. The CVC length follows the `brand` option (4 for Amex).
+
+### Changed
+- Behavior change in `./time` and `./date`: Backspace right after a separator in the middle of the value now
+  deletes the digit before it, and Delete right before a separator the digit after it (`12:|30` → `13:0`,
+  `12.|05.2024` → `10.52.024`). Before, the separator was put back and the key did nothing.
+- Behavior change in `./time` and `./date`: when `separator` or `order` changes the shown text, the component
+  and the hook call `onValueChange` once with the new values. The hook (`useTimeFormat`, `useDateFormat`) now
+  also re-lays out the input when these options change; before, only the component did. A new
+  `onValueChange` function on every render does not trigger a call.
+
 ## 2.11.0
 
 ### Added

@@ -17,7 +17,8 @@
       "react-input-mask-format/validators": ["./src/validators/index.ts"],
       "react-input-mask-format/number": ["./src/number/index.ts"],
       "react-input-mask-format/time": ["./src/time/index.ts"],
-      "react-input-mask-format/date": ["./src/date/index.ts"]
+      "react-input-mask-format/date": ["./src/date/index.ts"],
+      "react-input-mask-format/card": ["./src/card/index.ts"]
     }
   },
   "include": [

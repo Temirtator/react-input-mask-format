@@ -1,7 +1,7 @@
 {
   "name": "react-input-mask-format",
   "description": "Masked input component for React",
-  "version": "2.11.0",
+  "version": "2.12.0",
   "type": "module",
   "homepage": "https://github.com/Temirtator/react-input-mask-format",
   "license": "MIT",
@@ -21,7 +21,9 @@
     "uzbekistan",
     "pinfl",
     "kyrgyzstan",
-    "date"
+    "date",
+    "card",
+    "credit-card"
   ],
   "peerDependencies": {
     "react": ">=16.8.0"
@@ -117,6 +119,16 @@
         "default": "./dist/date.cjs"
       }
     },
+    "./card": {
+      "import": {
+        "types": "./dist/card.d.ts",
+        "default": "./dist/card.js"
+      },
+      "require": {
+        "types": "./dist/card.d.cts",
+        "default": "./dist/card.cjs"
+      }
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -147,6 +159,10 @@
     {
       "path": "dist/date.js",
       "limit": "2.5 KB"
+    },
+    {
+      "path": "dist/card.js",
+      "limit": "3 KB"
     }
   ],
   "scripts": {

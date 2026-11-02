@@ -19,6 +19,13 @@ import {
 import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
 import { TimeFormat, useTimeFormat } from "react-input-mask-format/time";
 import { DateFormat, useDateFormat } from "react-input-mask-format/date";
+import {
+  CardNumberFormat,
+  CardExpiryFormat,
+  CardCvcFormat,
+  useCardNumberFormat,
+} from "react-input-mask-format/card";
+import type { CardBrand } from "react-input-mask-format/card";
 import { Country } from "./countries";
 
 const bg = "#0e1420", panel = "#131c2c", line = "#223049", ink = "#f4f8ff", dim = "#6b7f9c", gold = "#FFC800";
@@ -102,6 +109,17 @@ function DateHookField() {
   return <input ref={ref} data-testid="date-format-hook" style={fieldStyle} />;
 }
 
+function CardNumberHookField() {
+  const [brand, setBrand] = useState<CardBrand | undefined>(undefined);
+  const ref = useCardNumberFormat({ onValueChange: v => setBrand(v.brand) });
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <input ref={ref} data-testid="card-number-hook" style={fieldStyle} />
+      <span data-testid="card-brand-hook" style={{ color: dim, fontSize: 12, minWidth: 80 }}>{brand ?? "—"}</span>
+    </div>
+  );
+}
+
 const COUNTRIES: { id: Country; label: string }[] = [
   { id: Country.Kz, label: "KZ" },
   { id: Country.Ru, label: "RU" },
@@ -141,6 +159,11 @@ function App() {
   const [amount, setAmount] = useState<number | undefined>(undefined);
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardBrand, setCardBrand] = useState<CardBrand | undefined>(undefined);
+  const [cardValid, setCardValid] = useState(false);
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCardCvc] = useState("");
 
   return (
     <main style={{ background: bg, minHeight: "100vh", color: ink, fontFamily: "system-ui, sans-serif", margin: 0 }}>
@@ -277,6 +300,40 @@ function App() {
             />
           </Row>
           <Row label="Raw date hook" sub="useDateFormat · YYYY-MM-DD"><DateHookField /></Row>
+        </section>
+
+        <section style={{ display: "grid", gap: 9 }}>
+          <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Карта · /card</div>
+          <Row label="Карта" sub={`CardNumberFormat · ${cardValid ? "valid" : "—"}`}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <CardNumberFormat
+                value={cardNumber}
+                onValueChange={v => {
+                  setCardNumber(v.value);
+                  setCardBrand(v.brand);
+                  setCardValid(v.valid);
+                }}
+                data-testid="card-number" style={fieldStyle}
+              />
+              <span data-testid="card-brand" style={{ color: gold, fontSize: 12, minWidth: 80 }}>{cardBrand ?? "—"}</span>
+            </div>
+          </Row>
+          <Row label="Срок" sub="CardExpiryFormat · MM/YY">
+            <CardExpiryFormat
+              value={cardExpiry}
+              onValueChange={v => setCardExpiry(v.value)}
+              data-testid="card-expiry" style={fieldStyle}
+            />
+          </Row>
+          <Row label="CVC" sub={`CardCvcFormat · ${cardBrand === "amex" ? 4 : 3} digits`}>
+            <CardCvcFormat
+              brand={cardBrand}
+              value={cardCvc}
+              onValueChange={v => setCardCvc(v.value)}
+              data-testid="card-cvc" style={fieldStyle}
+            />
+          </Row>
+          <Row label="Raw card hook" sub="useCardNumberFormat"><CardNumberHookField /></Row>
         </section>
         {import.meta.env.DEV && (
           <input data-testid="scratch" aria-label="scratch" style={{ ...fieldStyle, opacity: 0.35 }} />
