@@ -19,8 +19,8 @@
   filled still ignores typing at the end. A placeholder character typed into the last slot is replaced by the
   next typed character.
 - Pasting a complete international number (`+`, the country code and every digit of the national number) into a
-  partly or fully filled `kzPhone`, `uzPhone`, `kgPhone`, `ruPhone` or a custom mask whose prefix is `+` and the
-  country code (`+1 (999) 999-9999`) now replaces the whole value, wherever the caret or selection is. Before, the country code was read as national digits at the caret
+  partly or fully filled field of a phone preset or a custom mask whose prefix is `+` and the country code
+  (`+1 (999) 999-9999`) now replaces the whole value, wherever the caret or selection is. Before, the country code was read as national digits at the caret
   (`+7 (701) ___-__-__` + paste `+7 701 234 56 78` → `+7 (701) 770-12-34`); now it gives `+7 (701) 234-56-78`.
   A number with digits missing is still inserted at the caret, and typing is unchanged.
 
