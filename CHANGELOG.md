@@ -13,6 +13,10 @@
   `defaultValue` is now typed `string`; a number or array `defaultValue` no longer compiles (it never worked at
   runtime).
 
+### Changed
+- `DateFormat` and `TimeFormat` render `inputMode="numeric"` by default, like the card components, so phones show
+  a digit keypad. Pass `inputMode` to override it.
+
 ## 2.12.0
 
 ### Added

@@ -368,6 +368,7 @@ parseTime("14:30");  // { value: "14:30", formattedValue: "14:30", hours: 14, mi
 - Changing `separator` re-lays out the shown time and calls `onValueChange` with the new values.
 - `value` is optional: without it the field keeps what the user types; `defaultValue` (`"1430"` shows
   `14:30`) sets the initial text and is not reported through `onValueChange`.
+- `TimeFormat` defaults to `inputMode="numeric"`, so phones show a digit keypad; your props override it.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Date — `react-input-mask-format/date`
@@ -406,6 +407,7 @@ parseDate("12.05.2024");   // { value: "2024-05-12", formattedValue: "12.05.2024
   values; an empty field emits nothing.
 - `value` is optional: without it the field keeps what the user types; `defaultValue` (`"2024-05-12"` shows
   `12.05.2024`) sets the initial text and is not reported through `onValueChange`.
+- `DateFormat` defaults to `inputMode="numeric"`, so phones show a digit keypad; your props override it.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Cards — `react-input-mask-format/card`
