@@ -33,7 +33,7 @@ function extract(raw: string, decimal: string, options: NumberFormatOptions): Nu
   if (options.decimalScale !== undefined) {
     frac = frac.slice(0, options.decimalScale);
   }
-  return { negative, int, frac, hasSeparator };
+  return { negative, int, frac, hasSeparator: hasSeparator && options.decimalScale !== 0 };
 }
 
 // Tokenize a user-facing formatted string (strips prefix/suffix, uses opts separators).

@@ -342,7 +342,7 @@ formatNumber(1234.5, { thousandSeparator: ",", decimalScale: 2, fixedDecimalScal
 ```
 
 Options: `thousandSeparator` (`true` → `,`, or a string), `decimalSeparator` (`.`), `decimalScale`
-(truncates, no rounding), `fixedDecimalScale`, `prefix`, `suffix`, `allowNegative` (`true`),
+(truncates, no rounding; `0` ignores the decimal separator), `fixedDecimalScale`, `prefix`, `suffix`, `allowNegative` (`true`),
 `allowLeadingZeros`, `isAllowed(values) => boolean` (e.g. min/max). `parseNumber` is the inverse of
 `formatNumber`.
 
