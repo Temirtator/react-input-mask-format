@@ -9,6 +9,8 @@ import {
   kgPhone, kgInnPerson, kgInnCompany, kgAccount, kgBik, kgPlate, kgPlateCompany, kgPostal, kgPassport
 } from "../../src/presets";
 import { toRuPlateChar } from "../../src/utils/ru-plate";
+import { toLatinLookalike } from "../../src/utils/latin-lookalike";
+import { byPhone, byPersonalId, byUnp, byIban, byPlate, byPostal, byPassport } from "../../src/presets";
 import type { MaskPreset } from "../../src/presets";
 
 function format(preset: MaskPreset, raw: string): string {
@@ -180,5 +182,37 @@ describe("Kyrgyzstan presets format their sample values", () => {
   it("kgPassport uppercases ID card and passport series", () => {
     expect(format(kgPassport, "id1234567")).toBe("ID1234567");
     expect(format(kgPassport, "pe1234567")).toBe("PE1234567");
+  });
+});
+
+describe("Belarus presets format their sample values", () => {
+  it("toLatinLookalike maps Cyrillic look-alikes and uppercases", () => {
+    expect(toLatinLookalike("р")).toBe("P");
+    expect(toLatinLookalike("І")).toBe("I");
+    expect(toLatinLookalike("у")).toBe("Y");
+    expect(toLatinLookalike("d")).toBe("D");
+  });
+  it("byPhone reads domestic and international forms", () => {
+    for (const raw of ["+375291234567", "80291234567", "8 029 123-45-67", "375291234567", "291234567"]) {
+      expect(format(byPhone, raw)).toBe("+375 (29) 123-45-67");
+    }
+  });
+  it("byPersonalId, byUnp and byPassport convert Cyrillic look-alikes", () => {
+    expect(format(byPersonalId, "7000000а000рв1")).toBe("7000000A000PB1");
+    expect(format(byUnp, "ма1953684")).toBe("MA1953684");
+    expect(format(byUnp, "200988541")).toBe("200988541");
+    expect(format(byPassport, "мр1234567")).toBe("MP1234567");
+  });
+  it("byIban accepts compact input with and without the country code", () => {
+    expect(format(byIban, "by13nbrb3600900000002z00ab00")).toBe("BY13 NBRB 3600 9000 0000 2Z00 AB00");
+    expect(format(byIban, "13NBRB3600900000002Z00AB00")).toBe("BY13 NBRB 3600 9000 0000 2Z00 AB00");
+  });
+  it("byPlate converts look-alikes and rejects unlisted letters and region 9", () => {
+    expect(format(byPlate, "1234ав7")).toBe("1234 AB-7");
+    expect(format(byPlate, "1234DF7")).toBe("1234 __-_");
+    expect(format(byPlate, "1234AB9")).toBe("1234 AB-_");
+  });
+  it("byPostal", () => {
+    expect(format(byPostal, "220050")).toBe("220050");
   });
 });

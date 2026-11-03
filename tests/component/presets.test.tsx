@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask, { useMask } from "../../src/index";
 import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone } from "../../src/presets";
+import { byPhone, byPersonalId, byIban, byPlate } from "../../src/presets";
 import type { MaskPreset } from "../../src/presets";
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -439,5 +440,91 @@ describe("prefix-aware controlled and autofill input", () => {
     const input = screen.getByTestId("hooked") as HTMLInputElement;
     fireEvent.input(input, { target: { value: "+998901234567" } });
     expect(input.value).toBe("+998 (90) 123-45-67");
+  });
+});
+
+describe("Belarus presets on InputMask", () => {
+  it("byPhone: pasting domestic and international forms", async () => {
+    const user = userEvent.setup();
+    for (const pasted of ["80291234567", "8 029 123-45-67", "+375 29 123 45 67", "375291234567"]) {
+      const { unmount } = render(<InputMask {...byPhone} data-testid="by-phone" />);
+      const input = screen.getByTestId("by-phone") as HTMLInputElement;
+      await user.click(input);
+      await user.paste(pasted);
+      expect(input.value).toBe("+375 (29) 123-45-67");
+      unmount();
+    }
+  });
+
+  it("byPhone: typing a domestic number or a bare national number", async () => {
+    const user = userEvent.setup();
+    for (const typed of ["80291234567", "291234567"]) {
+      const { unmount } = render(<InputMask {...byPhone} data-testid="by-phone" />);
+      const input = screen.getByTestId("by-phone") as HTMLInputElement;
+      await user.click(input);
+      await user.keyboard(typed);
+      expect(input.value).toBe("+375 (29) 123-45-67");
+      unmount();
+    }
+  });
+
+  it("byPhone by design: typing the country code key by key fills the operator code", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...byPhone} data-testid="by-phone" />);
+    const input = screen.getByTestId("by-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("375291234567");
+    expect(input.value).toBe("+375 (37) 529-12-34");
+  });
+
+  it("byPhone: select all and type the international number key by key", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...byPhone} data-testid="by-phone" />);
+    const input = screen.getByTestId("by-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("291234567");
+    input.setSelectionRange(0, input.value.length);
+    await nextFrame();
+    await user.keyboard("+375331234567");
+    expect(input.value).toBe("+375 (33) 123-45-67");
+  });
+
+  it("byPersonalId: Cyrillic look-alikes become Latin", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...byPersonalId} data-testid="by-id" />);
+    const input = screen.getByTestId("by-id") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("7000000а000рв1");
+    expect(input.value).toBe("7000000A000PB1");
+  });
+
+  it("byPlate: Cyrillic look-alikes become Latin", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...byPlate} data-testid="by-plate" />);
+    const input = screen.getByTestId("by-plate") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("1234ав7");
+    expect(input.value).toBe("1234 AB-7");
+  });
+
+  it("byIban: pasting compact and grouped forms", async () => {
+    const user = userEvent.setup();
+    for (const pasted of ["BY13NBRB3600900000002Z00AB00", "BY13 NBRB 3600 9000 0000 2Z00 AB00"]) {
+      const { unmount } = render(<InputMask {...byIban} data-testid="by-iban" />);
+      const input = screen.getByTestId("by-iban") as HTMLInputElement;
+      await user.click(input);
+      await user.paste(pasted);
+      expect(input.value).toBe("BY13 NBRB 3600 9000 0000 2Z00 AB00");
+      unmount();
+    }
+  });
+
+  it("byIban: typing lowercase without the country code", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...byIban} data-testid="by-iban" />);
+    const input = screen.getByTestId("by-iban") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("13nbrb3600900000002z00ab00");
+    expect(input.value).toBe("BY13 NBRB 3600 9000 0000 2Z00 AB00");
   });
 });

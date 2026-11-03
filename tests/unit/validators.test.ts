@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate } from "../../src/validators";
 import { digitsOnly, remainder, isIbanChecksumValid, isRealDate } from "../../src/validators/shared";
+import { isValidByPersonalId, isValidByUnp, isValidByIban } from "../../src/validators";
 import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik } from "../../src/validators";
 
 describe("luhn", () => {
@@ -334,5 +335,60 @@ describe("isValidKgBik (format)", () => {
     expect(isValidKgBik("10300")).toBe(false);
     expect(isValidKgBik("")).toBe(false);
     expect(isValidKgBik(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe("isValidByPersonalId", () => {
+  it("accepts checksum-valid ids, Cyrillic look-alikes and lowercase", () => {
+    for (const v of ["7000000A000PB1", "7123456A789PB6", "3010190A001PB9", "4150295H012PB2", "7000000А000РВ1", "7000000a000pb1"]) {
+      expect(isValidByPersonalId(v)).toBe(true);
+    }
+  });
+  it("rejects wrong checksum, wrong length, placeholders and empty values", () => {
+    for (const v of ["7000000A000PB2", "7123456A001PB3", "7000000A000PB", "7000000A000PB_", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidByPersonalId(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidByUnp", () => {
+  it("accepts checksum-valid numeric and lettered УНП", () => {
+    for (const v of ["200988541", "MA1953684", "ма1953684", "M01953684", "100325912", "100220190", "101528843", "600122610", "800013732"]) {
+      expect(isValidByUnp(v)).toBe(true);
+    }
+  });
+  it("rejects wrong checksum, bad structure and empty values", () => {
+    for (const v of ["200988542", "MA1953685", "100325913", "20098854_", "020098854", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidByUnp(v)).toBe(false);
+    }
+  });
+  it("rejects every last digit when the weighted remainder is 10", () => {
+    const weights = [29, 23, 19, 17, 13, 7, 5, 3];
+    let prefix = "";
+    for (let n = 100000000; n < 200000000; n++) {
+      const s = String(n);
+      const sum = weights.reduce((acc, w, i) => acc + w * Number(s[i]), 0);
+      if (sum % 11 === 10) {
+        prefix = s.slice(0, 8);
+        break;
+      }
+    }
+    expect(prefix).not.toBe("");
+    for (let d = 0; d <= 9; d++) {
+      expect(isValidByUnp(prefix + d)).toBe(false);
+    }
+  });
+});
+
+describe("isValidByIban", () => {
+  it("accepts valid IBANs raw, grouped and lowercase", () => {
+    for (const v of ["BY13NBRB3600900000002Z00AB00", "BY13 NBRB 3600 9000 0000 2Z00 AB00", "by17akbb36424140006733100000", "BY44AKBB30120000170870000000"]) {
+      expect(isValidByIban(v)).toBe(true);
+    }
+  });
+  it("rejects bad checksum, length, placeholders, country and empty values", () => {
+    for (const v of ["BY13NBRB3600900000002Z00AB01", "BY13NBRB3600900000002Z00AB0", "BY13 NBRB 3600 ____ ____ ____ ____", "KZ13NBRB3600900000002Z00AB00", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidByIban(v)).toBe(false);
+    }
   });
 });
