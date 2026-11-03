@@ -705,8 +705,9 @@ function PhoneField() {
 }
 ```
 
-Checked with Ant Design 6. `useMask` on antd's `Input` currently loses the first typed character, a known
-issue in this library; use the wrapper above.
+Checked with Ant Design 6. For an uncontrolled field, `useMask` also works on antd's `Input` through its
+`.input` element: `ref={(r) => maskRef(r?.input ?? null)}`. antd controls the input's value, so the mask
+template shows once the user types rather than on focus.
 
 ### Other kits
 
