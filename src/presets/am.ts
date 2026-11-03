@@ -1,9 +1,9 @@
 import type { MaskPreset } from "./types";
 
-const D = /\d/;
+const DIGIT = /[0-9]/;
 
 export const amPhone: MaskPreset = {
-  mask: ["+", "3", "7", "4", " ", "(", /[1-9]/, D, ")", " ", D, D, "-", D, D, "-", D, D],
+  mask: ["+", "3", "7", "4", " ", "(", /[1-9]/, DIGIT, ")", " ", DIGIT, DIGIT, "-", DIGIT, DIGIT, "-", DIGIT, DIGIT],
   maskPlaceholder: "_"
 };
 

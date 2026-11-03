@@ -8,8 +8,8 @@
   `+375 (29) 123-45-67`); `byPersonalId`, `byUnp`, `byPlate` and `byPassport` turn typed Cyrillic look-alikes
   into Latin. Validators `isValidByPersonalId` (7-3-1), `isValidByUnp` (MNS mod-11) and `isValidByIban`
   (MOD-97).
-- Tajikistan pack: `tjPhone`, `tjInn`, `tjEin`, `tjAccount`, `tjBik`, `tjPlate`, `tjPlateCompany`,
-  `tjPostal`, and `isValidTjInn` (9 digits; the check digit is not published, so format only).
+- Tajikistan pack: `tjPhone`, `tjInn`, `tjEin`, `tjAccount`, `tjBik`, `tjPlate`, `tjPlateCompany`
+  (Cyrillic look-alikes typed on a Russian layout become Latin), `tjPostal`, and `isValidTjInn` (9 digits; the check digit is not published, so format only).
 - Armenia pack: `amPhone` (skips the domestic leading `0`), `amPsn`, `amTin`, `amAccount`, `amPlate`,
   `amPostal`, `amPassport`, and the structure validators `isValidAmPsn`, `isValidAmTin` and
   `isValidAmAccount`.
