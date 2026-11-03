@@ -36,6 +36,22 @@ export function decideFocus(cfg: MaskConfig, currentState: InputState): InputSta
   return nextState;
 }
 
+export function decideUpdate(
+  cfg: MaskConfig,
+  currentState: InputState,
+  isFocused: boolean
+): InputState {
+  const value = cfg.maskUtils.formatValue(currentState.value);
+  const nextState: InputState = {
+    value: isFocused || cfg.alwaysShowMask || !cfg.maskUtils.isValueEmpty(value) ? value : "",
+    selection: currentState.selection
+  };
+  if (cfg.beforeMaskedStateChange) {
+    return cfg.beforeMaskedStateChange({ currentState, nextState });
+  }
+  return nextState;
+}
+
 export function decideBlur(
   cfg: MaskConfig,
   currentState: InputState,

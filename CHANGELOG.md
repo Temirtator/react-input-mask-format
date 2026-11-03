@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- `useMask` re-formats the text already in the input when `mask`, `maskPlaceholder`, `alwaysShowMask`,
+  `formatChars` or `transform` change, like `<InputMask>` does. Before, the hook kept the old layout until the
+  next edit (`12/34` stayed after switching to `99-99-99`; now it shows `12-34-__`), and turning
+  `alwaysShowMask` on did not show the template.
+
 ## 2.12.0
 
 ### Added

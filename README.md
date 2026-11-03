@@ -178,7 +178,8 @@ const ref = useMask({ mask: "+7 (999) 999-99-99", maskPlaceholder: "_" });
 ```
 
 `useMask` is uncontrolled: don't pass a React `value`. `onChange` receives the masked value.
-For a controlled input use `<InputMask>`.
+For a controlled input use `<InputMask>`. When the options change (e.g. the mask follows a country picker), the
+text already in the input is re-formatted right away, as with `<InputMask>`; `onChange` is not called for it.
 
 ## Presets
 
