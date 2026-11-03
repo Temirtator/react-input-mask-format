@@ -50,7 +50,7 @@ The original `react-input-mask` has been unmaintained since 2021. This fork is:
 - [Presets](#presets) · [Masks with a fixed prefix](#masks-with-a-fixed-prefix) · [Validators](#validators)
 - [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) · [Time](#time--react-input-mask-formattime)
   · [Date](#date--react-input-mask-formatdate) · [Cards](#cards--react-input-mask-formatcard)
-- [Known issues](#known-issues) · [Migration](#migration)
+- [Known issues](#known-issues) · [Recipes](#recipes) · [Migration](#migration)
 
 ## Properties
 
@@ -503,6 +503,189 @@ postal codes are often autofilled; one-time codes are not.
 
 `cy.get("input").focus().type("12345")` can produce `23/45/____`, because `focus()` is not an action
 command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `.wait(50)` after `.focus()`.
+
+## Recipes
+
+### react-hook-form: `InputMask` with `Controller`
+
+`InputMask` is controlled, so use `Controller` and spread `field` onto it. `field.ref` reaches the input,
+so focus-on-error and `setFocus` work. A mask with a placeholder keeps `_` in an incomplete value, which
+makes a one-line `validate` enough; for documents add the checksum validator.
+
+```tsx
+import { useForm, Controller } from "react-hook-form";
+import InputMask from "react-input-mask-format";
+import { kzPhone, kzIin } from "react-input-mask-format/presets";
+import { isValidIin } from "react-input-mask-format/validators";
+
+type FormValues = { phone: string; iin: string };
+
+function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
+  const { control, handleSubmit } = useForm<FormValues>({ defaultValues: { phone: "", iin: "" } });
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="phone"
+        control={control}
+        rules={{ validate: (v) => !v.includes("_") || "Enter the full number" }}
+        render={({ field, fieldState }) => (
+          <>
+            <InputMask {...kzPhone} {...field} />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <Controller
+        name="iin"
+        control={control}
+        rules={{ validate: (v) => isValidIin(v) || "Invalid IIN" }}
+        render={({ field, fieldState }) => (
+          <>
+            <InputMask {...kzIin} {...field} />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+The form value is the masked text (`"+7 (701) 234-56-78"`). Strip it in `onSubmit` if the API wants digits.
+
+### react-hook-form: `useMask` with `register`
+
+For an uncontrolled input, merge the ref from `register` with the one from `useMask`. Both are called on
+every ref change, so the mask survives re-renders from `formState`.
+
+```tsx
+import { useForm } from "react-hook-form";
+import { useMask } from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
+  const { register, handleSubmit, formState } = useForm<{ phone: string }>();
+  const { ref, ...rest } = register("phone", {
+    validate: (v) => !v.includes("_") || "Enter the full number",
+  });
+  const maskRef = useMask(kzPhone);
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input
+        {...rest}
+        ref={(el) => {
+          ref(el);
+          maskRef(el);
+        }}
+      />
+      {formState.errors.phone && <p role="alert">{formState.errors.phone.message}</p>}
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+### react-hook-form: number, date and card components
+
+Pass the value, store what you need from `onValueChange`, and give `ref={field.ref}` so `setFocus` and
+focus-on-error reach the input.
+
+```tsx
+import { useForm, Controller } from "react-hook-form";
+import { NumberFormat } from "react-input-mask-format/number";
+import { DateFormat } from "react-input-mask-format/date";
+
+type FormValues = { amount: string; born: string };
+
+const { control, handleSubmit, setFocus } = useForm<FormValues>({ defaultValues: { amount: "", born: "" } });
+
+<Controller
+  name="amount"
+  control={control}
+  render={({ field }) => (
+    <NumberFormat
+      name={field.name}
+      ref={field.ref}
+      value={field.value}
+      onValueChange={(v) => field.onChange(v.value)}
+      onBlur={field.onBlur}
+      thousandSeparator=","
+      decimalScale={2}
+    />
+  )}
+/>
+<Controller
+  name="born"
+  control={control}
+  rules={{ required: "Enter a date" }}
+  render={({ field }) => (
+    <DateFormat
+      name={field.name}
+      ref={field.ref}
+      value={field.value}
+      onValueChange={(v) => field.onChange(v.value)}
+      onBlur={field.onBlur}
+    />
+  )}
+/>
+```
+
+Typing `1234.5` and `12052024` submits `{ amount: "1234.5", born: "2024-05-12" }`: the unformatted number and
+the ISO date. `born` stays `""` until the date is complete and exists, so `required` rejects a partial date.
+`CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` work the same way. For `CardNumberFormat`, `v.value`
+is the digits without spaces.
+
+### MUI `TextField`
+
+Wrap the `TextField` in `InputMask`. The mask finds the `<input>` inside it. MUI sees the value, so the
+floating label moves up and does not overlap the mask or the typed text.
+
+```tsx
+import InputMask from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+import TextField from "@mui/material/TextField";
+
+const [phone, setPhone] = useState("");
+
+<InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+  <TextField label="Phone" />
+</InputMask>
+```
+
+Checked with `@mui/material` 9.5.
+
+### Ant Design `Input`
+
+antd's `Input` ref is an `InputRef`, not the element, so forward `.input` to `InputMask`:
+
+```tsx
+import React, { useState } from "react";
+import { Input } from "antd";
+import type { InputProps, InputRef } from "antd";
+import InputMask from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+const AntInput = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+  const inner = React.useRef<InputRef>(null);
+  React.useImperativeHandle(ref, () => inner.current!.input!, []);
+  return <Input {...props} ref={inner} />;
+});
+
+const [phone, setPhone] = useState("");
+
+<InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+  <AntInput />
+</InputMask>
+```
+
+Checked with `antd` 6.6. `useMask` on antd's `Input` (`ref={(r) => maskRef(r?.input ?? null)}`) drops the
+first typed character, because antd keeps its own controlled value; use the wrapper above.
+
+### Other kits
+
+Any component that forwards its ref to the native `<input>` works as an `InputMask` child, or with
+`useMask` (see [`children`](#children)).
 
 ## Migration
 
