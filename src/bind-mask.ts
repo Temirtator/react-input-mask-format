@@ -1,5 +1,5 @@
 import type { MaskConfig } from "./core/config";
-import { decideChange, decideFocus, decideBlur, decideClickSelection, decideUpdate } from "./core/decide";
+import { decideChange, decideFocus, decideBlur, decideClickSelection, decideUpdate, formatDefaultValue } from "./core/decide";
 import { createSelectionTracker } from "./core/selection-tracker";
 import { watchClick } from "./core/click-tracker";
 import type { InputState } from "./types";
@@ -19,6 +19,7 @@ export interface MaskController {
 export function createMaskController(config: MaskConfig): MaskController {
   let input: HTMLInputElement | null = null;
   let lastValue = "";
+  let form: HTMLFormElement | null = null;
   const tracker = createSelectionTracker(() => input);
 
   function getInputState(): InputState {
@@ -99,16 +100,30 @@ export function createMaskController(config: MaskConfig): MaskController {
     }
   }
 
+  function format(): void {
+    if (!isMasked()) return;
+    const formatted = formatDefaultValue(config, input!.value);
+    if (formatted || config.alwaysShowMask) {
+      setNativeValue(input!, formatted);
+      lastValue = formatted;
+    }
+  }
+
+  function handleReset(): void {
+    defer(() => {
+      if (input) {
+        lastValue = input.value;
+        format();
+      }
+    });
+  }
+
   function bind(el: HTMLInputElement): void {
     input = el;
     lastValue = el.value;
-    if (isMasked()) {
-      const formatted = config.maskUtils.formatValue(el.value);
-      if (!config.maskUtils.isValueEmpty(formatted) || config.alwaysShowMask) {
-        setNativeValue(el, formatted);
-        lastValue = formatted;
-      }
-    }
+    form = el.form;
+    form?.addEventListener("reset", handleReset);
+    format();
     el.addEventListener("input", handleInput);
     el.addEventListener("focusin", handleFocus);
     el.addEventListener("blur", handleBlur);
@@ -126,6 +141,8 @@ export function createMaskController(config: MaskConfig): MaskController {
       input.removeEventListener("blur", handleBlur);
       input.removeEventListener("mousedown", handleMouseDown);
     }
+    form?.removeEventListener("reset", handleReset);
+    form = null;
     input = null;
   }
 
