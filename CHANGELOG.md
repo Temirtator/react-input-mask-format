@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Internal
+- React StrictMode tests for `useMask`, `./number`, `./time`, `./date` and `./card` components and hooks, and more
+  cases for `InputMask`: each scenario runs with and without `<StrictMode>` and must show the same value, caret and
+  emitted values.
+
 ## 2.12.0
 
 ### Added
