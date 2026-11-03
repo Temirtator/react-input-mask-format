@@ -130,6 +130,32 @@ describe("NumberFormat component", () => {
     expect(input).toHaveValue("12");
   });
 
+  it.each([
+    [{}, "1234.5", "1 234,5"],
+    [{ decimalScale: 2, fixedDecimalScale: true }, "1234.5", "1 234,50"],
+    [{ allowedDecimalSeparators: [] }, "12.5", "125"]
+  ])("reads a typed dot in a comma format (%o)", async (extra, keys, shown) => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [v, setV] = useState("");
+      return (
+        <NumberFormat
+          value={v}
+          onValueChange={x => setV(x.value)}
+          thousandSeparator=" "
+          decimalSeparator=","
+          {...extra}
+          data-testid="nf"
+        />
+      );
+    }
+    render(<Controlled />);
+    const input = screen.getByTestId("nf") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard(keys);
+    expect(input).toHaveValue(shown);
+  });
+
   it("moves past a fixed decimal separator when it is typed (controlled)", async () => {
     const user = userEvent.setup();
     function Controlled() {

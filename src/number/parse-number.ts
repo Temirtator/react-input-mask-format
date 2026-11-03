@@ -1,5 +1,5 @@
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
-import { tokenize, buildFormatted, resolveSeparators, type NumberParts } from "./format-number";
+import { tokenize, buildFormatted, resolveSeparators, decimalSeparators, type NumberParts } from "./format-number";
 
 function buildValue(parts: NumberParts): string {
   const sign = parts.negative ? "-" : "";
@@ -63,7 +63,7 @@ export function resolveCaret(
   // so the next keystroke goes into the fraction rather than ahead of the ".".
   if (
     decimal &&
-    (values.value.endsWith(".") || typedBefore.endsWith(decimal)) &&
+    (values.value.endsWith(".") || decimalSeparators(options).some(c => typedBefore.endsWith(c))) &&
     values.formattedValue.slice(caret, caret + decimal.length) === decimal
   ) {
     return caret + decimal.length;

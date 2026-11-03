@@ -15,6 +15,11 @@ export function resolveSeparators(options: NumberFormatOptions): { thousand: str
   return { thousand, decimal };
 }
 
+export function decimalSeparators(options: NumberFormatOptions): string[] {
+  const { thousand, decimal } = resolveSeparators(options);
+  return [decimal, ...(options.allowedDecimalSeparators ?? ["."])].filter(c => c && c !== thousand);
+}
+
 function extract(raw: string, decimal: string, options: NumberFormatOptions): NumberParts {
   const allowNegative = options.allowNegative ?? true;
   const negative = allowNegative && raw.indexOf("-") !== -1;
@@ -42,7 +47,8 @@ export function tokenize(rawInput: string, options: NumberFormatOptions): Number
   let s = rawInput;
   if (options.prefix && s.startsWith(options.prefix)) s = s.slice(options.prefix.length);
   if (options.suffix && s.endsWith(options.suffix)) s = s.slice(0, s.length - options.suffix.length);
-  return extract(s, decimal, options);
+  const sep = decimalSeparators(options).find(c => (c === decimal ? s.includes(c) : s.split(c).length === 2));
+  return extract(s, sep ?? decimal, options);
 }
 
 // Tokenize a canonical numeric string (from a JS number): always "." decimal, no affixes.

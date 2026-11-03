@@ -23,6 +23,7 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
     isAllowed,
     thousandSeparator,
     decimalSeparator,
+    allowedDecimalSeparators,
     decimalScale,
     fixedDecimalScale,
     prefix,
@@ -35,6 +36,7 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
   const options: NumberFormatOptions = {
     thousandSeparator,
     decimalSeparator,
+    allowedDecimalSeparators,
     decimalScale,
     fixedDecimalScale,
     prefix,

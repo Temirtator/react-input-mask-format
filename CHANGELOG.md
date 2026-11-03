@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+- `allowedDecimalSeparators` for `NumberFormat`, `useNumberFormat`, `formatNumber` and `parseNumber`: characters
+  also read as the decimal separator, as in react-number-format. The default `["."]` means a `.` typed or pasted
+  into a `decimalSeparator=","` field becomes `,` (`12.5` → `12,5`; before, it was dropped and gave `125`). It is
+  ignored when it equals `thousandSeparator`, when the text already has the decimal separator, and when it occurs
+  more than once (`1.234.567` stays `1 234 567`). A string `value` such as `"12.5"` is read the same way.
+
 ### Fixed
 - `NumberFormat` and `useNumberFormat` with `fixedDecimalScale`: typing the decimal separator in front of the
   padded fraction now moves the caret past it, so `1234.5` gives `1,234.50`. Before, the caret stayed in front of

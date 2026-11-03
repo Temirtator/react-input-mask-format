@@ -71,6 +71,10 @@ describe("resolveCaret", () => {
     const comma = { thousandSeparator: " ", decimalSeparator: ",", decimalScale: 2, fixedDecimalScale: true };
     expect(resolveCaret(parseNumber("1 234,,00", comma), 4, comma, "1 234,")).toBe(6);
   });
+  it("steps past the fixed separator when another allowed separator is typed", () => {
+    const comma = { thousandSeparator: " ", decimalSeparator: ",", decimalScale: 2, fixedDecimalScale: true };
+    expect(resolveCaret(parseNumber("1 234.,00", comma), 4, comma, "1 234.")).toBe(6);
+  });
   it("steps past a separator typed into the integer part", () => {
     const opts = { decimalSeparator: "," };
     expect(resolveCaret(parseNumber("12,34", opts), 2, opts, "12,")).toBe(3);

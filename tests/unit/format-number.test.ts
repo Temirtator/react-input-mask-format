@@ -31,6 +31,16 @@ describe("formatNumber", () => {
     expect(formatNumber(1234.9, { decimalScale: 0, fixedDecimalScale: true })).toBe("1234");
   });
 
+  it("reads a typed or pasted dot as the decimal separator of a comma format", () => {
+    const ru = { thousandSeparator: " ", decimalSeparator: ",", decimalScale: 2 };
+    expect(formatNumber("12.5", ru)).toBe("12,5");
+    expect(formatNumber("1.234,56", ru)).toBe("1 234,56");
+    expect(formatNumber("1.234.567", ru)).toBe("1 234 567");
+    expect(formatNumber("12.5", { thousandSeparator: ".", decimalSeparator: ",", decimalScale: 2 })).toBe("125");
+    expect(formatNumber("12.5", { ...ru, allowedDecimalSeparators: [] })).toBe("125");
+    expect(formatNumber("12/5", { ...ru, allowedDecimalSeparators: ["/"] })).toBe("12,5");
+  });
+
   it("pads with fixedDecimalScale", () => {
     expect(formatNumber("5", { decimalScale: 2, fixedDecimalScale: true })).toBe("5.00");
     expect(formatNumber("1234.5", { thousandSeparator: ",", decimalScale: 2, fixedDecimalScale: true })).toBe("1,234.50");
