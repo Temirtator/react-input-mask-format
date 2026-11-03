@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Internal
+- Property-based tests (fast-check) for `./number`, `./time`, `./date`, `./card` and the shared digit-field
+  helpers: idempotence, format/parse round trips, output shape and ranges, truncation, separator and brand
+  invariants, and Backspace/Delete next to a separator.
+
 ## 2.12.0
 
 ### Added
