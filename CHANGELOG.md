@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Demo: a playground to try any mask, `maskPlaceholder`, `alwaysShowMask` and `transform`, or start from a
+  preset, with the matching JSX to copy.
+
 ## 2.12.0
 
 ### Added

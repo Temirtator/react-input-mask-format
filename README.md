@@ -8,7 +8,7 @@ Input masking for React — dates, phones, cards, custom tokens, numbers, time, 
 country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan). A maintained fork of
 [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
-**[Live demo](https://temirtator.github.io/react-input-mask-format/)** · **[Changelog](CHANGELOG.md)**
+**[Live demo](https://temirtator.github.io/react-input-mask-format/)** (with a playground to try any mask) · **[Changelog](CHANGELOG.md)**
 
 ## Installation
 
