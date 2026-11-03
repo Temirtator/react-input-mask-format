@@ -36,6 +36,11 @@ export function decideFocus(cfg: MaskConfig, currentState: InputState): InputSta
   return nextState;
 }
 
+export function formatDefaultValue(cfg: MaskConfig, value: string): string {
+  const formatted = cfg.maskUtils.formatValue(value);
+  return cfg.alwaysShowMask || !cfg.maskUtils.isValueEmpty(formatted) ? formatted : "";
+}
+
 export function decideBlur(
   cfg: MaskConfig,
   currentState: InputState,

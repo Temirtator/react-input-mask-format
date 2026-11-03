@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Form reset brings back the formatted `defaultValue` (`12/12/2020`) for `<InputMask>` and `useMask`. Before, the
+  browser restored the raw `defaultValue` (`12122020`). `<InputMask>` now renders the formatted `defaultValue` on
+  the `<input>`; `useMask` re-formats after the form's `reset` event.
+- Focusing a field whose value is full but was not formatted by the mask (set with `el.value = …` without an
+  event, as form libraries do on reset) puts the caret at the end. Before, it went to the start, so Backspace did
+  nothing and typing replaced the first digit.
+
 ## 2.12.0
 
 ### Added

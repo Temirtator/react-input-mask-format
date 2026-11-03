@@ -7,7 +7,7 @@ import { isInputFocused } from "./utils/input";
 import { isFunction, toString } from "./utils/helpers";
 import { resolveMaskConfig } from "./core/config";
 import type { MaskConfig } from "./core/config";
-import { decideChange, decideFocus, decideBlur, decideClickSelection } from "./core/decide";
+import { decideChange, decideFocus, decideBlur, decideClickSelection, formatDefaultValue } from "./core/decide";
 import { watchClick } from "./core/click-tracker";
 import type { InputMaskProps, InputState } from "./types";
 
@@ -222,7 +222,8 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
         (forwardedRef as React.MutableRefObject<unknown>).current = ref;
       }
     },
-    value: isMasked && isControlled ? renderValue : props.value
+    value: isMasked && isControlled ? renderValue : props.value,
+    defaultValue: isMasked && !isControlled && initialValue ? formatDefaultValue(config, initialValue) : props.defaultValue
   };
 
   if (children) {
