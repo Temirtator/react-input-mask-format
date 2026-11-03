@@ -306,6 +306,10 @@ describe("vin preset", () => {
     expect(format(vin, "ХТА210930У0000001")).toBe("XTA210930Y0000001");
     expect(format(vin, "хта210930y0000001")).toBe("XTA210930Y0000001");
   });
+  it("reads a pasted label as characters", () => {
+    expect(format(vin, "VIN: WVWZZZ1JZ3W386752")).toBe("V1NWVWZZZ1JZ3W386");
+    expect(format(vin, "ВИН WVWZZZ1JZ3W386752")).toBe("BHWVWZZZ1JZ3W3867");
+  });
   it("keeps a trailing placeholder for 16 characters", () => {
     expect(format(vin, "WVWZZZ1JZ3W38675")).toBe("WVWZZZ1JZ3W38675_");
   });
