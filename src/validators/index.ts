@@ -4,3 +4,4 @@ export * from "./ru";
 export * from "./uz";
 export * from "./kg";
 export * from "./by";
+export * from "./tj";

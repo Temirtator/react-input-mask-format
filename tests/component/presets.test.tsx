@@ -3,8 +3,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask, { useMask } from "../../src/index";
-import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone } from "../../src/presets";
-import { byPhone, byPersonalId, byIban, byPlate } from "../../src/presets";
+import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone, byPhone, byPersonalId, byIban, byPlate, tjPhone } from "../../src/presets";
 import type { MaskPreset } from "../../src/presets";
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -526,5 +525,55 @@ describe("Belarus presets on InputMask", () => {
     await user.click(input);
     await user.keyboard("13nbrb3600900000002z00ab00");
     expect(input.value).toBe("BY13 NBRB 3600 9000 0000 2Z00 AB00");
+  });
+});
+
+describe("Tajikistan presets on InputMask", () => {
+  it("tjPhone: typing and pasting a national number", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<InputMask {...tjPhone} data-testid="tj-phone" />);
+    const typed = screen.getByTestId("tj-phone") as HTMLInputElement;
+    await user.click(typed);
+    await user.keyboard("931234567");
+    expect(typed.value).toBe("+992 (93) 123-45-67");
+    unmount();
+    render(<InputMask {...tjPhone} data-testid="tj-phone" />);
+    const pasted = screen.getByTestId("tj-phone") as HTMLInputElement;
+    await user.click(pasted);
+    await user.paste("931234567");
+    expect(pasted.value).toBe("+992 (93) 123-45-67");
+  });
+
+  it("tjPhone: pasting international forms", async () => {
+    const user = userEvent.setup();
+    for (const pasted of ["+992 93 123 4567", "992931234567"]) {
+      const { unmount } = render(<InputMask {...tjPhone} data-testid="tj-phone" />);
+      const input = screen.getByTestId("tj-phone") as HTMLInputElement;
+      await user.click(input);
+      await user.paste(pasted);
+      expect(input.value).toBe("+992 (93) 123-45-67");
+      unmount();
+    }
+  });
+
+  it("tjPhone by design: typing the country code key by key fills the operator code", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...tjPhone} data-testid="tj-phone" />);
+    const input = screen.getByTestId("tj-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("992931234567");
+    expect(input.value).toBe("+992 (99) 293-12-34");
+  });
+
+  it("tjPhone: select all and type the international number key by key", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...tjPhone} data-testid="tj-phone" />);
+    const input = screen.getByTestId("tj-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("501234567");
+    input.setSelectionRange(0, input.value.length);
+    await nextFrame();
+    await user.keyboard("+992931234567");
+    expect(input.value).toBe("+992 (93) 123-45-67");
   });
 });

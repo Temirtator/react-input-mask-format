@@ -6,11 +6,12 @@ import {
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
   ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
   uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
-  kgPhone, kgInnPerson, kgInnCompany, kgAccount, kgBik, kgPlate, kgPlateCompany, kgPostal, kgPassport
+  kgPhone, kgInnPerson, kgInnCompany, kgAccount, kgBik, kgPlate, kgPlateCompany, kgPostal, kgPassport,
+  byPhone, byPersonalId, byUnp, byIban, byPlate, byPostal, byPassport,
+  tjPhone, tjInn, tjEin, tjAccount, tjBik, tjPlate, tjPlateCompany, tjPostal
 } from "../../src/presets";
 import { toRuPlateChar } from "../../src/utils/ru-plate";
 import { toLatinLookalike } from "../../src/utils/latin-lookalike";
-import { byPhone, byPersonalId, byUnp, byIban, byPlate, byPostal, byPassport } from "../../src/presets";
 import type { MaskPreset } from "../../src/presets";
 
 function format(preset: MaskPreset, raw: string): string {
@@ -214,5 +215,28 @@ describe("Belarus presets format their sample values", () => {
   });
   it("byPostal", () => {
     expect(format(byPostal, "220050")).toBe("220050");
+  });
+});
+
+describe("Tajikistan presets format their sample values", () => {
+  it("tjPhone reads international and national forms", () => {
+    for (const raw of ["+992931234567", "992931234567", "931234567"]) {
+      expect(format(tjPhone, raw)).toBe("+992 (93) 123-45-67");
+    }
+    expect(format(tjPhone, "372123456")).toBe("+992 (37) 212-34-56");
+    expect(format(tjPhone, "001234567")).toBe("+992 (00) 123-45-67");
+  });
+  it("tjInn, tjEin, tjBik and tjPostal", () => {
+    expect(format(tjInn, "030026536")).toBe("030026536");
+    expect(format(tjEin, "0310015466")).toBe("0310015466");
+    expect(format(tjBik, "350101900")).toBe("350101900");
+    expect(format(tjPostal, "734025")).toBe("734025");
+  });
+  it("tjAccount groups 20 digits", () => {
+    expect(format(tjAccount, "22202972700007683505")).toBe("22202 972 7 00007683505");
+  });
+  it("tjPlate and tjPlateCompany convert look-alikes to Latin", () => {
+    expect(format(tjPlate, "1234ав01")).toBe("1234 AB 01");
+    expect(format(tjPlateCompany, "123ab01")).toBe("123 AB 01");
   });
 });

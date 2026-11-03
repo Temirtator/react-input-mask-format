@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate } from "../../src/validators";
 import { digitsOnly, remainder, isIbanChecksumValid, isRealDate } from "../../src/validators/shared";
-import { isValidByPersonalId, isValidByUnp, isValidByIban } from "../../src/validators";
-import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik } from "../../src/validators";
+import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik, isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn } from "../../src/validators";
 
 describe("luhn", () => {
   it("accepts valid card numbers (raw and formatted)", () => {
@@ -389,6 +388,22 @@ describe("isValidByIban", () => {
   it("rejects bad checksum, length, placeholders, country and empty values", () => {
     for (const v of ["BY13NBRB3600900000002Z00AB01", "BY13NBRB3600900000002Z00AB0", "BY13 NBRB 3600 ____ ____ ____ ____", "KZ13NBRB3600900000002Z00AB00", "", null as unknown as string, undefined as unknown as string]) {
       expect(isValidByIban(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidTjInn", () => {
+  it("accepts 9-digit values raw and grouped", () => {
+    for (const v of ["030026536", "020026745", "510004229", "030 026 536"]) {
+      expect(isValidTjInn(v)).toBe(true);
+    }
+  });
+  it("an active company that fails the unofficial checksum stays valid", () => {
+    expect(isValidTjInn("010025590")).toBe(true);
+  });
+  it("rejects wrong length, placeholders and empty values", () => {
+    for (const v of ["02002674", "0200267451", "02002674_", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidTjInn(v)).toBe(false);
     }
   });
 });
