@@ -79,6 +79,25 @@ describe("MaskUtils.processChange", () => {
     expect(result.selection).toEqual({ start: 4, end: 4 });
   });
 
+  it("does not move past an empty slot on Delete", () => {
+    const result = date().processChange(
+      { value: "12/3/____", selection: { start: 4, end: 4 } },
+      { value: "12/3_/____", selection: { start: 4, end: 4, length: 0 } }
+    );
+    expect(result.value).toBe("12/3_/____");
+    expect(result.selection).toEqual({ start: 4, end: 4 });
+  });
+
+  it("does nothing on Delete in front of a fixed tail", () => {
+    const kg = new MaskUtils({ mask: "99 kg", maskPlaceholder: "_" });
+    const result = kg.processChange(
+      { value: "12kg", selection: { start: 2, end: 2 } },
+      { value: "12 kg", selection: { start: 2, end: 2, length: 0 } }
+    );
+    expect(result.value).toBe("12 kg");
+    expect(result.selection).toEqual({ start: 2, end: 2 });
+  });
+
   it("keeps the caret on Delete without a placeholder", () => {
     const utils = new MaskUtils({ mask: "99/99/9999", maskPlaceholder: null });
     const result = utils.processChange(

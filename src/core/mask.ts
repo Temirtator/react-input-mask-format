@@ -372,10 +372,19 @@ export default class MaskUtils {
     if (removedLength) {
       if (removedLength === 1 && !previousSelection.length) {
         const deleteFromRight = previousSelection.start === selection.start;
-        cursorPosition = (deleteFromRight
+        const position = deleteFromRight
           ? this.getRightEditablePosition(selection.start!)
-          : this.getLeftEditablePosition(selection.start!))!;
-        deletedForward = deleteFromRight && maskPlaceholder ? 1 : 0;
+          : this.getLeftEditablePosition(selection.start!);
+        if (position === null) {
+          removedLength = 0;
+          cursorPosition = previousSelection.start!;
+        } else {
+          cursorPosition = position;
+          deletedForward =
+            deleteFromRight && maskPlaceholder && this.isCharacterFillingPosition(previousValue[position], position)
+              ? 1
+              : 0;
+        }
       }
       newValue = this.clearRange(newValue, cursorPosition, removedLength);
     }
@@ -410,6 +419,9 @@ export default class MaskUtils {
     }
 
     newValue = this.formatValue(newValue);
+    if (deletedForward && this.isValueEmpty(newValue)) {
+      cursorPosition = this.getDefaultSelectionForValue(newValue).start!;
+    }
 
     return {
       value: newValue,

@@ -70,3 +70,17 @@ for (const id of ["date", "usemask"]) {
     expect(await caret(input)).toBe(4);
   });
 }
+
+test("Delete on an empty slot keeps the caret there", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("usemask");
+  await input.click();
+  await page.waitForTimeout(50);
+  await input.pressSequentially("123");
+  await input.evaluate((el: HTMLInputElement) => el.setSelectionRange(4, 4));
+  await page.waitForTimeout(50);
+  await input.press("Delete");
+  expect(await caret(input)).toBe(4);
+  await input.pressSequentially("5");
+  await expect(input).toHaveValue("12/35/____");
+});

@@ -48,6 +48,26 @@ describe.each([
     expect(await deleteFrom({}, 3, 2)).toEqual(["12/_|4/5678", "12/__|/5678"]);
   });
 
+  it("stays on an empty slot, so the next key fills it", async () => {
+    const user = userEvent.setup();
+    render(<Field />);
+    const input = screen.getByTestId("field") as HTMLInputElement;
+    await user.click(input);
+    await nextFrame();
+    input.setSelectionRange(0, input.value.length);
+    await nextFrame();
+    await user.keyboard("123");
+    input.setSelectionRange(4, 4);
+    await nextFrame();
+    await user.keyboard("{Delete}5");
+    expect(shown(input)).toBe("12/35/|____");
+  });
+
+  it("goes back to the first slot once everything is deleted", async () => {
+    const steps = await deleteFrom({}, 0, 8);
+    expect(steps[7]).toBe("|__/__/____");
+  });
+
   it("shifts characters left without a placeholder", async () => {
     expect(await deleteFrom({ maskPlaceholder: null }, 0, 2)).toEqual(["|23/45/678", "|34/56/78"]);
   });
