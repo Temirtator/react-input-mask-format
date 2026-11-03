@@ -12,6 +12,8 @@
   `<DateFormat defaultValue="2024-05-12" />` shows `12.05.2024` and is not reported through `onValueChange`.
   `defaultValue` is now typed `string`; a number or array `defaultValue` no longer compiles (it never worked at
   runtime).
+- A form reset brings an uncontrolled `DateFormat`, `TimeFormat` or card field back to its `defaultValue` (or
+  empty), like a plain input. A controlled field keeps showing its `value`.
 
 ## 2.12.0
 
