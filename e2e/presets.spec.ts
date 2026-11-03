@@ -152,3 +152,12 @@ test("kzPhone select all + retype with the country code", async ({ page }) => {
   await input.pressSequentially("77779876543");
   await expect(input).toHaveValue("+7 (777) 987-65-43");
 });
+
+test("vin uppercases, maps O to 0 and Cyrillic to Latin", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("vin");
+  await input.click();
+  await input.pressSequentially("1hgcm8263oa004352");
+  await expect(input).toHaveValue("1HGCM82630A004352");
+  await expect(page.getByTestId("vin-state")).toHaveAttribute("data-value", "1HGCM82630A004352");
+});

@@ -197,9 +197,14 @@ Masks are shown as users see them. PRs adding other countries are welcome.
 | export | mask | example |
 | --- | --- | --- |
 | `card` | `9999 9999 9999 9999` | `4242 4242 4242 4242` |
+| `vin` | 17 characters, no `I`, `O`, `Q` | `WVWZZZ1JZ3W386752` |
 
 `card` is a fixed 16-digit mask. For Amex, 19-digit numbers and brand detection, use
 [`react-input-mask-format/card`](#cards--react-input-mask-formatcard).
+
+`vin` uppercases, turns Cyrillic look-alikes typed on a Russian layout into Latin, and replaces `I` with `1`
+and `O`/`Q` with `0` (VINs never contain those letters). Limitation: VINs issued before 1981 are shorter and
+non-standard, so they do not fit the mask.
 
 ### Kazakhstan
 
@@ -393,6 +398,7 @@ luhn("4242 4242 4242 4242");                           // true
 | function | checks |
 | --- | --- |
 | `luhn` | card number, Luhn |
+| `isValidVin` | format only (17 characters, no `I`, `O`, `Q`); the check digit is not verified because only North American and Chinese VINs are required to carry one, and European and Russian-market VINs would be rejected |
 | `isValidIin`, `isValidBin` | KZ IIN / BIN, mod-11 |
 | `isValidKzIban` | KZ IBAN, ISO 7064 MOD-97 |
 | `isValidRuInn` | RU INN, 10 (company) or 12 (person) digits |

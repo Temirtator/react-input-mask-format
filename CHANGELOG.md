@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `vin` preset in `react-input-mask-format/presets` (17 characters, uppercase, Cyrillic look-alikes become
+  Latin, `I` becomes `1`, `O`/`Q` become `0`) and `isValidVin` validator (format only, no check digit).
+
 ## 2.13.0
 
 ### Added
