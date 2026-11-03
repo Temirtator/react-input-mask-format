@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Delete (forward delete) in `<InputMask>` and `useMask` with a `maskPlaceholder` moves the caret past the slot it
+  cleared, so pressing it again deletes the next character (`|12/34/5678` → `_|2/34/5678` → `__|/34/5678` →
+  `__/_|4/5678`). Before, the caret stayed in front of the cleared slot and every further Delete did nothing.
+  Without a placeholder the following characters still shift left and the caret stays.
+
 ## 2.12.0
 
 ### Added

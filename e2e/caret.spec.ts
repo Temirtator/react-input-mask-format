@@ -51,3 +51,22 @@ test("custom child component gets masked", async ({ page }) => {
   await input.pressSequentially("0102");
   await expect(input).toHaveValue("01/02/____");
 });
+
+for (const id of ["date", "usemask"]) {
+  test(`${id}: Delete walks forward through a full value`, async ({ page }) => {
+    await page.goto("/");
+    const input = page.getByTestId(id);
+    await input.click();
+    await page.waitForTimeout(50);
+    await input.pressSequentially("12345678");
+    await input.evaluate((el: HTMLInputElement) => el.setSelectionRange(0, 0));
+    await page.waitForTimeout(50);
+    await input.press("Delete");
+    await expect(input).toHaveValue("_2/34/5678");
+    expect(await caret(input)).toBe(1);
+    await input.press("Delete");
+    await input.press("Delete");
+    await expect(input).toHaveValue("__/_4/5678");
+    expect(await caret(input)).toBe(4);
+  });
+}
