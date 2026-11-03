@@ -637,7 +637,7 @@ Differences:
 | `showMask` | `alwaysShowMask` |
 | no `showMask`: `+7 (912` | `maskPlaceholder={null}`: `+7 (912) ` |
 | replacement keys as the placeholder: `dd.mm.yyyy` | `maskPlaceholder="dd.mm.yyyy"` |
-| `separate` | not supported |
+| `separate` | the default with a `maskPlaceholder`: a deleted character leaves its slot empty; with `maskPlaceholder={null}` the following characters shift left |
 | `track` | `transform` per character, `beforeMaskedStateChange` for the whole value and selection |
 | `modify` | change `mask` and the other props from your state |
 | `onMask` (v1), `unformat` | `onChange`; `value.replace(/\D/g, "")` for digit masks |
@@ -708,7 +708,8 @@ Differences:
   `value.replace(/\D/g, "")` keeps the digits of fixed parts (the `7` of `+7`).
 - `9`, `a` and `*` are always slots unless escaped (`"+\\9\\98"`). `formatChars` replaces them: spread
   `defaultFormatChars` to use them next to your own tokens.
-- No `separate`: deleting a character in the middle shifts the following ones left (`12/34/5678`, Backspace
-  after the `3` → `12/45/678_`).
+- Deleting in the middle keeps positions while a `maskPlaceholder` is set (`12/34/5678`, Backspace after the
+  `3` → `12/_4/5678`), like `separate`. With `maskPlaceholder={null}` the following characters shift left
+  (`12/45/678`); there is no option to shift while a placeholder is shown.
 - `beforeMaskedStateChange` receives the previous, current and next `{ value, selection }` instead of
   `inputType` and `data`.
