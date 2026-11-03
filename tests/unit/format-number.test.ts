@@ -41,6 +41,15 @@ describe("formatNumber", () => {
     expect(formatNumber("12/5", { ...ru, allowedDecimalSeparators: ["/"] })).toBe("12,5");
   });
 
+  it("does not read a dot of the suffix or prefix as the decimal separator", () => {
+    const rub = { thousandSeparator: " ", decimalSeparator: ",", suffix: " руб." };
+    expect(formatNumber("12 руб.3", rub)).toBe("123 руб.");
+    expect(formatNumber("12 руб.3", { ...rub, decimalScale: 0 })).toBe("123 руб.");
+    expect(formatNumber("12,5 руб.", rub)).toBe("12,5 руб.");
+    expect(formatNumber("12.5 руб.", rub)).toBe("12,5 руб.");
+    expect(formatNumber("5р. 12", { decimalSeparator: ",", prefix: "р. " })).toBe("р. 512");
+  });
+
   it("pads with fixedDecimalScale", () => {
     expect(formatNumber("5", { decimalScale: 2, fixedDecimalScale: true })).toBe("5.00");
     expect(formatNumber("1234.5", { thousandSeparator: ",", decimalScale: 2, fixedDecimalScale: true })).toBe("1,234.50");

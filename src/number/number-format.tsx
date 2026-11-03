@@ -1,7 +1,7 @@
 import React, { forwardRef, useLayoutEffect, useReducer, useRef } from "react";
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
-import { formatNumber } from "./format-number";
-import { parseNumber, digitsBeforeCaret, resolveCaret } from "./parse-number";
+import { formatNumber, formatCanonical } from "./format-number";
+import { parseNumber, digitsBeforeCaret, resolveCaret, readTyped } from "./parse-number";
 import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
 
@@ -9,6 +9,7 @@ export interface NumberFormatProps
   extends NumberFormatOptions,
     Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "prefix"> {
   value?: string | number;
+  valueIsNumericString?: boolean;
   onValueChange?: (values: NumberFormatValues) => void;
   isAllowed?: (values: NumberFormatValues) => boolean;
 }
@@ -19,6 +20,7 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
 ) {
   const {
     value = "",
+    valueIsNumericString,
     onValueChange,
     isAllowed,
     thousandSeparator,
@@ -71,27 +73,41 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
   // in-progress formatted string — otherwise a trailing decimal separator or
   // trailing zeros the user is mid-typing get destroyed by the lossy number
   // round-trip (e.g. "12." -> 12 -> "12", eating the ".").
+  const numeric = typeof value === "number" || !!valueIsNumericString;
   const propFloatValue =
     typeof value === "number"
       ? value
-      : parseNumber(String(value ?? ""), options).floatValue;
+      : numeric
+        ? value === "" ? undefined : parseFloat(value)
+        : parseNumber(String(value ?? ""), options).floatValue;
   const optionsKey = JSON.stringify(options);
   if (optionsKeyRef.current !== optionsKey) {
     optionsKeyRef.current = optionsKey;
-    lastValuesRef.current = null;
+    const previous = lastValuesRef.current;
+    if (previous) {
+      lastValuesRef.current = { ...previous, formattedValue: formatCanonical(previous.value, options) };
+    }
   }
   const last = lastValuesRef.current;
   const formatted =
     last !== null && (propFloatValue === last.floatValue || value === last.value)
       ? last.formattedValue
-      : formatNumber(value ?? "", options);
+      : typeof value === "string" && numeric
+        ? formatCanonical(value, options)
+        : formatNumber(value ?? "", options);
   lastFormattedRef.current = formatted;
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const el = event.target;
-    const caret = el.selectionStart ?? el.value.length;
-    const digits = digitsBeforeCaret(el.value, caret);
-    const values = parseNumber(el.value, options);
+    const inputType = (event.nativeEvent as InputEvent).inputType;
+    const typed = readTyped(
+      el.value,
+      el.selectionStart ?? el.value.length,
+      options,
+      inputType ? inputType.startsWith("insert") : el.value.length > lastFormattedRef.current.length
+    );
+    const digits = digitsBeforeCaret(typed.raw, typed.caret);
+    const values = parseNumber(typed.raw, options);
 
     if (isAllowed && !isAllowed(values)) {
       // Revert: restore the previous formatted value AND put the caret back where
@@ -107,7 +123,7 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
       return;
     }
 
-    caretRef.current = resolveCaret(values, digits, options, el.value.slice(0, caret));
+    caretRef.current = resolveCaret(values, digits, options, typed.separator);
     lastValuesRef.current = values;
     forceUpdate();
     onValueChange?.(values);

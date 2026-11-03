@@ -7,21 +7,28 @@
   also read as the decimal separator, as in react-number-format. The default `["."]` means a `.` typed or pasted
   into a `decimalSeparator=","` field becomes `,` (`12.5` → `12,5`; before, it was dropped and gave `125`). It is
   ignored when it equals `thousandSeparator`, when the text already has the decimal separator, and when it occurs
-  more than once (`1.234.567` stays `1 234 567`). A string `value` such as `"12.5"` is read the same way.
+  more than once (`1.234.567` stays `1 234 567`). A string `value` such as `"12.5"` is read the same way. The
+  `prefix` and `suffix` are removed before, also when the user typed outside them, so the dot of ` руб.` never
+  becomes the separator (a digit typed after the suffix joins the number: `123 руб.`).
+- `valueIsNumericString` on `NumberFormat`: a string `value` is read as a canonical number (`"1234.5"`) whatever
+  `thousandSeparator` and `decimalSeparator` are, as in react-number-format.
 
 ### Fixed
-- `NumberFormat` and `useNumberFormat` with `fixedDecimalScale`: typing the decimal separator in front of the
-  padded fraction now moves the caret past it, so `1234.5` gives `1,234.50`. Before, the caret stayed in front of
-  `.00` and the next digits went into the integer part (`12,345.00`). A separator typed into the integer part
-  also puts the caret after it.
+- `NumberFormat` and `useNumberFormat`: a typed decimal separator puts the caret right after the separator in the
+  result, so with `fixedDecimalScale` `1234.5` gives `1,234.50` (before: `12,345.00`, the caret stayed in front
+  of `.00`), `.5` in an empty field gives `0.5` (before: `50.`), and a separator typed into the integer part or
+  in front of an existing one moves the caret into the fraction. Deleting never steps over the separator, so
+  holding Backspace from the end of `1,234.00` walks into the integer part.
 - `NumberFormat` with a `decimalSeparator` other than `.`: passing the `value` from `onValueChange` back as the
   `value` prop no longer re-reads its `.` as a thousands mark (`12,5` stayed, but with `fixedDecimalScale` typing
   `12` showed `1 200,00`).
 - `NumberFormat` re-formats when its options change. Before, a controlled field kept showing the text formatted
-  with the old options (a `prefix` switched from `$ ` to `€ ` still showed `$ 12`).
+  with the old options (a `prefix` switched from `$ ` to `€ ` still showed `$ 12`). The text being edited is
+  kept, also when an option changes in the same render as the edit (a suffix that depends on the value).
 - `NumberFormat`, `useNumberFormat` and `formatNumber` with `decimalScale: 0` ignore the decimal separator.
   Before, a typed or pasted `.` stayed at the end (`12.`) and the next digits went nowhere until it was
-  deleted; now `12.` shows `12` and `1,234.56` becomes `1,234`.
+  deleted; now `12.` shows `12`, a pasted `1,234.56` becomes `1,234`, and a `.` typed in the middle of
+  `1,234` changes nothing.
 
 ## 2.12.0
 

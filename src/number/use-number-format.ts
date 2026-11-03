@@ -2,7 +2,7 @@ import { useRef, useCallback } from "react";
 import type React from "react";
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
 import { formatNumber } from "./format-number";
-import { parseNumber, digitsBeforeCaret, resolveCaret } from "./parse-number";
+import { parseNumber, digitsBeforeCaret, resolveCaret, readTyped } from "./parse-number";
 import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
@@ -27,15 +27,22 @@ export function useNumberFormat(
 
   return useCallback((el: HTMLInputElement | null) => {
     if (el) {
-      const handler = (): void => {
+      let shown = el.value;
+      const handler = (event: Event): void => {
         const opts = optionsRef.current;
-        const caret = el.selectionStart ?? el.value.length;
-        const digits = digitsBeforeCaret(el.value, caret);
-        const values = parseNumber(el.value, opts);
-        const typedBefore = el.value.slice(0, caret);
+        const inputType = (event as InputEvent).inputType;
+        const typed = readTyped(
+          el.value,
+          el.selectionStart ?? el.value.length,
+          opts,
+          inputType ? inputType.startsWith("insert") : el.value.length > shown.length
+        );
+        const digits = digitsBeforeCaret(typed.raw, typed.caret);
+        const values = parseNumber(typed.raw, opts);
         setNativeValue(el, values.formattedValue);
+        shown = values.formattedValue;
         if (isInputFocused(el)) {
-          const next = resolveCaret(values, digits, opts, typedBefore);
+          const next = resolveCaret(values, digits, opts, typed.separator);
           setInputSelection(el, next, next);
         }
         // JSDOM-ONLY: resync @testing-library/user-event v14's shadow-value cache.
@@ -51,7 +58,7 @@ export function useNumberFormat(
             if (el.value !== values.formattedValue) return;
             el.value = values.formattedValue;
             if (isInputFocused(el)) {
-              const c = resolveCaret(values, digits, opts, typedBefore);
+              const c = resolveCaret(values, digits, opts, typed.separator);
               setInputSelection(el, c, c);
             }
           });
@@ -64,6 +71,7 @@ export function useNumberFormat(
       // format any initial (defaultValue) content
       if (el.value) {
         setNativeValue(el, formatNumber(el.value, optionsRef.current));
+        shown = el.value;
       }
     } else {
       if (inputRef.current && handlerRef.current) {

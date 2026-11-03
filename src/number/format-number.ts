@@ -45,10 +45,16 @@ function extract(raw: string, decimal: string, options: NumberFormatOptions): Nu
 export function tokenize(rawInput: string, options: NumberFormatOptions): NumberParts {
   const { decimal } = resolveSeparators(options);
   let s = rawInput;
-  if (options.prefix && s.startsWith(options.prefix)) s = s.slice(options.prefix.length);
-  if (options.suffix && s.endsWith(options.suffix)) s = s.slice(0, s.length - options.suffix.length);
+  const at = options.prefix ? s.indexOf(options.prefix) : -1;
+  if (at !== -1) s = s.slice(0, at) + s.slice(at + options.prefix!.length);
+  const end = options.suffix ? s.lastIndexOf(options.suffix) : -1;
+  if (end !== -1) s = s.slice(0, end) + s.slice(end + options.suffix!.length);
   const sep = decimalSeparators(options).find(c => (c === decimal ? s.includes(c) : s.split(c).length === 2));
   return extract(s, sep ?? decimal, options);
+}
+
+export function formatCanonical(value: string, options: NumberFormatOptions): string {
+  return buildFormatted(extract(value, ".", options), options);
 }
 
 // Tokenize a canonical numeric string (from a JS number): always "." decimal, no affixes.
