@@ -427,7 +427,7 @@ luhn("4242 4242 4242 4242");                           // true
 | --- | --- |
 | `luhn` | card number, Luhn |
 | `isValidVin` | format only (17 characters, no `I`, `O`, `Q`), no check digit |
-| `isValidIban(value, country?)` | any IBAN: ISO 13616 structure and MOD-97; with `country` the code must match; the length per country is not checked |
+| `isValidIban(value, country?)` | any IBAN: ISO 13616 structure (check digits 02–98) and MOD-97; with `country` the code must match; the length per country is not checked |
 | `isValidIin`, `isValidBin` | KZ IIN / BIN, mod-11 |
 | `isValidKzIban` | KZ IBAN, ISO 7064 MOD-97 |
 | `isValidRuInn` | RU INN, 10 (company) or 12 (person) digits |
