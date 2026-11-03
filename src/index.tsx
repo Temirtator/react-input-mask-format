@@ -84,6 +84,8 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
       defer(() => {
         setInputState(getLastInputState());
       });
+    } else if (isMasked && currentState.value !== getLastInputState().value) {
+      setInputState(currentState);
     }
 
     if (props.onFocus) {
@@ -223,7 +225,9 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
       }
     },
     value: isMasked && isControlled ? renderValue : props.value,
-    defaultValue: isMasked && !isControlled && initialValue ? formatDefaultValue(config, initialValue) : props.defaultValue
+    ...(isMasked && !isControlled && (initialValue || alwaysShowMask)
+      ? { defaultValue: formatDefaultValue(config, initialValue) }
+      : {})
   };
 
   if (children) {

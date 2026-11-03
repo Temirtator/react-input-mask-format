@@ -79,6 +79,17 @@ export function createMaskController(config: MaskConfig): MaskController {
           tracker.set(tracker.getLast());
         }
       });
+    } else {
+      lastValue = input!.value;
+    }
+  }
+
+  function watchForm(): void {
+    const next = input && input.form;
+    if (next !== form) {
+      form?.removeEventListener("reset", handleReset);
+      form = next;
+      form?.addEventListener("reset", handleReset);
     }
   }
 
@@ -121,8 +132,7 @@ export function createMaskController(config: MaskConfig): MaskController {
   function bind(el: HTMLInputElement): void {
     input = el;
     lastValue = el.value;
-    form = el.form;
-    form?.addEventListener("reset", handleReset);
+    watchForm();
     format();
     el.addEventListener("input", handleInput);
     el.addEventListener("focusin", handleFocus);
@@ -141,14 +151,14 @@ export function createMaskController(config: MaskConfig): MaskController {
       input.removeEventListener("blur", handleBlur);
       input.removeEventListener("mousedown", handleMouseDown);
     }
-    form?.removeEventListener("reset", handleReset);
-    form = null;
     input = null;
+    watchForm();
   }
 
   function update(nextConfig: MaskConfig): void {
     const wasMasked = isMasked();
     config = nextConfig;
+    watchForm();
     if (input && isMasked()) {
       const nextState = decideUpdate(config, getInputState(), isInputFocused(input), wasMasked);
       if (nextState.value !== input.value || !wasMasked) {
