@@ -510,7 +510,7 @@ command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `
 
 `InputMask` is controlled, so use `Controller` and spread `field` onto it. `field.ref` reaches the input,
 so focus-on-error and `setFocus` work. A mask with a placeholder keeps `_` in an incomplete value, which
-makes a one-line `validate` enough; for documents add the checksum validator.
+makes a one-line `validate` enough (add `required` for the empty value); for documents add the checksum validator.
 
 ```tsx
 import { useForm, Controller } from "react-hook-form";
@@ -527,7 +527,10 @@ function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
       <Controller
         name="phone"
         control={control}
-        rules={{ validate: (v) => !v.includes("_") || "Enter the full number" }}
+        rules={{
+          required: "Enter a phone",
+          validate: (v) => !v.includes("_") || "Enter the full number",
+        }}
         render={({ field, fieldState }) => (
           <>
             <InputMask {...kzPhone} {...field} />
@@ -567,6 +570,7 @@ import { kzPhone } from "react-input-mask-format/presets";
 function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
   const { register, handleSubmit, formState } = useForm<{ phone: string }>();
   const { ref, ...rest } = register("phone", {
+    required: "Enter a phone",
     validate: (v) => !v.includes("_") || "Enter the full number",
   });
   const maskRef = useMask(kzPhone);
@@ -589,7 +593,7 @@ function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
 ### react-hook-form: number, date and card components
 
 Pass the value, store what you need from `onValueChange`, and give `ref={field.ref}` so `setFocus` and
-focus-on-error reach the input.
+focus-on-error reach the input. `onBlur={field.onBlur}` is what makes `mode: "onBlur"` validate.
 
 ```tsx
 import { useForm, Controller } from "react-hook-form";
@@ -598,43 +602,56 @@ import { DateFormat } from "react-input-mask-format/date";
 
 type FormValues = { amount: string; born: string };
 
-const { control, handleSubmit, setFocus } = useForm<FormValues>({ defaultValues: { amount: "", born: "" } });
-
-<Controller
-  name="amount"
-  control={control}
-  render={({ field }) => (
-    <NumberFormat
-      name={field.name}
-      ref={field.ref}
-      value={field.value}
-      onValueChange={(v) => field.onChange(v.value)}
-      onBlur={field.onBlur}
-      thousandSeparator=","
-      decimalScale={2}
-    />
-  )}
-/>
-<Controller
-  name="born"
-  control={control}
-  rules={{ required: "Enter a date" }}
-  render={({ field }) => (
-    <DateFormat
-      name={field.name}
-      ref={field.ref}
-      value={field.value}
-      onValueChange={(v) => field.onChange(v.value)}
-      onBlur={field.onBlur}
-    />
-  )}
-/>
+function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
+  const { control, handleSubmit } = useForm<FormValues>({
+    mode: "onBlur",
+    defaultValues: { amount: "", born: "" },
+  });
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="amount"
+        control={control}
+        render={({ field }) => (
+          <NumberFormat
+            name={field.name}
+            ref={field.ref}
+            value={field.value}
+            onValueChange={(v) => field.onChange(v.value)}
+            onBlur={field.onBlur}
+            thousandSeparator=","
+            decimalScale={2}
+          />
+        )}
+      />
+      <Controller
+        name="born"
+        control={control}
+        rules={{ required: "Enter a date" }}
+        render={({ field, fieldState }) => (
+          <>
+            <DateFormat
+              name={field.name}
+              ref={field.ref}
+              value={field.value}
+              onValueChange={(v) => field.onChange(v.value)}
+              onBlur={field.onBlur}
+            />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
 ```
 
 Typing `1234.5` and `12052024` submits `{ amount: "1234.5", born: "2024-05-12" }`: the unformatted number and
-the ISO date. `born` stays `""` until the date is complete and exists, so `required` rejects a partial date.
-`CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` work the same way. For `CardNumberFormat`, `v.value`
-is the digits without spaces.
+the ISO date. `born` stays `""` until the date is complete and exists, so `required` rejects a partial date,
+on blur and on submit. `CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` take the same props; wire
+them the same way (`CardNumberFormat` gives the digits without spaces in `v.value`, `CardExpiryFormat`
+gives `"05/30"`).
 
 ### MUI `TextField`
 
@@ -642,22 +659,28 @@ Wrap the `TextField` in `InputMask`. The mask finds the `<input>` inside it. MUI
 floating label moves up and does not overlap the mask or the typed text.
 
 ```tsx
+import { useState } from "react";
 import InputMask from "react-input-mask-format";
 import { kzPhone } from "react-input-mask-format/presets";
 import TextField from "@mui/material/TextField";
 
-const [phone, setPhone] = useState("");
-
-<InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
-  <TextField label="Phone" />
-</InputMask>
+function PhoneField() {
+  const [phone, setPhone] = useState("");
+  return (
+    <InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+      <TextField label="Phone" />
+    </InputMask>
+  );
+}
 ```
 
-Checked with `@mui/material` 9.5.
+Checked with MUI 9. To reach the `<input>` props in MUI 9 use `slotProps.htmlInput`; MUI 5 and 6 use
+`inputProps`.
 
 ### Ant Design `Input`
 
-antd's `Input` ref is an `InputRef`, not the element, so forward `.input` to `InputMask`:
+antd's `Input` ref is an `InputRef`, not the element, so a plain `<Input>` as an `InputMask` child throws.
+Forward `.input` through a small wrapper:
 
 ```tsx
 import React, { useState } from "react";
@@ -672,15 +695,18 @@ const AntInput = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => 
   return <Input {...props} ref={inner} />;
 });
 
-const [phone, setPhone] = useState("");
-
-<InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
-  <AntInput />
-</InputMask>
+function PhoneField() {
+  const [phone, setPhone] = useState("");
+  return (
+    <InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+      <AntInput />
+    </InputMask>
+  );
+}
 ```
 
-Checked with `antd` 6.6. `useMask` on antd's `Input` (`ref={(r) => maskRef(r?.input ?? null)}`) drops the
-first typed character, because antd keeps its own controlled value; use the wrapper above.
+Checked with Ant Design 6. `useMask` on antd's `Input` currently loses the first typed character, a known
+issue in this library; use the wrapper above.
 
 ### Other kits
 

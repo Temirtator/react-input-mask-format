@@ -8,7 +8,7 @@ import { kzPhone, kzIin } from "../../src/presets";
 import { isValidIin } from "../../src/validators";
 import { NumberFormat } from "../../src/number";
 import { DateFormat } from "../../src/date";
-import { CardNumberFormat } from "../../src/card";
+import { CardNumberFormat, CardExpiryFormat } from "../../src/card";
 
 type PhoneForm = { phone: string; iin: string };
 
@@ -19,7 +19,10 @@ function ControlledForm({ onSubmit }: { onSubmit: (data: PhoneForm) => void }) {
       <Controller
         name="phone"
         control={control}
-        rules={{ validate: (v) => !v.includes("_") || "Enter the full number" }}
+        rules={{
+          required: "Enter a phone",
+          validate: (v) => !v.includes("_") || "Enter the full number",
+        }}
         render={({ field, fieldState }) => (
           <>
             <InputMask {...kzPhone} {...field} data-testid="phone" />
@@ -71,9 +74,21 @@ describe("recipe: react-hook-form + InputMask via Controller", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it("requires the phone when it is empty", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<ControlledForm onSubmit={onSubmit} />);
+    await user.click(screen.getByText("Send"));
+    const alerts = await screen.findAllByRole("alert");
+    expect(alerts[0]).toHaveTextContent("Enter a phone");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("clears the error after the value is fixed", async () => {
     const user = userEvent.setup();
     render(<ControlledForm onSubmit={vi.fn()} />);
+    await user.click(screen.getByTestId("phone"));
+    await user.keyboard("012345678");
     await user.click(screen.getByTestId("iin"));
     await user.keyboard("901010123450");
     await user.click(screen.getByText("Send"));
@@ -87,6 +102,7 @@ describe("recipe: react-hook-form + InputMask via Controller", () => {
 function RegisterForm({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
   const { register, handleSubmit, formState } = useForm<{ phone: string }>();
   const { ref, ...rest } = register("phone", {
+    required: "Enter a phone",
     validate: (v) => !v.includes("_") || "Enter the full number",
   });
   const maskRef = useMask(kzPhone);
@@ -136,11 +152,12 @@ describe("recipe: react-hook-form + useMask via register", () => {
   });
 });
 
-type Mixed = { amount: string; born: string; card: string };
+type Mixed = { amount: string; born: string; card: string; expiry: string };
 
 function ComponentsForm({ onSubmit }: { onSubmit: (data: Mixed) => void }) {
   const { control, handleSubmit, setFocus } = useForm<Mixed>({
-    defaultValues: { amount: "", born: "", card: "" },
+    mode: "onBlur",
+    defaultValues: { amount: "", born: "", card: "", expiry: "" },
   });
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -192,6 +209,20 @@ function ComponentsForm({ onSubmit }: { onSubmit: (data: Mixed) => void }) {
           />
         )}
       />
+      <Controller
+        name="expiry"
+        control={control}
+        render={({ field }) => (
+          <CardExpiryFormat
+            name={field.name}
+            ref={field.ref}
+            value={field.value}
+            onValueChange={(v) => field.onChange(v.value)}
+            onBlur={field.onBlur}
+            data-testid="expiry"
+          />
+        )}
+      />
       <button type="button" onClick={() => setFocus("born")}>
         Focus date
       </button>
@@ -211,6 +242,9 @@ describe("recipe: react-hook-form + number, date and card components", () => {
     await user.keyboard("12052024");
     await user.click(screen.getByTestId("card"));
     await user.keyboard("4242424242424242");
+    await user.click(screen.getByTestId("expiry"));
+    await user.keyboard("0530");
+    expect(screen.getByTestId("expiry")).toHaveValue("05/30");
     expect(screen.getByTestId("amount")).toHaveValue("1,234.5");
     expect(screen.getByTestId("born")).toHaveValue("12.05.2024");
     expect(screen.getByTestId("card")).toHaveValue("4242 4242 4242 4242");
@@ -220,6 +254,7 @@ describe("recipe: react-hook-form + number, date and card components", () => {
       amount: "1234.5",
       born: "2024-05-12",
       card: "4242424242424242",
+      expiry: "05/30",
     });
   });
 
@@ -232,5 +267,26 @@ describe("recipe: react-hook-form + number, date and card components", () => {
     await user.click(screen.getByTestId("amount"));
     await user.click(screen.getByText("Focus date"));
     expect(screen.getByTestId("born")).toHaveFocus();
+  });
+
+  it("rejects a partial date on submit", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<ComponentsForm onSubmit={onSubmit} />);
+    await user.click(screen.getByTestId("born"));
+    await user.keyboard("1205");
+    await user.click(screen.getByText("Send"));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Enter a date");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("validates on blur through field.onBlur", async () => {
+    const user = userEvent.setup();
+    render(<ComponentsForm onSubmit={vi.fn()} />);
+    await user.click(screen.getByTestId("born"));
+    await user.keyboard("12");
+    expect(screen.queryByRole("alert")).toBeNull();
+    await user.tab();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Enter a date");
   });
 });
