@@ -504,6 +504,25 @@ postal codes are often autofilled; one-time codes are not.
 `cy.get("input").focus().type("12345")` can produce `23/45/____`, because `focus()` is not an action
 command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `.wait(50)` after `.focus()`.
 
+### Playwright
+
+`locator.fill()` on an unfocused field that already has text can insert at the caret instead of replacing the
+value in Chromium (`12/3_/____` filled with `87654321` gives `12/38/7654`): the field puts its caret on focus one
+frame later. Click the field and wait a frame first: `await input.click(); await page.waitForTimeout(50);`.
+
+### Testing Library
+
+The mask reads the caret once per animation frame. After moving it from a test with `setSelectionRange`, wait a
+frame before the next key, or the edit is read as a replacement of the whole value:
+
+```ts
+input.setSelectionRange(4, 4);
+await new Promise((resolve) => requestAnimationFrame(resolve));
+await user.keyboard("{Backspace}");
+```
+
+Typing with `user.click()` and `user.keyboard()` alone needs no waits.
+
 ## Migration
 
 ### Migrating from react-input-mask
