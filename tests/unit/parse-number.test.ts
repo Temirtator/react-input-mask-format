@@ -65,4 +65,18 @@ describe("resolveCaret", () => {
     const values = parseNumber("1,234.5", opts);
     expect(resolveCaret(values, 4, opts)).toBe(5); // still editing the integer part
   });
+  it("steps past the separator the user just typed in front of a fixed fraction", () => {
+    const opts = { thousandSeparator: "," as const, decimalScale: 2, fixedDecimalScale: true };
+    expect(resolveCaret(parseNumber("1,234..00", opts), 4, opts, "1,234.")).toBe(6);
+    const comma = { thousandSeparator: " ", decimalSeparator: ",", decimalScale: 2, fixedDecimalScale: true };
+    expect(resolveCaret(parseNumber("1 234,,00", comma), 4, comma, "1 234,")).toBe(6);
+  });
+  it("steps past a separator typed into the integer part", () => {
+    const opts = { decimalSeparator: "," };
+    expect(resolveCaret(parseNumber("12,34", opts), 2, opts, "12,")).toBe(3);
+  });
+  it("keeps the caret in front of the separator when a digit was typed", () => {
+    const opts = { thousandSeparator: "," as const, decimalScale: 2, fixedDecimalScale: true };
+    expect(resolveCaret(parseNumber("1,2345.00", opts), 5, opts, "1,2345")).toBe(6);
+  });
 });

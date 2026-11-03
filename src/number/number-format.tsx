@@ -49,6 +49,7 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
   const caretRef = useRef<number | null>(null);
   const lastFormattedRef = useRef<string>("");
   const lastValuesRef = useRef<NumberFormatValues | null>(null);
+  const optionsKeyRef = useRef("");
 
   // A controlled parent may call onValueChange with a floatValue that is
   // Object.is-equal to its current state (e.g. typing "12." after "12" still
@@ -72,9 +73,15 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
     typeof value === "number"
       ? value
       : parseNumber(String(value ?? ""), options).floatValue;
+  const optionsKey = JSON.stringify(options);
+  if (optionsKeyRef.current !== optionsKey) {
+    optionsKeyRef.current = optionsKey;
+    lastValuesRef.current = null;
+  }
+  const last = lastValuesRef.current;
   const formatted =
-    lastValuesRef.current !== null && propFloatValue === lastValuesRef.current.floatValue
-      ? lastValuesRef.current.formattedValue
+    last !== null && (propFloatValue === last.floatValue || value === last.value)
+      ? last.formattedValue
       : formatNumber(value ?? "", options);
   lastFormattedRef.current = formatted;
 
@@ -98,7 +105,7 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
       return;
     }
 
-    caretRef.current = resolveCaret(values, digits, options);
+    caretRef.current = resolveCaret(values, digits, options, el.value.slice(0, caret));
     lastValuesRef.current = values;
     forceUpdate();
     onValueChange?.(values);

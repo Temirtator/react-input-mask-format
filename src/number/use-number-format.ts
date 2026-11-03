@@ -32,9 +32,10 @@ export function useNumberFormat(
         const caret = el.selectionStart ?? el.value.length;
         const digits = digitsBeforeCaret(el.value, caret);
         const values = parseNumber(el.value, opts);
+        const typedBefore = el.value.slice(0, caret);
         setNativeValue(el, values.formattedValue);
         if (isInputFocused(el)) {
-          const next = resolveCaret(values, digits, opts);
+          const next = resolveCaret(values, digits, opts, typedBefore);
           setInputSelection(el, next, next);
         }
         // JSDOM-ONLY: resync @testing-library/user-event v14's shadow-value cache.
@@ -50,7 +51,7 @@ export function useNumberFormat(
             if (el.value !== values.formattedValue) return;
             el.value = values.formattedValue;
             if (isInputFocused(el)) {
-              const c = resolveCaret(values, digits, opts);
+              const c = resolveCaret(values, digits, opts, typedBefore);
               setInputSelection(el, c, c);
             }
           });

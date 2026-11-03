@@ -52,18 +52,21 @@ export function caretAfterReformat(nextFormatted: string, digitsBefore: number):
 export function resolveCaret(
   values: NumberFormatValues,
   digitsBefore: number,
-  options: NumberFormatOptions
+  options: NumberFormatOptions,
+  typedBefore = ""
 ): number {
   const caret = caretAfterReformat(values.formattedValue, digitsBefore);
+  const { decimal } = resolveSeparators(options);
   // caretAfterReformat is digit-anchored and can't see a just-typed trailing
   // decimal separator with no fraction digit yet (e.g. "1,234." right after
   // the "." is typed) — it lands the caret BEFORE that separator. Step past it
   // so the next keystroke goes into the fraction rather than ahead of the ".".
-  if (values.value.endsWith(".")) {
-    const { decimal } = resolveSeparators(options);
-    if (decimal && values.formattedValue.slice(caret, caret + decimal.length) === decimal) {
-      return caret + decimal.length;
-    }
+  if (
+    decimal &&
+    (values.value.endsWith(".") || typedBefore.endsWith(decimal)) &&
+    values.formattedValue.slice(caret, caret + decimal.length) === decimal
+  ) {
+    return caret + decimal.length;
   }
   return caret;
 }

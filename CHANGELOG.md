@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- `NumberFormat` and `useNumberFormat` with `fixedDecimalScale`: typing the decimal separator in front of the
+  padded fraction now moves the caret past it, so `1234.5` gives `1,234.50`. Before, the caret stayed in front of
+  `.00` and the next digits went into the integer part (`12,345.00`). A separator typed into the integer part
+  also puts the caret after it.
+- `NumberFormat` with a `decimalSeparator` other than `.`: passing the `value` from `onValueChange` back as the
+  `value` prop no longer re-reads its `.` as a thousands mark (`12,5` stayed, but with `fixedDecimalScale` typing
+  `12` showed `1 200,00`).
+- `NumberFormat` re-formats when its options change. Before, a controlled field kept showing the text formatted
+  with the old options (a `prefix` switched from `$ ` to `€ ` still showed `$ 12`).
+
 ## 2.12.0
 
 ### Added
