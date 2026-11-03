@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate } from "../../src/validators";
 import { digitsOnly, remainder, isIbanChecksumValid, isRealDate } from "../../src/validators/shared";
-import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik, isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn } from "../../src/validators";
+import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik, isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn, isValidAmPsn, isValidAmTin, isValidAmAccount } from "../../src/validators";
 
 describe("luhn", () => {
   it("accepts valid card numbers (raw and formatted)", () => {
@@ -404,6 +404,66 @@ describe("isValidTjInn", () => {
   it("rejects wrong length, placeholders and empty values", () => {
     for (const v of ["02002674", "0200267451", "02002674_", "", null as unknown as string, undefined as unknown as string]) {
       expect(isValidTjInn(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAmPsn", () => {
+  it("accepts every month-code group and both day-code ranges", () => {
+    for (const v of ["3014750025", "5121050017", "1101000011", "8134991234", "1106000010", "1126000010"]) {
+      expect(isValidAmPsn(v)).toBe(true);
+    }
+  });
+  it("rejects day code 45", () => {
+    expect(isValidAmPsn("4512901234")).toBe(false);
+  });
+  it("rejects day code 10", () => {
+    expect(isValidAmPsn("1001000010")).toBe(false);
+  });
+  it("rejects month code 13", () => {
+    expect(isValidAmPsn("2513901234")).toBe(false);
+  });
+  it("rejects month code 33", () => {
+    expect(isValidAmPsn("1133000010")).toBe(false);
+  });
+  it("rejects month code 15", () => {
+    expect(isValidAmPsn("1115000010")).toBe(false);
+  });
+  it("rejects serial 000", () => {
+    expect(isValidAmPsn("2512900004")).toBe(false);
+  });
+  it("rejects wrong length, placeholders and empty values", () => {
+    for (const v of ["301475002", "301475002_", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidAmPsn(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAmTin", () => {
+  it("accepts 8-digit values", () => {
+    for (const v of ["02502212", "02500518", "00024873"]) {
+      expect(isValidAmTin(v)).toBe(true);
+    }
+  });
+  it("a 2025-series TIN that breaks the unofficial checksum stays valid", () => {
+    expect(isValidAmTin("20000388")).toBe(true);
+  });
+  it("rejects wrong length, letters, placeholders and empty values", () => {
+    for (const v of ["0250221", "0250221A", "025022121", "0250221_", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidAmTin(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAmAccount", () => {
+  it("accepts 11 to 16 digits, with trailing placeholders and spaces", () => {
+    for (const v of ["1150013314754778", "115000814802004", "11500814802", "11500814802_____", "11500 814802"]) {
+      expect(isValidAmAccount(v)).toBe(true);
+    }
+  });
+  it("rejects wrong length, letters-only and empty values", () => {
+    for (const v of ["1150081480", "11500133147547781", "11500ABC", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidAmAccount(v)).toBe(false);
     }
   });
 });

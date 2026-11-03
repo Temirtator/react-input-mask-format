@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask, { useMask } from "../../src/index";
-import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone, byPhone, byPersonalId, byIban, byPlate, tjPhone } from "../../src/presets";
+import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone, byPhone, byPersonalId, byIban, byPlate, tjPhone, amPhone } from "../../src/presets";
 import type { MaskPreset } from "../../src/presets";
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -575,5 +575,55 @@ describe("Tajikistan presets on InputMask", () => {
     await nextFrame();
     await user.keyboard("+992931234567");
     expect(input.value).toBe("+992 (93) 123-45-67");
+  });
+});
+
+describe("Armenia presets on InputMask", () => {
+  it("amPhone: typing and pasting a national number", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<InputMask {...amPhone} data-testid="am-phone" />);
+    const typed = screen.getByTestId("am-phone") as HTMLInputElement;
+    await user.click(typed);
+    await user.keyboard("077123456");
+    expect(typed.value).toBe("+374 (77) 12-34-56");
+    unmount();
+    render(<InputMask {...amPhone} data-testid="am-phone" />);
+    const pasted = screen.getByTestId("am-phone") as HTMLInputElement;
+    await user.click(pasted);
+    await user.paste("077123456");
+    expect(pasted.value).toBe("+374 (77) 12-34-56");
+  });
+
+  it("amPhone: pasting international forms", async () => {
+    const user = userEvent.setup();
+    for (const pasted of ["+374 77 123456", "37477123456"]) {
+      const { unmount } = render(<InputMask {...amPhone} data-testid="am-phone" />);
+      const input = screen.getByTestId("am-phone") as HTMLInputElement;
+      await user.click(input);
+      await user.paste(pasted);
+      expect(input.value).toBe("+374 (77) 12-34-56");
+      unmount();
+    }
+  });
+
+  it("amPhone by design: typing the country code key by key fills the operator code", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...amPhone} data-testid="am-phone" />);
+    const input = screen.getByTestId("am-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("37477123456");
+    expect(input.value).toBe("+374 (37) 47-71-23");
+  });
+
+  it("amPhone: select all and type the international number key by key", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...amPhone} data-testid="am-phone" />);
+    const input = screen.getByTestId("am-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("91123456");
+    input.setSelectionRange(0, input.value.length);
+    await nextFrame();
+    await user.keyboard("+37477123456");
+    expect(input.value).toBe("+374 (77) 12-34-56");
   });
 });

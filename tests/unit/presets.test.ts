@@ -8,7 +8,8 @@ import {
   uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
   kgPhone, kgInnPerson, kgInnCompany, kgAccount, kgBik, kgPlate, kgPlateCompany, kgPostal, kgPassport,
   byPhone, byPersonalId, byUnp, byIban, byPlate, byPostal, byPassport,
-  tjPhone, tjInn, tjEin, tjAccount, tjBik, tjPlate, tjPlateCompany, tjPostal
+  tjPhone, tjInn, tjEin, tjAccount, tjBik, tjPlate, tjPlateCompany, tjPostal,
+  amPhone, amPsn, amTin, amAccount, amPlate, amPostal, amPassport
 } from "../../src/presets";
 import { toRuPlateChar } from "../../src/utils/ru-plate";
 import { toLatinLookalike } from "../../src/utils/latin-lookalike";
@@ -238,5 +239,26 @@ describe("Tajikistan presets format their sample values", () => {
   it("tjPlate and tjPlateCompany convert look-alikes to Latin", () => {
     expect(format(tjPlate, "1234ав01")).toBe("1234 AB 01");
     expect(format(tjPlateCompany, "123ab01")).toBe("123 AB 01");
+  });
+});
+
+describe("Armenia presets format their sample values", () => {
+  it("amPhone reads international and national forms", () => {
+    for (const raw of ["+37477123456", "077123456", "77123456", "37477123456"]) {
+      expect(format(amPhone, raw)).toBe("+374 (77) 12-34-56");
+    }
+  });
+  it("amPsn, amTin, amPostal and amPassport", () => {
+    expect(format(amPsn, "3014750025")).toBe("3014750025");
+    expect(format(amTin, "02502212")).toBe("02502212");
+    expect(format(amPostal, "0010")).toBe("0010");
+    expect(format(amPassport, "am0565436")).toBe("AM0565436");
+  });
+  it("amAccount keeps trailing placeholders for short accounts", () => {
+    expect(format(amAccount, "1150013314754778")).toBe("1150013314754778");
+    expect(format(amAccount, "11500814802")).toBe("11500814802_____");
+  });
+  it("amPlate uppercases", () => {
+    expect(format(amPlate, "35ol123")).toBe("35 OL 123");
   });
 });
