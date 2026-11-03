@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import InputMask, { useMask } from "react-input-mask-format";
 import { extendedFormatChars } from "react-input-mask-format";
 import {
-  card, vin, iban, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
+  card, vin, iban, gePhone, gePostal, mdPhone, mdPostal, uaPhone, uaPostal, tmPhone, tmPostal, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
   ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
   uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
@@ -135,7 +135,11 @@ const COUNTRIES: { id: Country; label: string }[] = [
   { id: Country.By, label: "BY" },
   { id: Country.Tj, label: "TJ" },
   { id: Country.Am, label: "AM" },
-  { id: Country.Az, label: "AZ" }
+  { id: Country.Az, label: "AZ" },
+  { id: Country.Ge, label: "GE" },
+  { id: Country.Md, label: "MD" },
+  { id: Country.Ua, label: "UA" },
+  { id: Country.Tm, label: "TM" }
 ];
 const DEMO_BIK = "044525225";
 
@@ -185,7 +189,7 @@ function App() {
             <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.7</span>
           </div>
           <h1 style={{ fontSize: 26, margin: "10px 0 4px" }}>General-purpose input masks for React — with batteries</h1>
-          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, Armenia, Azerbaijan.</p>
+          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, Armenia, Azerbaijan; phones and postal codes: Georgia, Moldova, Ukraine, Turkmenistan.</p>
         </header>
 
         <section style={{ display: "grid", gap: 9 }}>
@@ -289,6 +293,33 @@ function App() {
               <Row label="Госномер" sub="azPlate · UPPER"><PresetField preset={azPlate} testid="azPlate" /></Row>
               <Row label="Индекс" sub="azPostal"><PresetField preset={azPostal} testid="azPostal" /></Row>
               <Row label="Паспорт" sub="azPassport · UPPER"><PresetField preset={azPassport} testid="azPassport" /></Row>
+            </>
+          )}
+          {country === Country.Ge && (
+            <>
+              <Row label="Телефон" sub="gePhone"><PresetField preset={gePhone} testid="gePhone" /></Row>
+              <Row label="Индекс" sub="gePostal"><PresetField preset={gePostal} testid="gePostal" /></Row>
+              <Row label="IBAN" sub="iban · MOD-97"><PresetField preset={iban} testid="geIban" validate={v => isValidIban(v, "GE")} /></Row>
+            </>
+          )}
+          {country === Country.Md && (
+            <>
+              <Row label="Телефон" sub="mdPhone"><PresetField preset={mdPhone} testid="mdPhone" /></Row>
+              <Row label="Индекс" sub="mdPostal"><PresetField preset={mdPostal} testid="mdPostal" /></Row>
+              <Row label="IBAN" sub="iban · MOD-97"><PresetField preset={iban} testid="mdIban" validate={v => isValidIban(v, "MD")} /></Row>
+            </>
+          )}
+          {country === Country.Ua && (
+            <>
+              <Row label="Телефон" sub="uaPhone"><PresetField preset={uaPhone} testid="uaPhone" /></Row>
+              <Row label="Индекс" sub="uaPostal"><PresetField preset={uaPostal} testid="uaPostal" /></Row>
+              <Row label="IBAN" sub="iban · MOD-97"><PresetField preset={iban} testid="uaIban" validate={v => isValidIban(v, "UA")} /></Row>
+            </>
+          )}
+          {country === Country.Tm && (
+            <>
+              <Row label="Телефон" sub="tmPhone"><PresetField preset={tmPhone} testid="tmPhone" /></Row>
+              <Row label="Индекс" sub="tmPostal"><PresetField preset={tmPostal} testid="tmPostal" /></Row>
             </>
           )}
           <Row label="Карта" sub="card · Luhn"><PresetField preset={card} testid="card" validate={luhn} /></Row>

@@ -8,6 +8,9 @@
 - `iban` preset (any country, up to 34 characters grouped by 4, uppercase, Cyrillic look-alikes become Latin)
   and `isValidIban(value, country?)` validator (ISO 13616 structure and MOD-97 for any country; `country`
   restricts the code). Georgia, Moldova, Ukraine and other IBAN countries without a pack can use them.
+- Phone and postal presets for Georgia (`gePhone`, `gePostal`), Moldova (`mdPhone`, `mdPostal`), Ukraine
+  (`uaPhone`, `uaPostal`) and Turkmenistan (`tmPhone`, `tmPostal`). Phones read international, domestic (`0…`,
+  pasted `8…`) and national forms; demo tabs GE, MD, UA, TM.
 
 ## 2.13.0
 
