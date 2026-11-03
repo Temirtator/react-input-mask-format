@@ -61,6 +61,18 @@ describe("useNumberFormat", () => {
     expect(last!.value).toBe("1234.50");
   });
 
+  it("ignores a typed decimal separator when decimalScale is 0", async () => {
+    const user = userEvent.setup();
+    let last: NumberFormatValues | null = null;
+    render(<HookField thousandSeparator="," decimalScale={0} onValueChange={v => (last = v)} />);
+    const input = screen.getByTestId("num") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("1234.5");
+    expect(input).toHaveValue("12,345");
+    expect(last!.value).toBe("12345");
+    expect(input.selectionStart).toBe(6);
+  });
+
   it("warns (dev) when thousand and decimal separators collide", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     render(<HookField thousandSeparator="," decimalSeparator="," />);
@@ -190,6 +202,22 @@ describe("NumberFormat component", () => {
     expect(input).toHaveValue("$ 12");
     act(() => setPrefix("€ "));
     expect(input).toHaveValue("€ 12");
+  });
+
+  it("ignores a typed decimal separator when decimalScale is 0", async () => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [v, setV] = useState("");
+      return <NumberFormat value={v} decimalScale={0} onValueChange={x => setV(x.value)} data-testid="nf" />;
+    }
+    render(<Controlled />);
+    const input = screen.getByTestId("nf") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("12.");
+    expect(input).toHaveValue("12");
+    expect(input.selectionStart).toBe(2);
+    await user.keyboard("3");
+    expect(input).toHaveValue("123");
   });
 
   it("does not leak numeric options to the DOM", () => {

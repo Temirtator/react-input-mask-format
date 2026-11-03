@@ -12,6 +12,9 @@
   `12` showed `1 200,00`).
 - `NumberFormat` re-formats when its options change. Before, a controlled field kept showing the text formatted
   with the old options (a `prefix` switched from `$ ` to `€ ` still showed `$ 12`).
+- `NumberFormat`, `useNumberFormat` and `formatNumber` with `decimalScale: 0` ignore the decimal separator.
+  Before, a typed or pasted `.` stayed at the end (`12.`) and the next digits went nowhere until it was
+  deleted; now `12.` shows `12` and `1,234.56` becomes `1,234`.
 
 ## 2.12.0
 
