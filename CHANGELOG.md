@@ -9,7 +9,8 @@
   `alwaysShowMask` on did not show the template.
 - `useMask()` without a `mask` (or with `mask: null`, both allowed by its types) no longer throws
   `Cannot read properties of null` on mount; the input works as a plain input, and a mask passed later is applied
-  to the text already typed with the caret on the first empty slot, as in `<InputMask>`.
+  to the text already typed with the caret on the first empty slot, as in `<InputMask>`. `<InputMask>`'s `mask`
+  prop is now typed `Mask | null` too (it already worked without a mask at runtime).
 
 ## 2.12.0
 

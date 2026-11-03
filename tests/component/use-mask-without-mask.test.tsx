@@ -8,11 +8,10 @@ import type { InputMaskProps, UseMaskOptions } from "../../src/types";
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
 function Component(props: UseMaskOptions & { onChange?: (value: string) => void }) {
-  const { onChange, mask, ...rest } = props;
+  const { onChange, ...rest } = props;
   return (
     <InputMask
       {...(rest as InputMaskProps)}
-      mask={mask ?? undefined}
       data-testid="field"
       onChange={e => onChange?.((e.target as HTMLInputElement).value)}
     />
