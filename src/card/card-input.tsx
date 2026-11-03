@@ -10,16 +10,18 @@ export function cardInput<O, V extends DigitValues, P>(
   return forwardRef<HTMLInputElement, P>(function CardInput(props, forwardedRef) {
     const {
       value,
+      defaultValue,
       onValueChange,
       [option]: setting,
       ...domProps
-    } = props as P & { value?: string; onValueChange?: (values: V) => void };
+    } = props as P & { value?: string; defaultValue?: string; onValueChange?: (values: V) => void };
     const input = useDigitInput(
       kind,
       value,
       { [option]: setting } as O,
       onValueChange,
-      forwardedRef
+      forwardedRef,
+      defaultValue
     );
     return <input inputMode="numeric" autoComplete={autoComplete} {...domProps} {...input} />;
   });

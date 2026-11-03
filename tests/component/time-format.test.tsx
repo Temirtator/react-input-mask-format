@@ -279,3 +279,42 @@ describe("option changes report the reformatted time", () => {
     expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ value: "12:30" });
   });
 });
+
+describe("TimeFormat uncontrolled and defaultValue", () => {
+  it("shows defaultValue formatted without reporting it and stays editable", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<TimeFormat defaultValue="1430" onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    expect(input).toHaveValue("14:30");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(input);
+    await user.keyboard("{Backspace}0");
+    expect(input).toHaveValue("14:30");
+    expect(onValueChange).toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("lets value win over defaultValue without a warning", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<TimeFormat value="0915" defaultValue="1430" onValueChange={() => {}} data-testid="u" />);
+    expect(screen.getByTestId("u")).toHaveValue("09:15");
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+});
+
+describe("TimeFormat without value", () => {
+  it("keeps a complete time and reports its value", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimeFormat onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    await user.click(input);
+    await user.keyboard("1430");
+    expect(input).toHaveValue("14:30");
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ value: "14:30" });
+  });
+});

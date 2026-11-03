@@ -127,3 +127,29 @@ describe("uncontrolled CardExpiryFormat", () => {
     expect(input).toHaveValue("12/26");
   });
 });
+
+describe("CardExpiryFormat uncontrolled and defaultValue", () => {
+  it("shows defaultValue formatted without reporting it and stays editable", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<CardExpiryFormat defaultValue="1226" onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    expect(input).toHaveValue("12/26");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(input);
+    await user.keyboard("{Backspace}6");
+    expect(input).toHaveValue("12/26");
+    expect(onValueChange).toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("lets value win over defaultValue without a warning", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<CardExpiryFormat value="0130" defaultValue="1226" onValueChange={() => {}} data-testid="u" />);
+    expect(screen.getByTestId("u")).toHaveValue("01/30");
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+});

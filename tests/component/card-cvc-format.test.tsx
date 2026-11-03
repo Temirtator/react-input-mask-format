@@ -133,3 +133,29 @@ describe("uncontrolled CardCvcFormat", () => {
     expect(input).toHaveValue("123");
   });
 });
+
+describe("CardCvcFormat uncontrolled and defaultValue", () => {
+  it("shows defaultValue formatted without reporting it and stays editable", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<CardCvcFormat defaultValue="123" onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    expect(input).toHaveValue("123");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(input);
+    await user.keyboard("{Backspace}3");
+    expect(input).toHaveValue("123");
+    expect(onValueChange).toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("lets value win over defaultValue without a warning", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<CardCvcFormat value="456" defaultValue="123" onValueChange={() => {}} data-testid="u" />);
+    expect(screen.getByTestId("u")).toHaveValue("456");
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+});

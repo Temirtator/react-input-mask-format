@@ -207,7 +207,8 @@ export function useDigitInput<O, V extends DigitValues>(
   value: string | undefined,
   options: O,
   onValueChange: ((values: V) => void) | undefined,
-  forwardedRef: React.ForwardedRef<HTMLInputElement>
+  forwardedRef: React.ForwardedRef<HTMLInputElement>,
+  defaultValue?: string
 ): {
   ref: (el: HTMLInputElement | null) => void;
   value: string;
@@ -225,7 +226,7 @@ export function useDigitInput<O, V extends DigitValues>(
     last !== null && (value === undefined || value === last.value || value === last.formattedValue);
   const formatted =
     last === null || !echo
-      ? kind.format(value ?? "", options)
+      ? kind.format(value ?? defaultValue ?? "", options)
       : sameOptions(options, lastOptionsRef.current)
         ? last.formattedValue
         : kind.format(value || last.formattedValue, options);

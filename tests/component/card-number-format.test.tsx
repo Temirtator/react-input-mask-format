@@ -204,3 +204,29 @@ describe("uncontrolled CardNumberFormat", () => {
     expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ brand: "amex", valid: true });
   });
 });
+
+describe("CardNumberFormat uncontrolled and defaultValue", () => {
+  it("shows defaultValue formatted without reporting it and stays editable", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<CardNumberFormat defaultValue="4111111111111111" onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    expect(input).toHaveValue("4111 1111 1111 1111");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(input);
+    await user.keyboard("{Backspace}1");
+    expect(input).toHaveValue("4111 1111 1111 1111");
+    expect(onValueChange).toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("lets value win over defaultValue without a warning", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<CardNumberFormat value="5500000000000004" defaultValue="4111111111111111" onValueChange={() => {}} data-testid="u" />);
+    expect(screen.getByTestId("u")).toHaveValue("5500 0000 0000 0004");
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+});

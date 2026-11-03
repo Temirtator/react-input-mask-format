@@ -354,3 +354,55 @@ describe("useDateFormat option changes read the shown date", () => {
     expect(input).toHaveValue("2030-01-01");
   });
 });
+
+describe("DateFormat uncontrolled and defaultValue", () => {
+  it("shows defaultValue formatted without reporting it and stays editable", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<DateFormat defaultValue="2024-05-12" onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    expect(input).toHaveValue("12.05.2024");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(input);
+    await user.keyboard("{Backspace}4");
+    expect(input).toHaveValue("12.05.2024");
+    expect(onValueChange).toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("lets value win over defaultValue without a warning", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<DateFormat value="2023-01-02" defaultValue="2024-05-12" onValueChange={() => {}} data-testid="u" />);
+    expect(screen.getByTestId("u")).toHaveValue("02.01.2023");
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+});
+
+describe("DateFormat without value", () => {
+  it("keeps a complete date and reports its ISO value", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<DateFormat onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    await user.click(input);
+    await user.keyboard("12052024");
+    expect(input).toHaveValue("12.05.2024");
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ value: "2024-05-12" });
+  });
+
+  it("re-lays out defaultValue and reports once when order changes before any edit", () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(
+      <DateFormat defaultValue="2024-05-12" onValueChange={onValueChange} data-testid="u" />
+    );
+    expect(screen.getByTestId("u")).toHaveValue("12.05.2024");
+    rerender(
+      <DateFormat defaultValue="2024-05-12" order="mdy" onValueChange={onValueChange} data-testid="u" />
+    );
+    expect(screen.getByTestId("u")).toHaveValue("05.12.2024");
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+  });
+});

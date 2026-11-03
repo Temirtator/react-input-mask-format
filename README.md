@@ -366,6 +366,8 @@ parseTime("14:30");  // { value: "14:30", formattedValue: "14:30", hours: 14, mi
 - Backspace right after the separator in a full time deletes the hour digit before it (`12:|30` → `13:0`);
   Delete right before it deletes the minute digit after it.
 - Changing `separator` re-lays out the shown time and calls `onValueChange` with the new values.
+- `value` is optional: without it the field keeps what the user types; `defaultValue` (`"1430"` shows `14:30`) sets the
+  initial text and is not reported through `onValueChange`.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Date — `react-input-mask-format/date`
@@ -402,6 +404,8 @@ parseDate("12.05.2024");   // { value: "2024-05-12", formattedValue: "12.05.2024
   digit after it, with the same shift (`12.|05.2024`, Backspace → `10.52.024`).
 - Changing `order` or `separator` re-lays out the shown date and calls `onValueChange` once with the new
   values; an empty field emits nothing.
+- `value` is optional: without it the field keeps what the user types; `defaultValue` (`"2024-05-12"` shows
+  `12.05.2024`) sets the initial text and is not reported through `onValueChange`.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Cards — `react-input-mask-format/card`
@@ -488,6 +492,8 @@ const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir
   props override them.
 - `value` is optional: without it a card field keeps what the user types and only reports it through
   `onValueChange`.
+- `defaultValue` sets the initial text of a card field without `value` (`"4111111111111111"` shows
+  `4111 1111 1111 1111`) and is not reported through `onValueChange`.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Known issues

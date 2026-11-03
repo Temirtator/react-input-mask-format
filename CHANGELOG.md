@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- `DateFormat` and `TimeFormat` without a `value` prop are now uncontrolled. Before, they were controlled with
+  `""`, so the field was emptied as soon as the date or time was complete (`12052024` typed into `<DateFormat />`
+  became empty); now it keeps `12.05.2024` and still calls `onValueChange` on every edit.
+- `DateFormat`, `TimeFormat`, `CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` support `defaultValue`.
+  Before, it reached the `<input>` next to `value`, React warned and the text was ignored; now
+  `<DateFormat defaultValue="2024-05-12" />` shows `12.05.2024` and is not reported through `onValueChange`.
+
 ## 2.12.0
 
 ### Added
