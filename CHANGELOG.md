@@ -10,7 +10,7 @@
   restricts the code). Georgia, Moldova, Ukraine and other IBAN countries without a pack can use them.
 - Phone and postal presets for Georgia (`gePhone`, `gePostal`), Moldova (`mdPhone`, `mdPostal`), Ukraine
   (`uaPhone`, `uaPostal`) and Turkmenistan (`tmPhone`, `tmPostal`). Phones read international, domestic (`0…`,
-  pasted `8…`) and national forms; demo tabs GE, MD, UA, TM.
+  Turkmen `8…`, pasted Ukrainian `8…`) and national forms; demo tabs GE, MD, UA, TM.
 - `phonePresets` (ISO code → phone preset for the 12 countries) and `detectPhoneCountry(text)` (country of an
   international `+…` or `00…` number, `+7` split into Kazakhstan and Russia) in `react-input-mask-format/presets`,
   with a README recipe for a phone field with a country picker that switches when another country's number is

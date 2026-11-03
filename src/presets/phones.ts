@@ -31,12 +31,12 @@ export const phonePresets: Record<PhoneCountry, MaskPreset> = {
 
 const CODES: Array<[string, PhoneCountry]> = [
   ["373", "MD"], ["374", "AM"], ["375", "BY"], ["380", "UA"], ["992", "TJ"], ["993", "TM"],
-  ["994", "AZ"], ["995", "GE"], ["996", "KG"], ["998", "UZ"], ["76", "KZ"], ["77", "KZ"], ["7", "RU"]
+  ["994", "AZ"], ["995", "GE"], ["996", "KG"], ["998", "UZ"], ["7", "RU"]
 ];
 
 export function detectPhoneCountry(value: string): PhoneCountry | null {
   const match = /^\s*(?:\+|00)([\d\s().-]*)/.exec(value ?? "");
   const digits = match ? match[1].replace(/\D/g, "") : "";
   const found = CODES.find(([code]) => digits.startsWith(code) && digits.length > code.length);
-  return found ? found[1] : null;
+  return !found ? null : found[1] === "RU" && /^7[67]/.test(digits) ? "KZ" : found[1];
 }

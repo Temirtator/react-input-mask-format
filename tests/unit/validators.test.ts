@@ -589,6 +589,12 @@ describe("isValidIban (ISO 13616, MOD-97)", () => {
     expect(isValidIban("GB82WEST1234569876543212345678901234")).toBe(false);
   });
 
+  it("rejects the check digits 00, 01 and 99 that MOD-97 alone lets through", () => {
+    expect(isValidIban("GB99WEST12345698765432")).toBe(false);
+    expect(isValidIban("GB00WEST12345698765432")).toBe(false);
+    expect(isValidIban("GB01WEST12345698765432")).toBe(false);
+  });
+
   it("checks the country when one is given", () => {
     expect(isValidIban("GE29NB0000000101904917", "GE")).toBe(true);
     expect(isValidIban("GE29NB0000000101904917", "ge")).toBe(true);

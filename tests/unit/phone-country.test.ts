@@ -19,6 +19,9 @@ describe("detectPhoneCountry", () => {
     ["+380 67 123 45 67", "UA"],
     ["+993 65 123456", "TM"],
     ["00998901234567", "UZ"],
+    ["+76", "KZ"],
+    ["+77", "KZ"],
+    ["+79", "RU"],
     ["  +380671234567", "UA"]
   ])("%s → %s", (value, country) => {
     expect(detectPhoneCountry(value)).toBe(country);
