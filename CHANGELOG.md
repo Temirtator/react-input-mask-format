@@ -6,7 +6,7 @@
 - Browser autofill into a masked field that the user had visited and left empty (so it was cleared on blur) gives
   the right value. Before, the caret position from the earlier visit was used for the new text:
   `+77012345678` became `+7 (723) 456-78-__` or `+7 (7__) ___-__-__`, and a date `12/05/2024` became
-  `20/24/____`. A caret beyond the end of the previous value is now treated as unknown.
+  `20/24/____`. A caret that starts beyond the end of the previous value is now treated as unknown.
 
 ## 2.12.0
 

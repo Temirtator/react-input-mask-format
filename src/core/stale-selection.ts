@@ -22,7 +22,7 @@ export function resolveStaleSelection(
 ): { previous: InputState; current: InputState } {
   const start = previous.selection.start ?? 0;
   const end = previous.selection.end ?? start;
-  if (end <= previous.value.length && explainsEdit(previous.value, current.value, start, end, current.selection.start)) {
+  if (start <= previous.value.length && explainsEdit(previous.value, current.value, start, end, current.selection.start)) {
     return { previous, current };
   }
   const length = current.value.length;
