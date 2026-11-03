@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Masked inputs inside a shadow root (web components) work. Focus was checked against
+  `document.activeElement`, which is the shadow host there, so `<InputMask>` and `useMask` dropped typed
+  characters and moved the caret to the end; `./date`, `./time`, `./card` and `./number` lost their caret
+  placement. Focus is now checked against the input's own root.
+
 ## 2.12.0
 
 ### Added
