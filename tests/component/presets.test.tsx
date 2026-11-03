@@ -734,7 +734,7 @@ describe.each([
   ["gePhone", gePhone, "0555123456", "+995 555 12 34 56", "995555123456", "+995 (555) 12-34-56", "+995 (995) 55-51-23"],
   ["mdPhone", mdPhone, "069123456", "+373 69 123 456", "37369123456", "+373 (69) 123-456", "+373 (37) 369-123"],
   ["uaPhone", uaPhone, "0671234567", "+38 (067) 123-45-67", "380671234567", "+380 (67) 123-45-67", "+380 (38) 067-12-34"],
-  ["tmPhone", tmPhone, "65123456", "8 65 12 34 56", "99365123456", "+993 (65) 12-34-56", "+993 (99) 36-51-23"]
+  ["tmPhone", tmPhone, "865123456", "8 65 12 34 56", "99365123456", "+993 (65) 12-34-56", "+993 (36) 51-23-45"]
 ] as const)("%s on InputMask", (_name, preset, typed, pasted, codeTyped, expected, codeTypedResult) => {
   it("formats a typed domestic or national number", async () => {
     const user = userEvent.setup();

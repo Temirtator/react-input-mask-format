@@ -367,12 +367,13 @@ Phones and postal codes. For IBANs use [`iban`](#generic) with `isValidIban(valu
 | `mdPostal` | `MD-9999` | `MD-2001` |
 | `uaPhone` | `+380 (99) 999-99-99` (first digit 1–9) | `+380 (67) 123-45-67` |
 | `uaPostal` | `99999` | `01001` |
-| `tmPhone` | `+993 (99) 99-99-99` (first digit 1–9) | `+993 (65) 12-34-56` |
+| `tmPhone` | `+993 (99) 99-99-99` (first digit 1–7) | `+993 (65) 12-34-56` |
 | `tmPostal` | `999999` | `744000` |
 
 A typed or pasted domestic `0` is skipped (`0671234567` → `+380 (67) 123-45-67`, `069 123 456` →
-`+373 (69) 123-456`). A domestic `8` (Turkmenistan, old Ukrainian long-distance) is skipped when pasted or
-passed as `value`, but not when typed, because numbers such as `800 …` start with 8. Typed key by key into an
+`+373 (69) 123-456`), and so is Turkmenistan's domestic `8` (no Turkmen number starts with 8 or 9). The old
+Ukrainian long-distance `8` is skipped when pasted or passed as `value`, but not when typed, because Ukrainian
+numbers such as `800 …` start with 8. Typed key by key into an
 empty field, the country code is read as the operator code, as with `uzPhone`; pasting works.
 
 ### Masks with a fixed prefix
