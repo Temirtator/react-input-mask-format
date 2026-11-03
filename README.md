@@ -190,7 +190,7 @@ import { kzPhone, kzIban } from "react-input-mask-format/presets";
 <InputMask {...kzPhone} value={phone} onChange={onChange} />
 ```
 
-Masks are shown as users see them. PRs adding other countries are welcome.
+Masks are shown as users see them. PRs adding other countries are welcome; see [CONTRIBUTING](CONTRIBUTING.md).
 
 ### Generic
 
