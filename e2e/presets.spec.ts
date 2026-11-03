@@ -87,6 +87,60 @@ test("kgPassport uppercases the ID card series", async ({ page }) => {
   await expect(input).toHaveValue("ID1234567");
 });
 
+test("byPhone skips a typed domestic 8 0 prefix", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-by").click();
+  const input = page.getByTestId("byPhone");
+  await input.click();
+  await input.pressSequentially("80291234567");
+  await expect(input).toHaveValue("+375 (29) 123-45-67");
+});
+
+test("byPersonalId turns typed Cyrillic into Latin", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-by").click();
+  const input = page.getByTestId("byPersonalId");
+  await input.click();
+  await input.pressSequentially("7000000а000рв1");
+  await expect(input).toHaveValue("7000000A000PB1");
+});
+
+test("tjPhone formats a typed national number", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-tj").click();
+  const input = page.getByTestId("tjPhone");
+  await input.click();
+  await input.pressSequentially("931234567");
+  await expect(input).toHaveValue("+992 (93) 123-45-67");
+});
+
+test("amPhone skips a typed domestic leading 0", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-am").click();
+  const input = page.getByTestId("amPhone");
+  await input.click();
+  await input.pressSequentially("077123456");
+  await expect(input).toHaveValue("+374 (77) 12-34-56");
+});
+
+test("azPhone skips a typed domestic leading 0", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-az").click();
+  const input = page.getByTestId("azPhone");
+  await input.click();
+  await input.pressSequentially("0501234567");
+  await expect(input).toHaveValue("+994 (50) 123-45-67");
+});
+
+test("azFin uppercases and turns a typed O into zero", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-az").click();
+  const input = page.getByTestId("azFin");
+  await input.click();
+  await input.pressSequentially("5vbkovr");
+  await expect(input).toHaveValue("5VBK0VR");
+});
+
 test("kzPhone select all + retype with the country code", async ({ page }) => {
   await page.goto("/");
   const input = page.getByTestId("kzPhone");

@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.13.0
+
+### Added
+- Belarus pack in `react-input-mask-format/presets`: `byPhone`, `byPersonalId`, `byUnp`, `byIban`, `byPlate`,
+  `byPostal`, `byPassport`. `byPhone` skips the domestic `8 0…` prefix (`"80291234567"` becomes
+  `+375 (29) 123-45-67`); `byPersonalId`, `byUnp`, `byPlate` and `byPassport` turn typed Cyrillic look-alikes
+  into Latin. Validators `isValidByPersonalId` (7-3-1), `isValidByUnp` (MNS mod-11) and `isValidByIban`
+  (MOD-97).
+- Tajikistan pack: `tjPhone`, `tjInn`, `tjEin`, `tjAccount`, `tjBik`, `tjPlate`, `tjPlateCompany`,
+  `tjPostal`, and `isValidTjInn` (9 digits; the check digit is not published, so format only).
+- Armenia pack: `amPhone` (skips the domestic leading `0`), `amPsn`, `amTin`, `amAccount`, `amPlate`,
+  `amPostal`, `amPassport`, and the structure validators `isValidAmPsn`, `isValidAmTin` and
+  `isValidAmAccount`.
+- Azerbaijan pack: `azPhone` (skips the domestic `0` and `00994`), `azFin` (a typed `O` becomes `0`),
+  `azVoen`, `azIban`, `azPlate`, `azPostal` (`1000` and `AZ 1000` become `AZ1000`), `azPassport`, and
+  validators `isValidAzVoen` (VÖEN mod-11), `isValidAzIban` (MOD-97) and `isValidAzFin` (structure).
+- The demo has BY, TJ, AM and AZ tabs.
+
+### Notes
+- Additive: no existing preset, validator or component changes behavior.
+
 ## 2.12.0
 
 ### Added
