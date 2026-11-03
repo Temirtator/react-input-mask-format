@@ -38,3 +38,25 @@ for (const c of cases) {
     expect(await selection(page, c.id)).toEqual([c.empty, c.empty]);
   });
 }
+
+test("a click that moves the mouse a little still puts the caret on the first empty slot", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("kzPhone");
+  await input.click();
+  await input.pressSequentially("01");
+  await expect(input).toHaveValue("+7 (701) ___-__-__");
+  await page.getByTestId("scratch").click();
+  await input.scrollIntoViewIfNeeded();
+  const box = (await input.boundingBox())!;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(box.x + 50, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 53, y);
+  await page.waitForTimeout(60);
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  await expect(input).toBeFocused();
+  expect(await selection(page, "kzPhone")).toEqual([9, 9]);
+  await page.keyboard.type("2");
+  await expect(input).toHaveValue("+7 (701) 2__-__-__");
+});

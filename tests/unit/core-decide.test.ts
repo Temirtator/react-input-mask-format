@@ -95,9 +95,13 @@ describe("decideClickSelection", () => {
     expect(decideClickSelection(cfg(), "12/__", { start: 1, end: 1 })).toMatchObject({ start: 3, end: 3 });
   });
 
-  it("keeps a range selected on focus when the value has typed characters", () => {
+  it("keeps the whole value selected on focus when it has typed characters", () => {
     expect(decideClickSelection(cfg(), "12/__", { start: 0, end: 5 })).toEqual({ start: 0, end: 5 });
-    expect(decideClickSelection(cfg(), "12/__", { start: 1, end: 3 })).toEqual({ start: 1, end: 3 });
+  });
+
+  it("collapses a partial range left by a small drag during the click", () => {
+    expect(decideClickSelection(cfg(), "12/__", { start: 1, end: 3 })).toMatchObject({ start: 3, end: 3 });
+    expect(decideClickSelection(cfg(), "12/__", { start: 0, end: 1 })).toMatchObject({ start: 3, end: 3 });
   });
 
   it("moves the caret to the first slot when the value is empty", () => {

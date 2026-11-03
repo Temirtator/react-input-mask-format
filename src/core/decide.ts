@@ -56,7 +56,7 @@ export function decideClickSelection(
   lastValue: string,
   selection: Selection
 ): Selection {
-  return selection.start !== selection.end && !cfg.maskUtils.isValueEmpty(lastValue)
+  return selection.start === 0 && selection.end === lastValue.length && !cfg.maskUtils.isValueEmpty(lastValue)
     ? selection
     : cfg.maskUtils.getDefaultSelectionForValue(lastValue);
 }
