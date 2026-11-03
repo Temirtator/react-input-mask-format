@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CardCvcFormat } from "../../src/card/card-cvc-format";
@@ -135,6 +135,8 @@ describe("uncontrolled CardCvcFormat", () => {
 });
 
 describe("CardCvcFormat uncontrolled and defaultValue", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("shows defaultValue formatted without reporting it and stays editable", async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
@@ -146,9 +148,8 @@ describe("CardCvcFormat uncontrolled and defaultValue", () => {
     await user.click(input);
     await user.keyboard("{Backspace}3");
     expect(input).toHaveValue("123");
-    expect(onValueChange).toHaveBeenCalled();
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ formattedValue: "123" });
     expect(error).not.toHaveBeenCalled();
-    error.mockRestore();
   });
 
   it("lets value win over defaultValue without a warning", () => {
@@ -156,6 +157,5 @@ describe("CardCvcFormat uncontrolled and defaultValue", () => {
     render(<CardCvcFormat value="456" defaultValue="123" onValueChange={() => {}} data-testid="u" />);
     expect(screen.getByTestId("u")).toHaveValue("456");
     expect(error).not.toHaveBeenCalled();
-    error.mockRestore();
   });
 });

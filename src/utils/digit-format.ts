@@ -229,7 +229,7 @@ export function useDigitInput<O, V extends DigitValues>(
       ? kind.format(value ?? defaultValue ?? "", options)
       : sameOptions(options, lastOptionsRef.current)
         ? last.formattedValue
-        : kind.format(value || last.formattedValue, options);
+        : kind.format(value || last.value || last.formattedValue, options);
   const shownRef = useRef({ options, text: formatted });
 
   function onChange(event: React.ChangeEvent<HTMLInputElement>): void {

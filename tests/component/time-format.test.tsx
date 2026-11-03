@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useTimeFormat } from "../../src/time/use-time-format";
@@ -281,6 +281,8 @@ describe("option changes report the reformatted time", () => {
 });
 
 describe("TimeFormat uncontrolled and defaultValue", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("shows defaultValue formatted without reporting it and stays editable", async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
@@ -292,9 +294,8 @@ describe("TimeFormat uncontrolled and defaultValue", () => {
     await user.click(input);
     await user.keyboard("{Backspace}0");
     expect(input).toHaveValue("14:30");
-    expect(onValueChange).toHaveBeenCalled();
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ formattedValue: "14:30" });
     expect(error).not.toHaveBeenCalled();
-    error.mockRestore();
   });
 
   it("lets value win over defaultValue without a warning", () => {
@@ -302,7 +303,6 @@ describe("TimeFormat uncontrolled and defaultValue", () => {
     render(<TimeFormat value="0915" defaultValue="1430" onValueChange={() => {}} data-testid="u" />);
     expect(screen.getByTestId("u")).toHaveValue("09:15");
     expect(error).not.toHaveBeenCalled();
-    error.mockRestore();
   });
 });
 

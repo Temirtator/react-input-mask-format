@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CardExpiryFormat } from "../../src/card/card-expiry-format";
@@ -129,6 +129,8 @@ describe("uncontrolled CardExpiryFormat", () => {
 });
 
 describe("CardExpiryFormat uncontrolled and defaultValue", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("shows defaultValue formatted without reporting it and stays editable", async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
@@ -140,9 +142,8 @@ describe("CardExpiryFormat uncontrolled and defaultValue", () => {
     await user.click(input);
     await user.keyboard("{Backspace}6");
     expect(input).toHaveValue("12/26");
-    expect(onValueChange).toHaveBeenCalled();
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ formattedValue: "12/26" });
     expect(error).not.toHaveBeenCalled();
-    error.mockRestore();
   });
 
   it("lets value win over defaultValue without a warning", () => {
@@ -150,6 +151,5 @@ describe("CardExpiryFormat uncontrolled and defaultValue", () => {
     render(<CardExpiryFormat value="0130" defaultValue="1226" onValueChange={() => {}} data-testid="u" />);
     expect(screen.getByTestId("u")).toHaveValue("01/30");
     expect(error).not.toHaveBeenCalled();
-    error.mockRestore();
   });
 });

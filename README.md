@@ -366,8 +366,8 @@ parseTime("14:30");  // { value: "14:30", formattedValue: "14:30", hours: 14, mi
 - Backspace right after the separator in a full time deletes the hour digit before it (`12:|30` → `13:0`);
   Delete right before it deletes the minute digit after it.
 - Changing `separator` re-lays out the shown time and calls `onValueChange` with the new values.
-- `value` is optional: without it the field keeps what the user types; `defaultValue` (`"1430"` shows `14:30`) sets the
-  initial text and is not reported through `onValueChange`.
+- `value` is optional: without it the field keeps what the user types; `defaultValue` (`"1430"` shows
+  `14:30`) sets the initial text and is not reported through `onValueChange`.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
 ## Date — `react-input-mask-format/date`
