@@ -499,11 +499,6 @@ Browser autofill needs an empty input or a value that matches the start of the a
 `maskPlaceholder={null}`, apply the mask only to a non-empty value, or use less formatting. Phones and
 postal codes are often autofilled; one-time codes are not.
 
-### Cypress
-
-`cy.get("input").focus().type("12345")` can produce `23/45/____`, because `focus()` is not an action
-command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `.wait(50)` after `.focus()`.
-
 ### Playwright
 
 `locator.fill()` on an unfocused field that already has text can insert at the caret instead of replacing the
@@ -522,6 +517,11 @@ await user.keyboard("{Backspace}");
 ```
 
 Typing with `user.click()` and `user.keyboard()` alone needs no waits.
+
+### Cypress
+
+`cy.get("input").focus().type("12345")` can produce `23/45/____`, because `focus()` is not an action
+command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `.wait(50)` after `.focus()`.
 
 ## Migration
 
