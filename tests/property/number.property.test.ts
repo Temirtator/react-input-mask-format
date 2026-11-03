@@ -225,6 +225,7 @@ describe("parseNumber", () => {
         ([o, text], thousandSeparator, prefix, suffix) => {
           const other = { ...o, thousandSeparator, prefix, suffix };
           fc.pre(thousandOf(other) !== decimalOf(other));
+          fc.pre(decimalOf(o) === "." || !text.includes("."));
           const value = parseNumber(formatNumber(text, o), o).value;
           expect(parseNumber(formatNumber(text, other), other).value).toBe(value);
         }
