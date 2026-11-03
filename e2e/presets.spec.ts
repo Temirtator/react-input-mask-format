@@ -161,3 +161,12 @@ test("vin uppercases, maps O to 0 and Cyrillic to Latin", async ({ page }) => {
   await expect(input).toHaveValue("1HGCM82630A004352");
   await expect(page.getByTestId("vin-state")).toHaveAttribute("data-value", "1HGCM82630A004352");
 });
+
+test("iban groups any country's IBAN and validates it", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("iban-any");
+  await input.click();
+  await input.pressSequentially("gb82west12345698765432");
+  await expect(input).toHaveValue("GB82 WEST 1234 5698 7654 32");
+  await expect(page.getByTestId("iban-any-state")).toContainText("✓");
+});

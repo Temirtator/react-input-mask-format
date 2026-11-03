@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import MaskUtils from "../../src/core/mask";
 import { resolveTransform } from "../../src/utils/transform";
 import {
-  card, vin, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
+  card, vin, iban, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
   ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
   uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
@@ -290,6 +290,20 @@ describe("Azerbaijan presets format their sample values", () => {
   });
   it("azPassport uppercases", () => {
     expect(format(azPassport, "c01234567")).toBe("C01234567");
+  });
+});
+
+describe("iban preset", () => {
+  it("groups any country's IBAN by 4 and uppercases", () => {
+    expect(format(iban, "gb82west12345698765432")).toBe("GB82 WEST 1234 5698 7654 32");
+    expect(format(iban, "NO9386011117947")).toBe("NO93 8601 1117 947");
+    expect(format(iban, "MT84MALT011000012345MTLCAST001S")).toBe("MT84 MALT 0110 0001 2345 MTLC AST0 01S");
+  });
+  it("turns Cyrillic look-alikes into Latin", () => {
+    expect(format(iban, "кz86125кzт5004100100")).toBe("KZ86 125K ZT50 0410 0100 ");
+  });
+  it("needs two letters and two digits first", () => {
+    expect(format(iban, "1234")).toBe("");
   });
 });
 

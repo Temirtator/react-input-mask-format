@@ -22,3 +22,9 @@ export const vin: MaskPreset = {
   maskPlaceholder: "_",
   transform: vinChar
 };
+
+export const iban: MaskPreset = {
+  mask: "aa99 **** **** **** **** **** **** **** **",
+  maskPlaceholder: null,
+  transform: toLatinLookalike
+};
