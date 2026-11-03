@@ -39,12 +39,15 @@ export function decideFocus(cfg: MaskConfig, currentState: InputState): InputSta
 export function decideUpdate(
   cfg: MaskConfig,
   currentState: InputState,
-  isFocused: boolean
+  isFocused: boolean,
+  wasMasked = true
 ): InputState {
-  const value = cfg.maskUtils.formatValue(currentState.value);
+  const formatted = cfg.maskUtils.formatValue(currentState.value);
+  const value = isFocused || cfg.alwaysShowMask || !cfg.maskUtils.isValueEmpty(formatted) ? formatted : "";
   const nextState: InputState = {
-    value: isFocused || cfg.alwaysShowMask || !cfg.maskUtils.isValueEmpty(value) ? value : "",
-    selection: currentState.selection
+    value,
+    selection:
+      isFocused && !wasMasked ? cfg.maskUtils.getDefaultSelectionForValue(value) : currentState.selection
   };
   if (cfg.beforeMaskedStateChange) {
     return cfg.beforeMaskedStateChange({ currentState, nextState });
