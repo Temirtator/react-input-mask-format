@@ -45,6 +45,10 @@ export function tokenize(rawInput: string, options: NumberFormatOptions): Number
   return extract(s, decimal, options);
 }
 
+export function formatCanonical(value: string, options: NumberFormatOptions): string {
+  return buildFormatted(extract(value, ".", options), options);
+}
+
 // Tokenize a canonical numeric string (from a JS number): always "." decimal, no affixes.
 function tokenizeCanonical(canonical: string, options: NumberFormatOptions): NumberParts {
   return extract(canonical, ".", options);

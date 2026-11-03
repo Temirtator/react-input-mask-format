@@ -345,7 +345,9 @@ Options: `thousandSeparator` (`true` → `,`, or a string), `decimalSeparator` (
 (truncates, no rounding; `0` ignores the decimal separator), `fixedDecimalScale`, `prefix`, `suffix`, `allowNegative` (`true`),
 `allowLeadingZeros`, `isAllowed(values) => boolean` (e.g. min/max). `parseNumber` is the inverse of
 `formatNumber`. A string `value` is read like typed text, in the `decimalSeparator` of the props; the `value`
-or `floatValue` that `onValueChange` reported can be passed back as is.
+or `floatValue` that `onValueChange` reported can be passed back as is. For a canonical string from elsewhere
+(`"1234.5"` from an API) pass a number, or set `valueIsNumericString` so `NumberFormat` reads it with a `.`
+decimal whatever the separators are.
 
 ## Time — `react-input-mask-format/time`
 
