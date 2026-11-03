@@ -12,3 +12,4 @@ export * from "./ge";
 export * from "./md";
 export * from "./ua";
 export * from "./tm";
+export * from "./phones";

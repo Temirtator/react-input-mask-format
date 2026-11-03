@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { pasteInto } from "./helpers";
 
 test("kzIban uppercases typed account letters", async ({ page }) => {
   await page.goto("/");
@@ -197,3 +198,17 @@ test("uaIban validates a Ukrainian IBAN", async ({ page }) => {
   await expect(input).toHaveValue("UA21 3223 1300 0002 6007 2335 6600 1");
   await expect(page.getByTestId("uaIban-state")).toContainText("✓");
 });
+
+for (const c of [
+  { pasted: "+998 90 123 45 67", country: "UZ", expected: "+998 (90) 123-45-67" },
+  { pasted: "+7 912 345-67-89", country: "RU", expected: "+7 (912) 345-67-89" },
+  { pasted: "+380 67 123 45 67", country: "UA", expected: "+380 (67) 123-45-67" }
+]) {
+  test(`a pasted ${c.country} number switches the phone country`, async ({ page }) => {
+    await page.goto("/");
+    const input = page.getByTestId("phone-any");
+    await pasteInto(page, input, c.pasted);
+    await expect(page.getByTestId("phone-country")).toHaveValue(c.country);
+    await expect(input).toHaveValue(c.expected);
+  });
+}
