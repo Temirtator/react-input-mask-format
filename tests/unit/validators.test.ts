@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate } from "../../src/validators";
 import { digitsOnly, remainder, isIbanChecksumValid, isRealDate } from "../../src/validators/shared";
-import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik, isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn, isValidAmPsn, isValidAmTin, isValidAmAccount } from "../../src/validators";
+import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik, isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn, isValidAmPsn, isValidAmTin, isValidAmAccount, isValidAzVoen, isValidAzIban, isValidAzFin } from "../../src/validators";
 
 describe("luhn", () => {
   it("accepts valid card numbers (raw and formatted)", () => {
@@ -464,6 +464,67 @@ describe("isValidAmAccount", () => {
   it("rejects wrong length, letters-only and empty values", () => {
     for (const v of ["1150081480", "11500133147547781", "11500ABC", "", null as unknown as string, undefined as unknown as string]) {
       expect(isValidAmAccount(v)).toBe(false);
+    }
+  });
+});
+
+const EMPTY_VALUES = ["", null as unknown as string, undefined as unknown as string];
+
+describe("isValidAzVoen", () => {
+  it("accepts real VOENs, including d10 other than 1 or 2", () => {
+    for (const v of ["9900003871", "9900003611", "1400057421", "9900001881", "1401555071", "0200001911", "0200001918"]) {
+      expect(isValidAzVoen(v)).toBe(true);
+    }
+  });
+  it("rejects wrong check digits and the illustrative OECD samples", () => {
+    for (const v of ["9900003621", "1401555081", "1525855852", "1325678851"]) {
+      expect(isValidAzVoen(v)).toBe(false);
+    }
+  });
+  it("rejects every ninth digit when the remainder is 10", () => {
+    const weights = [4, 1, 8, 6, 2, 7, 5, 3];
+    let prefix = "";
+    for (let n = 0; n < 100000 && !prefix; n++) {
+      const candidate = String(n).padStart(8, "0");
+      const sum = candidate.split("").reduce((acc, ch, i) => acc + Number(ch) * weights[i], 0);
+      if (sum % 11 === 10) {
+        prefix = candidate;
+      }
+    }
+    expect(prefix).not.toBe("");
+    for (let d9 = 0; d9 <= 9; d9++) {
+      expect(isValidAzVoen(`${prefix}${d9}1`)).toBe(false);
+    }
+  });
+  it("rejects wrong length, placeholders and empty values", () => {
+    for (const v of ["990000387", "990000387_", ...EMPTY_VALUES]) {
+      expect(isValidAzVoen(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAzIban", () => {
+  it("accepts valid IBANs, raw, spaced and lowercase", () => {
+    for (const v of ["AZ21NABZ00000000137010001944", "AZ84 NABZ 0000 0000 1370 1000 2944", "az37nabz01350100000000001944", "AZ25AIIB410100F9446440502141"]) {
+      expect(isValidAzIban(v)).toBe(true);
+    }
+  });
+  it("rejects a bad checksum, structure or length and empty values", () => {
+    for (const v of ["AZ85NABZ00000000137010002944", "AZ21NABZ00000000137010001945", "AZ211ABZ00000000137010001944", "AZ21NABZ0000000013701000194", ...EMPTY_VALUES]) {
+      expect(isValidAzIban(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAzFin", () => {
+  it("accepts 7 characters without the letter O", () => {
+    for (const v of ["5VBK5VR", "5vbk5vr", "0000000", "5VBK 5VR"]) {
+      expect(isValidAzFin(v)).toBe(true);
+    }
+  });
+  it("rejects the letter O, wrong length, placeholders and empty values", () => {
+    for (const v of ["5VBK5V", "5VBKOVR", "5VBK5V_", "5VBK5VRR", ...EMPTY_VALUES]) {
+      expect(isValidAzFin(v)).toBe(false);
     }
   });
 });

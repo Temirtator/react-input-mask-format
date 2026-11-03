@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask, { useMask } from "../../src/index";
-import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone, byPhone, byPersonalId, byIban, byPlate, tjPhone, amPhone } from "../../src/presets";
+import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone, byPhone, byPersonalId, byIban, byPlate, tjPhone, amPhone, azPhone, azPostal, azFin } from "../../src/presets";
 import type { MaskPreset } from "../../src/presets";
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -625,5 +625,84 @@ describe("Armenia presets on InputMask", () => {
     await nextFrame();
     await user.keyboard("+37477123456");
     expect(input.value).toBe("+374 (77) 12-34-56");
+  });
+});
+
+describe("Azerbaijan presets on InputMask", () => {
+  it("azPhone: typing and pasting a national number", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<InputMask {...azPhone} data-testid="az-phone" />);
+    const typed = screen.getByTestId("az-phone") as HTMLInputElement;
+    await user.click(typed);
+    await user.keyboard("0501234567");
+    expect(typed.value).toBe("+994 (50) 123-45-67");
+    unmount();
+    render(<InputMask {...azPhone} data-testid="az-phone" />);
+    const pasted = screen.getByTestId("az-phone") as HTMLInputElement;
+    await user.click(pasted);
+    await user.paste("0501234567");
+    expect(pasted.value).toBe("+994 (50) 123-45-67");
+  });
+
+  it("azPhone: pasting international forms", async () => {
+    const user = userEvent.setup();
+    for (const pasted of ["+994 50 123 45 67", "994501234567", "00994501234567"]) {
+      const { unmount } = render(<InputMask {...azPhone} data-testid="az-phone" />);
+      const input = screen.getByTestId("az-phone") as HTMLInputElement;
+      await user.click(input);
+      await user.paste(pasted);
+      expect(input.value).toBe("+994 (50) 123-45-67");
+      unmount();
+    }
+  });
+
+  it("azPhone by design: typing the country code key by key fills the operator code", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...azPhone} data-testid="az-phone" />);
+    const input = screen.getByTestId("az-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("994501234567");
+    expect(input.value).toBe("+994 (99) 450-12-34");
+  });
+
+  it("azPhone: select all and type the international number key by key", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...azPhone} data-testid="az-phone" />);
+    const input = screen.getByTestId("az-phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("551234567");
+    input.setSelectionRange(0, input.value.length);
+    await nextFrame();
+    await user.keyboard("+994501234567");
+    expect(input.value).toBe("+994 (50) 123-45-67");
+  });
+
+  it("azPostal: typing and pasting add the AZ prefix", async () => {
+    const user = userEvent.setup();
+    for (const typedValue of ["1000", "az1000"]) {
+      const { unmount } = render(<InputMask {...azPostal} data-testid="az-postal" />);
+      const input = screen.getByTestId("az-postal") as HTMLInputElement;
+      await user.click(input);
+      await user.keyboard(typedValue);
+      expect(input.value).toBe("AZ1000");
+      unmount();
+    }
+    for (const pasted of ["AZ1000", "AZ 1000", "1000"]) {
+      const { unmount } = render(<InputMask {...azPostal} data-testid="az-postal" />);
+      const input = screen.getByTestId("az-postal") as HTMLInputElement;
+      await user.click(input);
+      await user.paste(pasted);
+      expect(input.value).toBe("AZ1000");
+      unmount();
+    }
+  });
+
+  it("azFin: typing uppercases and turns O into 0", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...azFin} data-testid="az-fin" />);
+    const input = screen.getByTestId("az-fin") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("5vbkovr");
+    expect(input.value).toBe("5VBK0VR");
   });
 });

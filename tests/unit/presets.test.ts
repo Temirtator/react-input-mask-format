@@ -9,7 +9,8 @@ import {
   kgPhone, kgInnPerson, kgInnCompany, kgAccount, kgBik, kgPlate, kgPlateCompany, kgPostal, kgPassport,
   byPhone, byPersonalId, byUnp, byIban, byPlate, byPostal, byPassport,
   tjPhone, tjInn, tjEin, tjAccount, tjBik, tjPlate, tjPlateCompany, tjPostal,
-  amPhone, amPsn, amTin, amAccount, amPlate, amPostal, amPassport
+  amPhone, amPsn, amTin, amAccount, amPlate, amPostal, amPassport,
+  azPhone, azFin, azVoen, azIban, azPlate, azPostal, azPassport
 } from "../../src/presets";
 import { toRuPlateChar } from "../../src/utils/ru-plate";
 import { toLatinLookalike } from "../../src/utils/latin-lookalike";
@@ -260,5 +261,34 @@ describe("Armenia presets format their sample values", () => {
   });
   it("amPlate uppercases", () => {
     expect(format(amPlate, "35ol123")).toBe("35 OL 123");
+  });
+});
+
+describe("Azerbaijan presets format their sample values", () => {
+  it("azPhone reads international and national forms", () => {
+    for (const raw of ["+994501234567", "0501234567", "501234567", "994501234567", "00994501234567"]) {
+      expect(format(azPhone, raw)).toBe("+994 (50) 123-45-67");
+    }
+  });
+  it("azFin uppercases and turns O into 0", () => {
+    expect(format(azFin, "5vbkovr")).toBe("5VBK0VR");
+  });
+  it("azVoen", () => {
+    expect(format(azVoen, "9900003871")).toBe("9900003871");
+  });
+  it("azIban adds the AZ prefix and groups", () => {
+    expect(format(azIban, "az21nabz00000000137010001944")).toBe("AZ21 NABZ 0000 0000 1370 1000 1944");
+    expect(format(azIban, "21NABZ00000000137010001944")).toBe("AZ21 NABZ 0000 0000 1370 1000 1944");
+  });
+  it("azPlate uppercases", () => {
+    expect(format(azPlate, "90aa001")).toBe("90-AA-001");
+  });
+  it("azPostal adds the AZ prefix", () => {
+    for (const raw of ["1000", "AZ1000", "AZ 1000", "az1000"]) {
+      expect(format(azPostal, raw)).toBe("AZ1000");
+    }
+  });
+  it("azPassport uppercases", () => {
+    expect(format(azPassport, "c01234567")).toBe("C01234567");
   });
 });
