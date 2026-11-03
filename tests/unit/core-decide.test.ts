@@ -89,9 +89,23 @@ describe("decideBlur", () => {
 });
 
 describe("decideClickSelection", () => {
+  const cfg = () => resolveMaskConfig({ mask: "99/99" });
+
   it("returns the default selection for the value", () => {
-    const cfg = resolveMaskConfig({ mask: "99/99" });
-    expect(decideClickSelection(cfg, "12/__")).toMatchObject({ start: 3, end: 3 });
+    expect(decideClickSelection(cfg(), "12/__", { start: 1, end: 1 })).toMatchObject({ start: 3, end: 3 });
+  });
+
+  it("keeps a range selected on focus when the value has typed characters", () => {
+    expect(decideClickSelection(cfg(), "12/__", { start: 0, end: 5 })).toEqual({ start: 0, end: 5 });
+    expect(decideClickSelection(cfg(), "12/__", { start: 1, end: 3 })).toEqual({ start: 1, end: 3 });
+  });
+
+  it("moves the caret to the first slot when the value is empty", () => {
+    expect(decideClickSelection(cfg(), "__/__", { start: 0, end: 5 })).toMatchObject({ start: 0, end: 0 });
+  });
+
+  it("treats an unknown selection as a caret", () => {
+    expect(decideClickSelection(cfg(), "12/__", { start: null, end: null })).toMatchObject({ start: 3, end: 3 });
   });
 });
 

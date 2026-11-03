@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- A selection made while a partly filled `<InputMask>` or `useMask` field takes focus now survives the click,
+  so `onFocus={e => e.target.select()}` selects the whole value and the next key replaces it. Before, the click
+  moved the caret to the first empty slot. An empty field still gets the caret on its first slot, and a quick
+  click that leaves a caret still moves it there; a short drag that selects characters is now kept.
+
 ## 2.12.0
 
 ### Added
