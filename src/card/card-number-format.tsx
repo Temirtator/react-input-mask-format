@@ -11,10 +11,10 @@ export interface CardNumberFormatProps
   onValueChange?: (values: CardNumberValues) => void;
 }
 
-export const CardNumberFormat = cardInput<CardNumberOptions, CardNumberValues, CardNumberFormatProps>(
+export const CardNumberFormat = /* @__PURE__ */ cardInput<CardNumberOptions, CardNumberValues, CardNumberFormatProps>(
+  "CardNumberFormat",
   cardNumberKind,
   "separator",
   "cc-number"
 );
 
-CardNumberFormat.displayName = "CardNumberFormat";

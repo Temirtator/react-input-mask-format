@@ -3,14 +3,21 @@
 ## Unreleased
 
 ### Changed
-- **Breaking:** React 17 or newer is required (`peerDependencies.react` is `>=17.0.0`). React 16 was listed as
-  supported but never tested, and two tests fail on 16.14; CI tests 17, 18 and 19.
 - **Breaking:** the published code targets ES2020 and keeps `??` and `?.`. Supported: Chrome 80, Firefox 72,
   Safari 13.1, Node 14 and newer. A toolchain that cannot parse ES2020, such as webpack 4 without Babel for
   `node_modules`, has to transpile the package. Bundles get smaller: index −77 B, number −100 B, time, date and card
   −70 to −90 B.
+- Importing one function no longer pulls in the components of its entry. `InputMask`, `NumberFormat`,
+  `DateFormat`, `TimeFormat` and the card fields are marked as pure, so bundlers drop them when unused. Measured
+  with esbuild (brotli): `useMask` alone 6.2 → 4.8 kB, `formatDate` 2.0 → 0.7 kB, `detectCardBrand` 2.4 → 0.7 kB,
+  `formatNumber` 2.0 → 0.9 kB, `extendedFormatChars` 5.5 → 0.3 kB. A Vite app that imports only `formatDate` is
+  3.8 kB (minified) smaller. `displayName`s are unchanged.
+- **Breaking:** React 17 or newer is required (`peerDependencies.react` is `>=17.0.0`). React 16 was listed as
+  supported but never tested, and two tests fail on 16.14; CI tests 17, 18 and 19.
 
 ### Internal
+- size-limit also checks what importing one name costs (`useMask`, `formatNumber`, `formatDate`, `detectCardBrand`,
+  `CardNumberFormat`, …), so tree-shaking cannot regress unnoticed.
 - CI runs the whole test suite a second time against the built `dist` files (`npm run test:dist`), and also on
   pushes to `next`.
 
