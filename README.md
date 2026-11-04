@@ -37,12 +37,30 @@ const ref = useMask({ mask: "+7 (999) 999-99-99" });
 
 ## Why this fork
 
-The original `react-input-mask` has been unmaintained since 2021. This fork is:
+The original `react-input-mask` has had no release since 2.0.4 (September 2018), and its repository is
+archived. Its 2.x uses `findDOMNode`, which React 19 removed. This fork is:
 
 - **React 16.8 – 19 compatible** — no `defaultProps`, no `findDOMNode`, StrictMode-safe
 - **TypeScript-first**, **zero runtime dependencies**, ESM + CJS, tree-shakable entry points
 - **Drop-in compatible** with `react-input-mask` v2 and v3-alpha APIs ([migration](#migrating-from-react-input-mask))
 - **Custom `children` work again** — broken upstream since v1.0.x
+
+### Compared with other libraries
+
+| | this package | `react-input-mask` | `react-imask` | `react-number-format` | `@react-input/mask` |
+|---|---|---|---|---|---|
+| Last release | 2026 | 2018 | 2024 | 2026 | 2024 |
+| Bundled TypeScript types | ✓ | — | ✓ | ✓ | ✓ |
+| Main component, min+gzip | 5.8 kB | 4.8 kB | 17.5 kB | 6.8 kB | 5.4 kB |
+| Numbers and currency | ✓ | — | ✓ | ✓ | — |
+| Dates with day/month clamping | ✓ | — | ✓ | — | — |
+| Card numbers with brand detection | ✓ | — | — | — | — |
+| Country presets and validators | ✓ | — | — | — | — |
+| Hook for your own `<input>` | ✓ | — | ✓ | — | ✓ |
+
+Sizes: each main component bundled with `esbuild --minify`, `react` external, then gzipped, on 2026-11-03.
+`react-number-format` counts `NumericFormat` and `PatternFormat`; `react-imask` includes the whole `imask`
+core. `/number`, `/date` and `/card` are separate entry points of 1.7 kB, 2.0 kB and 2.4 kB.
 
 ## Contents
 
