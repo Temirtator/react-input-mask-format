@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- `useMask` throws when `maskPlaceholder` is neither one character nor as long as the mask, like `<InputMask>` always
+  did. Before, the hook showed broken text (`mask: "99-99"`, `maskPlaceholder: "ab"` gave `ab-`, then `1b-`).
+
+### Fixed
+- Masked fields with `type="number"` or `type="email"` no longer throw on every key; `NumberFormat type="number"`
+  no longer unmounts the whole React tree. These types have no text selection, so the browser rejected the caret
+  update (`InvalidStateError`). The field is left alone instead, and in development a console error explains it
+  once per type and suggests `type="text"` or `type="tel"` with `inputMode="numeric"`.
+- `<InputMask value={123456} mask="999-999">` shows `123-456`. Before, a number `value` (allowed by the types)
+  threw `string.split is not a function`.
+- In development, a custom child of `InputMask` that does not forward its ref gets an error that says so, instead
+  of `Cannot read properties of null (reading 'getRootNode')`. The error for a child without an `<input>` names this
+  package instead of the old `react-input-mask`.
+- In development, a mask without editable positions (`mask="+7"`, `mask={[]}`) logs a console error once.
+- `V2MaskOptions`, used by the `BeforeMaskedValueChangeFn` type, is exported.
+
 ## 2.13.0
 
 ### Added

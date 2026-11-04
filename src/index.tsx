@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, forwardRef } from "react";
 
 import { useInputState, useInputElement, usePrevious } from "./hooks";
-import { validateMaxLength, validateChildren, validateMaskPlaceholder } from "./validate-props";
+import { validateMaxLength, validateChildren, validateInputElement } from "./validate-props";
 import { defer } from "./utils/defer";
 import { isInputFocused, getInputSelection } from "./utils/input";
 import { isFunction, toString } from "./utils/helpers";
@@ -41,8 +41,6 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     beforeMaskedValueChange
   });
   const config: MaskConfig = { maskUtils, maskPlaceholder, alwaysShowMask, beforeMaskedStateChange };
-
-  validateMaskPlaceholder({ ...props, maskPlaceholder });
 
   const isMasked = !!mask;
   const isEditable = !restProps.disabled && !restProps.readOnly;
@@ -140,7 +138,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     const isFocused = !!input && isInputFocused(input);
     let newValue =
       isFocused || alwaysShowMask || props.value
-        ? maskUtils.formatControlledValue(props.value as string, getLastInputState().value)
+        ? maskUtils.formatControlledValue(toString(props.value), getLastInputState().value)
         : (props.value as string);
 
     if (beforeMaskedStateChange) {
@@ -169,6 +167,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     }
 
     const input = getInputElement();
+    validateInputElement(input);
     const isFocused = isInputFocused(input as HTMLInputElement);
     const previousSelection = lastSelection;
     const currentState = getInputState();
@@ -255,6 +254,7 @@ export type {
   Selection,
   BeforeMaskedStateChangeFn,
   BeforeMaskedValueChangeFn,
+  V2MaskOptions,
   Mask,
   Transform,
   FormatChars,
