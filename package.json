@@ -67,7 +67,7 @@
     "fast-check": "4.10.2",
     "happy-dom": "^21.0.4",
     "jsdom": "^25.0.0",
-    "publint": "^0.2.0",
+    "publint": "^0.3.25",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.91.0",
