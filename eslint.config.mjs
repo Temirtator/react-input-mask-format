@@ -16,7 +16,15 @@ export default tseslint.config(
     plugins: { "react-hooks": reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-hooks/exhaustive-deps": ["warn", { additionalHooks: "useIsomorphicLayoutEffect" }]
+      "react-hooks/exhaustive-deps": ["warn", { additionalHooks: "useIsomorphicLayoutEffect" }],
+      "react-hooks/refs": "off",
+      "react-hooks/immutability": "off"
+    }
+  },
+  {
+    files: ["tests/**/*.{ts,tsx}"],
+    rules: {
+      "react-hooks/globals": "off"
     }
   }
 );

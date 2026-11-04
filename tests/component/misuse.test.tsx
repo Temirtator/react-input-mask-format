@@ -1,12 +1,12 @@
 import React from "react";
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, type MockInstance } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask, { useMask } from "../../src/index";
 import { NumberFormat } from "../../src/number";
 import { DateFormat } from "../../src/date";
 
-let consoleError: ReturnType<typeof vi.spyOn> | undefined;
+let consoleError: MockInstance<typeof console.error> | undefined;
 
 function silenceConsole() {
   consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -18,7 +18,7 @@ afterEach(() => {
   consoleError = undefined;
 });
 
-function messages(spy: ReturnType<typeof vi.spyOn>): string[] {
+function messages(spy: MockInstance<typeof console.error>): string[] {
   return spy.mock.calls.map(call => String(call[0]));
 }
 
