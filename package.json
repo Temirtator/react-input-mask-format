@@ -1,6 +1,6 @@
 {
   "name": "react-input-mask-format",
-  "description": "Masked input component for React",
+  "description": "Input masks for React: phones, dates, cards, numbers, time and country presets. A maintained fork of react-input-mask.",
   "version": "2.13.0",
   "type": "module",
   "homepage": "https://github.com/Temirtator/react-input-mask-format",
@@ -33,7 +33,18 @@
     "voen",
     "date",
     "card",
-    "credit-card"
+    "credit-card",
+    "react-input-mask",
+    "input-mask",
+    "mask-input",
+    "phone",
+    "phone-mask",
+    "number-format",
+    "currency",
+    "time",
+    "hook",
+    "typescript",
+    "iban"
   ],
   "peerDependencies": {
     "react": ">=16.8.0"
@@ -54,7 +65,6 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "fast-check": "4.10.2",
     "jsdom": "^25.0.0",
-    "prettier": "^3.0.0",
     "publint": "^0.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

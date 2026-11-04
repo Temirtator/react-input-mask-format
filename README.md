@@ -76,7 +76,7 @@ core. `/number`, `/date` and `/card` are separate entry points of 1.7 kB, 2.0 kB
 - [Presets](#presets) · [Masks with a fixed prefix](#masks-with-a-fixed-prefix) · [Validators](#validators)
 - [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) · [Time](#time--react-input-mask-formattime)
   · [Date](#date--react-input-mask-formatdate) · [Cards](#cards--react-input-mask-formatcard)
-- [Known issues](#known-issues) · [Recipes](#recipes) · [Migration](#migration)
+- [TypeScript](#typescript) · [Known issues](#known-issues) · [Recipes](#recipes) · [Migration](#migration)
 
 ## Properties
 
@@ -698,6 +698,39 @@ const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir
 - `defaultValue` sets the initial text of a card field without `value` (`"4111111111111111"` shows
   `4111 1111 1111 1111`) and is not reported through `onValueChange`.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
+
+## TypeScript
+
+Types ship with the package; every entry exports the types of its components, hooks and values.
+
+| Entry | Types |
+|---|---|
+| `react-input-mask-format` | `InputMaskProps`, `UseMaskOptions`, `Mask`, `FormatChars`, `Transform`, `InputState`, `Selection`, `BeforeMaskedStateChangeFn`, `BeforeMaskedValueChangeFn` |
+| `/presets` | `MaskPreset`, `PhoneCountry` |
+| `/number` | `NumberFormatProps`, `NumberFormatOptions`, `NumberFormatValues`, `UseNumberFormatOptions` |
+| `/time` | `TimeFormatProps`, `TimeFormatOptions`, `TimeFormatValues`, `UseTimeFormatOptions` |
+| `/date` | `DateFormatProps`, `DateFormatOptions`, `DateFormatValues`, `DateOrder`, `UseDateFormatOptions` |
+| `/card` | `CardBrand`, `CardNumberFormatProps`, `CardNumberOptions`, `CardNumberValues`, `CardExpiryFormatProps`, `CardExpiryOptions`, `CardExpiryValues`, `CardCvcFormatProps`, `CardCvcOptions`, `CardCvcValues`, `UseCardNumberFormatOptions`, `UseCardExpiryFormatOptions`, `UseCardCvcFormatOptions` |
+
+A wrapper that forwards everything to `InputMask`, and a typed preset of your own:
+
+```tsx
+import { forwardRef } from "react";
+import InputMask from "react-input-mask-format";
+import type { InputMaskProps } from "react-input-mask-format";
+import type { MaskPreset } from "react-input-mask-format/presets";
+import type { NumberFormatValues } from "react-input-mask-format/number";
+
+export const PhoneInput = forwardRef<HTMLInputElement, InputMaskProps>((props, ref) => (
+  <InputMask {...props} ref={ref} className="phone" />
+));
+
+export const orderNumber: MaskPreset = { mask: "AA-9999", formatChars: { A: /[A-Z]/ } };
+
+function onAmount({ floatValue }: NumberFormatValues) {
+  console.log(floatValue ?? 0);
+}
+```
 
 ## Known issues
 
