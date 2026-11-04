@@ -1,4 +1,5 @@
 import type { NumberFormatOptions } from "./types";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export interface NumberParts {
   negative: boolean;
@@ -21,6 +22,7 @@ export function decimalSeparators(options: NumberFormatOptions): string[] {
 }
 
 function extract(raw: string, decimal: string, options: NumberFormatOptions): NumberParts {
+  raw = toAsciiDigits(raw);
   const allowNegative = options.allowNegative ?? true;
   const negative = allowNegative && raw.indexOf("-") !== -1;
 
