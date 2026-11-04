@@ -207,7 +207,7 @@
     },
     {
       "path": "dist/presets.js",
-      "limit": "2 KB"
+      "limit": "1.9 KB"
     },
     {
       "path": "dist/validators.js",
@@ -215,73 +215,73 @@
     },
     {
       "path": "dist/number.js",
-      "limit": "3.5 KB"
+      "limit": "2.85 KB"
     },
     {
       "path": "dist/time.js",
-      "limit": "3 KB"
+      "limit": "2.35 KB"
     },
     {
       "path": "dist/date.js",
-      "limit": "3.5 KB"
+      "limit": "2.85 KB"
     },
     {
       "path": "dist/card.js",
-      "limit": "3.5 KB"
+      "limit": "3.4 KB"
     },
     {
       "name": "index { useMask }",
       "path": "dist/index.js",
       "import": "{ useMask }",
-      "limit": "5 KB"
+      "limit": "4.75 KB"
     },
     {
       "name": "index { extendedFormatChars }",
       "path": "dist/index.js",
       "import": "{ extendedFormatChars }",
-      "limit": "0.4 KB"
+      "limit": "0.2 KB"
     },
     {
       "name": "number { formatNumber }",
       "path": "dist/number.js",
       "import": "{ formatNumber }",
-      "limit": "1 KB"
+      "limit": "0.9 KB"
     },
     {
       "name": "number { useNumberFormat }",
       "path": "dist/number.js",
       "import": "{ useNumberFormat }",
-      "limit": "2.5 KB"
+      "limit": "2 KB"
     },
     {
       "name": "time { formatTime }",
       "path": "dist/time.js",
       "import": "{ formatTime }",
-      "limit": "0.45 KB"
+      "limit": "0.32 KB"
     },
     {
       "name": "date { formatDate }",
       "path": "dist/date.js",
       "import": "{ formatDate }",
-      "limit": "0.8 KB"
+      "limit": "0.65 KB"
     },
     {
       "name": "card { detectCardBrand }",
       "path": "dist/card.js",
       "import": "{ detectCardBrand }",
-      "limit": "0.75 KB"
+      "limit": "0.62 KB"
     },
     {
       "name": "card { CardNumberFormat }",
       "path": "dist/card.js",
       "import": "{ CardNumberFormat }",
-      "limit": "2.5 KB"
+      "limit": "2.25 KB"
     },
     {
       "name": "presets { kzPhone }",
       "path": "dist/presets.js",
       "import": "{ kzPhone }",
-      "limit": "0.15 KB"
+      "limit": "0.1 KB"
     }
   ],
   "scripts": {
