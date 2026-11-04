@@ -4,8 +4,9 @@
 
 ### Fixed
 - Next.js App Router: rendering `<InputMask>`, `NumberFormat`, `DateFormat`, `TimeFormat` or a card field in a Server
-  Component no longer fails the build (`TypeError: useRef is not a function`). The component entries now start with
-  `"use client"`; `/presets` and `/validators` stay plain modules.
+  Component no longer fails the build (`TypeError: useRef is not a function`). Under the `react-server` export
+  condition the component entries resolve to `dist/rsc/*.js`, which re-export them behind `"use client"`. Other
+  bundlers get the plain modules, so Vite shows no directive warning. `/presets` and `/validators` stay plain modules.
 - TypeScript with `"moduleResolution": "node"`: `react-input-mask-format/presets`, `/validators`, `/number`, `/time`,
   `/date` and `/card` now resolve their types (`typesVersions`). Before, every subpath import failed with `TS2307`.
 - TypeScript without `esModuleInterop`: the published types no longer default-import React, which gave `TS1259` or
