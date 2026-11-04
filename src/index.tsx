@@ -313,7 +313,7 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
 
 export { defaultFormatChars, extendedFormatChars } from "./constants";
 export { useMask } from "./use-mask";
-export { isMaskComplete } from "./is-mask-complete";
+export { formatMask, isMaskComplete } from "./mask-helpers";
 export type {
   InputMaskProps,
   InputState,
@@ -326,4 +326,5 @@ export type {
   FormatChars,
   UseMaskOptions
 } from "./types";
+export type { MaskHelperOptions } from "./mask-helpers";
 export default InputMask;
