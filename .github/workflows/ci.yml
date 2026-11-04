@@ -1,9 +1,16 @@
 name: CI
 on:
   push:
-    branches: [master, v2]
+    branches: [master]
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   checks:
@@ -18,10 +25,12 @@ jobs:
       - run: npm run build
       - run: npx publint
       - run: npm run size
+      - run: npm run test:coverage
 
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         react: ["17", "18", "19"]
     steps:
@@ -43,7 +52,30 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium firefox
-      - run: npm run test:e2e
+      - run: npm run test:e2e -- --project chromium --project firefox
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+  e2e-webkit:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - run: npm run test:e2e -- --project webkit
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-webkit
+          path: playwright-report
+          retention-days: 7
 
   smoke:
     runs-on: ubuntu-latest
@@ -87,6 +119,10 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     needs: [checks, test, e2e, smoke]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
