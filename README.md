@@ -755,3 +755,189 @@ Replace `NumericFormat` with `NumberFormat` from `react-input-mask-format/number
 [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) are the same. Differences:
 `decimalScale` truncates instead of rounding while typing, and there is no `PatternFormat` — use
 `<InputMask>` for pattern masks.
+
+### Migrating from react-imask
+
+Replace `IMaskInput` with `InputMask` and `useIMask` with `useMask`. Pattern masks translate token by token
+(`0` → `9`); `mask={Number}` and `mask={Date}` move to the [`/number`](#numbers--currency--react-input-mask-formatnumber)
+and [`/date`](#date--react-input-mask-formatdate) modules. `onChange` receives the masked value: there is no
+`onAccept` and no `unmask`.
+
+| react-imask | this package |
+| --- | --- |
+| `<IMaskInput mask="…" />` | `<InputMask mask="…" />` |
+| `useIMask(opts, { onAccept })` → `{ ref, value, unmaskedValue, … }` | `useMask(options)` → a ref only; read the value in the input's `onChange` |
+| `0` | `9` |
+| `a` (any letter) | `a` (A–Z, a–z); `Я` from `extendedFormatChars` for Cyrillic |
+| `*` (any character) | `*` (A–Z, a–z, 0–9) |
+| `\\0` (a fixed `0`) | `0` |
+| a fixed `9`, e.g. `+998` | `"+\\9\\98"` |
+| `{7}` (fixed part kept in the unmasked value) | `7`: the value always contains the fixed parts |
+| `[…]` (optional part) | not supported |
+| `lazy` (default): only typed characters | `maskPlaceholder={null}` |
+| `lazy={false}` | `alwaysShowMask` |
+| `placeholderChar="#"` | `maskPlaceholder="#"` |
+| `definitions={{ "#": /[1-6]/ }}` | `formatChars={{ ...defaultFormatChars, "#": /[1-6]/ }}` |
+| `prepareChar={(str) => str.toUpperCase()}` | `transform="uppercase"` or `transform={(char, position) => …}` |
+| `unmask` | no helper; `value.replace(/\D/g, "")` for digit masks |
+| `onAccept={(value) => …}` | `onChange={(e) => …}` with `e.target.value` |
+| `onComplete` | no event; check the value in `onChange` |
+| `inputRef` | `ref` |
+| `IMaskMixin(Component)` | [`children`](#children) |
+| `mask={Date}` | `DateFormat` from `react-input-mask-format/date` |
+| `mask={Number}` with `scale`, `radix`, `thousandsSeparator`, `padFractionalZeros`, `min` / `max` | `NumberFormat` with `decimalScale`, `decimalSeparator`, `thousandSeparator`, `fixedDecimalScale`, `isAllowed` |
+| an array of masks, `dispatch` | change the `mask` prop from your state; `CardNumberFormat` for card numbers |
+| `blocks`, `MaskedRange`, `MaskedEnum` | an array mask with a `RegExp` per position, `DateFormat`, `TimeFormat` |
+
+Phone with the mask always shown and the digits extracted:
+
+```jsx
+// react-imask
+<IMaskInput
+  mask="+{7} (000) 000-00-00"
+  lazy={false}
+  unmask
+  value={phone}
+  onAccept={(value) => setPhone(value)} // "77012345678"
+  onComplete={(value) => save(value)}
+/>
+
+// react-input-mask-format
+<InputMask
+  mask="+7 (999) 999-99-99" // or {...kzPhone}, {...ruPhone}
+  alwaysShowMask
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)} // "+7 (701) 234-56-78"
+/>
+const digits = phone.replace(/\D/g, ""); // "77012345678"
+const complete = digits.length === 11;
+```
+
+Keep the masked value in state and derive the digits from it.
+
+Custom definitions and uppercase input:
+
+```jsx
+// react-imask
+<IMaskInput mask="#00000" definitions={{ "#": /[1-6]/ }} />
+<IMaskInput mask="aa0000000" prepareChar={(str) => str.toUpperCase()} />
+
+// react-input-mask-format
+import InputMask, { defaultFormatChars } from "react-input-mask-format";
+
+<InputMask mask="#99999" formatChars={{ ...defaultFormatChars, "#": /[1-6]/ }} />
+<InputMask mask="aa9999999" transform="uppercase" /> // same as the uzPassport preset
+```
+
+Date:
+
+```jsx
+// react-imask
+<IMaskInput mask={Date} unmask="typed" onAccept={(date) => setDate(date)} /> // Date, null until complete
+
+// react-input-mask-format
+import { DateFormat } from "react-input-mask-format/date";
+
+<DateFormat value={date} onValueChange={(v) => setDate(v.value)} /> // "2024-05-12", "" until complete
+```
+
+Differences:
+
+- `InputMask` and `useMask` report only the masked value. The `/number`, `/date`, `/time` and `/card`
+  components report parsed values in `onValueChange`.
+- `formatChars` replaces the default tokens: spread `defaultFormatChars` to keep `9`, `a` and `*`.
+- No optional parts, `blocks`, `overwrite`, `eager`, `skipInvalid`, `displayChar`, `validate` or `commit`.
+- No pipe for pattern masks; a controlled `value` is formatted on render. The modules export `formatNumber`,
+  `formatDate`, `formatTime` and `formatCardNumber`.
+- `DateFormat` has no `min` / `max` and gives an ISO string, not a `Date`; build one from `day`, `month` and
+  `year` if you need it.
+
+### Migrating from @react-input/mask
+
+`InputMask` and `useMask` keep their names. Slots in the mask are the format characters `9`, `a`, `*` (or your
+`formatChars`) instead of `replacement` keys, and `maskPlaceholder` sets what unfilled slots show.
+
+| @react-input/mask | this package |
+| --- | --- |
+| `mask="+7 (___) ___-__-__" replacement={{ _: /\d/ }}` | `mask="+7 (999) 999-99-99"` |
+| `replacement={{ _: /[A-Z]/ }}` | `formatChars={{ "#": /[A-Z]/ }}` with `#` in the mask, or an array mask |
+| `replacement="_"` (any character) | `*` (A–Z, a–z, 0–9), or a `formatChars` token that does not match the placeholder: `/[^_]/` |
+| `showMask` | `alwaysShowMask` |
+| no `showMask`: `+7 (912` | `maskPlaceholder={null}`: `+7 (912) ` |
+| replacement keys as the placeholder: `dd.mm.yyyy` | `maskPlaceholder="dd.mm.yyyy"` |
+| `separate` | the default with a `maskPlaceholder`: a deleted character leaves its slot empty; with `maskPlaceholder={null}` the following characters shift left |
+| `track` | `transform` per character, `beforeMaskedStateChange` for the whole value and selection |
+| `modify` | change `mask` and the other props from your state |
+| `onMask` (v1), `unformat` | `onChange`; `value.replace(/\D/g, "")` for digit masks |
+| `format` for an initial value | not needed: a raw `value` or `defaultValue` is formatted on render |
+| `generatePattern`, `formatToParts` | not supported; checksums in [Validators](#validators) |
+| `component={CustomInput}` | `<InputMask><CustomInput /></InputMask>`, see [children](#children) |
+| `useMask({ mask, replacement })` | `useMask({ mask })` |
+
+Phone with the mask always shown and the digits extracted:
+
+```jsx
+// @react-input/mask
+import { InputMask, unformat } from "@react-input/mask";
+
+const options = { mask: "+7 (___) ___-__-__", replacement: { _: /\d/ } };
+<InputMask
+  {...options}
+  showMask
+  onChange={(e) => setDigits(unformat(e.target.value, options))} // "9123456789"
+/>
+
+// react-input-mask-format
+import InputMask from "react-input-mask-format";
+import { ruPhone } from "react-input-mask-format/presets";
+
+<InputMask
+  {...ruPhone}
+  alwaysShowMask
+  onChange={(e) => setDigits(e.target.value.replace(/\D/g, "").slice(1))} // "9123456789"
+/>
+```
+
+`.slice(1)` drops the `7` of `+7`, which `unformat` leaves out. `ruPhone` also reads a pasted `8 912 …` or
+`+7 912 …`, see [Masks with a fixed prefix](#masks-with-a-fixed-prefix).
+
+Date with letters as the placeholder:
+
+```jsx
+// @react-input/mask
+<InputMask mask="dd.mm.yyyy" replacement={{ d: /\d/, m: /\d/, y: /\d/ }} showMask separate />
+
+// react-input-mask-format
+<InputMask mask="99.99.9999" maskPlaceholder="dd.mm.yyyy" alwaysShowMask />
+
+// or, with day and month clamping and an ISO value:
+import { DateFormat } from "react-input-mask-format/date";
+
+<DateFormat value={date} onValueChange={(v) => setDate(v.value)} />
+```
+
+Custom token with uppercase input:
+
+```jsx
+// @react-input/mask
+<InputMask
+  mask="____ ____"
+  replacement={{ _: /[0-9A-F]/ }}
+  track={({ data }) => data && data.toUpperCase()}
+/>
+
+// react-input-mask-format
+<InputMask mask="#### ####" formatChars={{ "#": /[0-9A-F]/ }} transform="uppercase" />
+```
+
+Differences:
+
+- `onChange` receives the masked value with placeholders (`+7 (912) ___-__-__`). There is no `unformat`, and
+  `value.replace(/\D/g, "")` keeps the digits of fixed parts (the `7` of `+7`).
+- `9`, `a` and `*` are always slots unless escaped (`"+\\9\\98"`). `formatChars` replaces them: spread
+  `defaultFormatChars` to use them next to your own tokens.
+- Deleting in the middle keeps positions while a `maskPlaceholder` is set (`12/34/5678`, Backspace after the
+  `3` → `12/_4/5678`), like `separate`. With `maskPlaceholder={null}` the following characters shift left
+  (`12/45/678`); there is no option to shift while a placeholder is shown.
+- `beforeMaskedStateChange` receives the previous, current and next `{ value, selection }` instead of
+  `inputType` and `data`.
