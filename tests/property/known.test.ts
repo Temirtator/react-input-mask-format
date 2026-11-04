@@ -26,4 +26,22 @@ describe("known divergences (by design)", () => {
     const continued = typeString(kz, typed, "7011234567");
     expect(continued.value).toBe("+7 (701) 123-45-67");
   });
+
+  it("K5 (by design) a placeholder character typed into the last slot is replaced by the next typed character", () => {
+    const setup = { mask: [/[A-Za-z0-9]/], maskPlaceholder: "_" };
+    const d = describeMask(setup);
+    expect(known.typesPlaceholderIntoLastSlot(d, "_0")).toBe(true);
+    expect(known.typesPlaceholderIntoLastSlot(d, "_")).toBe(false);
+    expect(known.typesPlaceholderIntoLastSlot(d, "_!")).toBe(false);
+    expect(known.typesPlaceholderIntoLastSlot(d, "0_0")).toBe(false);
+    const subject = createSubject(setup);
+    expect(typeString(subject, focus(subject), "_0").value).toBe("0");
+    expect(subject.format("_0")).toBe("_");
+    const kzSetup = presets.find(p => p.name === "kzPhone")!.setup;
+    expect(known.typesPlaceholderIntoLastSlot(describeMask(kzSetup), "01234567_8")).toBe(true);
+    expect(known.typesPlaceholderIntoLastSlot(describeMask(kzSetup), "0123456_78")).toBe(false);
+    const kz = preset("kzPhone");
+    expect(typeString(kz, focus(kz), "01234567_8").value).toBe("+7 (701) 234-56-78");
+    expect(kz.format("+7 (7" + "01234567_8")).toBe("+7 (701) 234-56-7_");
+  });
 });
