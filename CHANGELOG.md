@@ -3,15 +3,22 @@
 ## Unreleased
 
 ### Changed
-- **Breaking:** `defaultFormatChars` and `extendedFormatChars` are frozen. Assigning a token to them now throws a
-  `TypeError` instead of silently changing every mask in the app, presets included. Spread them into a map of your
-  own: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`.
 - **Breaking:** the published code targets ES2020 and keeps `??` and `?.`. Supported: Chrome 80, Firefox 72,
   Safari 13.1, Node 14 and newer. A toolchain that cannot parse ES2020, such as webpack 4 without Babel for
   `node_modules`, has to transpile the package. Bundles get smaller: index −77 B, number −100 B, time, date and card
   −70 to −90 B.
+- Importing one function no longer pulls in the components of its entry. `InputMask`, `NumberFormat`,
+  `DateFormat`, `TimeFormat` and the card fields are marked as pure, so bundlers drop them when unused. Measured
+  with esbuild (brotli): `useMask` alone 6.2 → 4.8 kB, `formatDate` 2.0 → 0.7 kB, `detectCardBrand` 2.4 → 0.7 kB,
+  `formatNumber` 2.0 → 0.9 kB, `extendedFormatChars` 5.5 → 0.3 kB. A Vite app that imports only `formatDate` is
+  3.8 kB (minified) smaller. `displayName`s are unchanged.
+- **Breaking:** `defaultFormatChars` and `extendedFormatChars` are frozen. Assigning a token to them now throws a
+  `TypeError` instead of silently changing every mask in the app, presets included. Spread them into a map of your
+  own: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`.
 
 ### Internal
+- size-limit also checks what importing one name costs (`useMask`, `formatNumber`, `formatDate`, `detectCardBrand`,
+  `CardNumberFormat`, …), so tree-shaking cannot regress unnoticed.
 - CI runs the whole test suite a second time against the built `dist` files (`npm run test:dist`), and also on
   pushes to `next`.
 

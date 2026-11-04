@@ -1,5 +1,4 @@
 import * as React from "react";
-import { forwardRef } from "react";
 import { useIsomorphicLayoutEffect } from "./utils/layout-effect";
 
 import { useInputState, useInputElement, usePrevious } from "./hooks";
@@ -11,9 +10,10 @@ import { resolveMaskConfig } from "./core/config";
 import type { MaskConfig } from "./core/config";
 import { decideChange, decideFocus, decideBlur, decideClickSelection, formatDefaultValue } from "./core/decide";
 import { watchClick } from "./core/click-tracker";
+import { component } from "./utils/component";
 import type { InputMaskProps, InputState } from "./types";
 
-const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMask(
+const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("InputMask", function InputMask(
   props,
   forwardedRef
 ) {
@@ -245,7 +245,6 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   return <input {...inputProps} />;
 });
 
-InputMask.displayName = "InputMask";
 
 export { defaultFormatChars, extendedFormatChars } from "./constants";
 export { useMask } from "./use-mask";

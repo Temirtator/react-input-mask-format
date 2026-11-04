@@ -1,11 +1,12 @@
 import * as React from "react";
-import { forwardRef, useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
 import { formatNumber, formatCanonical } from "./format-number";
 import { parseNumber, digitsBeforeCaret, resolveCaret, readTyped } from "./parse-number";
 import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
 import { useIsomorphicLayoutEffect } from "../utils/layout-effect";
+import { component } from "../utils/component";
 
 export interface NumberFormatProps
   extends NumberFormatOptions,
@@ -17,7 +18,7 @@ export interface NumberFormatProps
   isAllowed?: (values: NumberFormatValues) => boolean;
 }
 
-export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(function NumberFormat(
+export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFormatProps>("NumberFormat", function NumberFormat(
   props,
   forwardedRef
 ) {
@@ -183,4 +184,3 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
   return <input {...domProps} ref={setRef} value={formatted} onChange={handleChange} />;
 });
 
-NumberFormat.displayName = "NumberFormat";
