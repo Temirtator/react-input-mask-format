@@ -70,6 +70,12 @@ export function decideBlur(
   return nextState;
 }
 
-export function decideClickSelection(cfg: MaskConfig, lastValue: string): Selection {
-  return cfg.maskUtils.getDefaultSelectionForValue(lastValue);
+export function decideClickSelection(
+  cfg: MaskConfig,
+  lastValue: string,
+  selection: Selection
+): Selection {
+  return selection.start === 0 && selection.end === lastValue.length && !cfg.maskUtils.isValueEmpty(lastValue)
+    ? selection
+    : cfg.maskUtils.getDefaultSelectionForValue(lastValue);
 }

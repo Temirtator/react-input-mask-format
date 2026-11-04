@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { fc, holds, maskCase, digits } from "./arbitraries";
+import { acceptedCharFor, charFor, fc, holds, maskCase, digits } from "./arbitraries";
 import { known } from "./known";
-import { slotIndices } from "./description";
-import { focus, pasteOverAll, typeString } from "./driver";
+import { firstEmptySlot, slotIndices } from "./description";
+import { focus, insert, pasteOverAll, typeString } from "./driver";
 
 const plusCase = maskCase.filter(c => c.d.prefix.startsWith("+"));
 const prefixedCase = maskCase.filter(c => c.d.prefix.length > 0);
@@ -51,6 +51,34 @@ describe("prefix masks", () => {
           fc.pre(!known.entersPrefixStart(c.d, text, 0));
           const pasted = pasteOverAll(c.subject, focus(c.subject), text);
           expect(pasted.start).toBeGreaterThanOrEqual(c.d.prefix.length);
+        }
+      )
+    );
+  });
+
+  it("X4 a complete international number pasted at any caret equals pasting it over everything", () => {
+    const fraction = fc.double({ min: 0, max: 1, noNaN: true });
+    holds(
+      fc.property(
+        plusCase.chain(c =>
+          fc.tuple(
+            fc.constant(c),
+            fc.string({ unit: charFor(c), maxLength: 20 }),
+            fc.tuple(...slotIndices(c.d).map(slot => acceptedCharFor(c, slot))),
+            fraction,
+            fraction
+          )
+        ),
+        ([c, typed, filling, from, to]) => {
+          fc.pre(c.d.significant.length > 0 && !known.slotLikeLiteral(c.d) && filling.every(char => char !== null));
+          const text = `+${c.d.significant}${filling.join("")}`;
+          const current = typeString(c.subject, focus(c.subject), typed);
+          const position = (fraction: number) => Math.floor(fraction * (current.value.length + 1));
+          const start = position(Math.min(from, to));
+          const end = position(Math.max(from, to));
+          const whole = pasteOverAll(c.subject, current, text);
+          fc.pre(firstEmptySlot(c.d, whole.value) === null);
+          expect(insert(c.subject, { ...current, start, end }, text).value).toBe(whole.value);
         }
       )
     );

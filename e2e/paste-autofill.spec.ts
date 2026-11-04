@@ -80,6 +80,16 @@ test("paste into a partially filled kzPhone", async ({ page }) => {
   await expectState(page, kzPhone, "+7 (701) 123-45-67");
 });
 
+test("paste a complete international number into a partially filled kzPhone", async ({ page }) => {
+  const input = await openField(page, kzPhone);
+  await input.click();
+  await input.pressSequentially("01");
+  await expect(input).toHaveValue("+7 (701) ___-__-__");
+  await pasteInto(page, input, "+7 701 234 56 78");
+  await expect(input).toHaveValue("+7 (701) 234-56-78");
+  await expectState(page, kzPhone, "+7 (701) 234-56-78");
+});
+
 test.describe("paste over a selection", () => {
   test("kzPhone", async ({ page }) => {
     const input = await openField(page, kzPhone);
