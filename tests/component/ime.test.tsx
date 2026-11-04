@@ -30,16 +30,18 @@ function compose(el: HTMLInputElement, steps: string[], commit: string, order: O
       fireEvent.input(el, { isComposing: true, inputType: "insertCompositionText", data: text });
     });
   }
+  const input = (isComposing: boolean) => () => {
+    fireEvent.input(el, { isComposing, inputType: "insertCompositionText", data: commit });
+  };
+  const end = () => {
+    fireEvent.compositionEnd(el, { data: commit });
+  };
   act(() => {
     write(commit);
-    if (order === "chrome") {
-      fireEvent.input(el, { isComposing: true, inputType: "insertCompositionText", data: commit });
-      fireEvent.compositionEnd(el, { data: commit });
-    } else {
-      fireEvent.compositionEnd(el, { data: commit });
-      fireEvent.input(el, { isComposing: false, inputType: "insertCompositionText", data: commit });
-    }
   });
+  for (const step of order === "chrome" ? [input(true), end] : [end, input(false)]) {
+    act(step);
+  }
 }
 
 function field(): HTMLInputElement {
