@@ -1,4 +1,5 @@
 import { isSingleKeystroke } from "../utils/digit-format";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export interface CardExpiryOptions {
   separator?: string;
@@ -7,6 +8,7 @@ export interface CardExpiryOptions {
 export interface CardExpiryValues {
   value: string;
   formattedValue: string;
+  complete: boolean;
   month: number | undefined;
   year: number | undefined;
 }
@@ -16,7 +18,7 @@ function layout(
   options: CardExpiryOptions | undefined,
   keystrokeDigits?: number
 ): CardExpiryValues {
-  const groups = String(raw ?? "").match(/\d+/g) || [];
+  const groups = toAsciiDigits(String(raw ?? "")).match(/\d+/g) || [];
   const [first = "", second = ""] = groups;
   const digits = (
     keystrokeDigits === undefined &&
@@ -36,6 +38,7 @@ function layout(
   return {
     value: valid && year.length === 2 ? `${month}/${year}` : "",
     formattedValue: month.length < 2 ? month : month + (options?.separator ?? "/") + year,
+    complete: month.length === 2 && year.length === 2,
     month: valid ? monthNumber : undefined,
     year: year.length === 2 ? 2000 + +year : undefined,
   };

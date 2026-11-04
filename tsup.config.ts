@@ -5,6 +5,18 @@ import { defineConfig } from "tsup";
 
 const clientEntries = ["index", "number", "time", "date", "card"];
 
+const internalProps = [
+  "isCharacterAllowedAtPosition", "isCharacterFillingPosition", "isPositionEditable", "isValueEmpty",
+  "isValueFilled", "getDefaultSelectionForValue", "getFilledLength", "getStringFillingLengthAtPosition",
+  "placeString", "getLeftEditablePosition", "getRightEditablePosition", "countEditablePositionsFrom",
+  "getFillingCharacterIndices", "formatValue", "formatControlledValue", "clearRange", "repeatsLiteral",
+  "insertCharacterAtPosition", "insertStringAtPosition", "processChange", "maskOptions", "prefixHost",
+  "lastEditablePosition", "slots", "fillingIndices", "fillingLengthAt", "maskUtils", "skipped", "getLast",
+  "hasLegacyString", "getInputState", "setInputState", "getLastInputState", "getLastSelection",
+  "getLastValue", "inputRef", "unbind", "hasSeparator", "thousand", "negative", "frac", "int", "caret", "raw",
+  "ranges", "lengths", "gaps", "asciiDigits"
+];
+
 async function writeClientBoundaries(): Promise<void> {
   await mkdir("dist/rsc", { recursive: true });
   for (const entry of clientEntries) {
@@ -28,7 +40,10 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  target: "es2019",
+  target: "es2020",
   external: ["react"],
+  esbuildOptions(options) {
+    options.mangleProps = new RegExp(`^(${internalProps.join("|")})$`);
+  },
   onSuccess: writeClientBoundaries
 });

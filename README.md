@@ -9,7 +9,10 @@ country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, 
 postal codes for Georgia, Moldova, Ukraine, Turkmenistan). A maintained
 fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
-**[Live demo](https://temirtator.github.io/react-input-mask-format/)** (with a playground to try any mask) · **[Changelog](CHANGELOG.md)**
+**[Live demo](https://temirtator.github.io/react-input-mask-format/)** (with a playground to try any mask) ·
+**[Open in StackBlitz](https://stackblitz.com/github/Temirtator/react-input-mask-format/tree/master/examples/basic)**
+(a ready Vite + React project with presets, react-hook-form and the number, date and card fields) ·
+**[Changelog](CHANGELOG.md)**
 
 ## Installation
 
@@ -17,7 +20,7 @@ fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 npm install react-input-mask-format
 ```
 
-Requires React 16.8 or later.
+Requires React 17 or later and an ES2020 environment (Chrome 80, Firefox 72, Safari 13.1, Node 14 or newer).
 
 Works with server rendering and the Next.js App Router. Under the `react-server` export condition, which React Server
 Components bundlers use, the component entries (`react-input-mask-format`, `/number`, `/time`, `/date`, `/card`)
@@ -48,7 +51,7 @@ const ref = useMask({ mask: "+7 (999) 999-99-99" });
 The original `react-input-mask` has had no release since 2.0.4 (September 2018), and its repository is
 archived. Its 2.x uses `findDOMNode`, which React 19 removed. This fork is:
 
-- **React 16.8 – 19 compatible** — no `defaultProps`, no `findDOMNode`, StrictMode-safe
+- **React 17 – 19 compatible** — no `defaultProps`, no `findDOMNode`, StrictMode-safe
 - **TypeScript-first**, **zero runtime dependencies**, ESM + CJS, tree-shakable entry points
 - **Drop-in compatible** with `react-input-mask` v2 and v3-alpha APIs ([migration](#migrating-from-react-input-mask))
 - **Custom `children` work again** — broken upstream since v1.0.x
@@ -156,6 +159,14 @@ import InputMask, { extendedFormatChars } from "react-input-mask-format";
 
 String values (`{ w: "[a-z]" }`) still work but are deprecated.
 
+`defaultFormatChars` and `extendedFormatChars` are frozen. To add a token everywhere, spread them into a map of your
+own and pass it, or wrap `InputMask` in a component that does:
+
+```jsx
+const formatChars = { ...defaultFormatChars, "#": /[0-9A-F]/ };
+const HexInput = props => <InputMask formatChars={formatChars} {...props} />;
+```
+
 ### `beforeMaskedStateChange`
 
 Change the masked value and selection before they are applied. Receives:
@@ -206,6 +217,20 @@ const ref = useMask({ mask: "+7 (999) 999-99-99", maskPlaceholder: "_" });
 `useMask` is uncontrolled: don't pass a React `value`. `onChange` receives the masked value.
 For a controlled input use `<InputMask>`. When the options change (e.g. the mask follows a country picker), the
 text already in the input is re-formatted right away, as with `<InputMask>`; `onChange` is not called for it.
+
+### Formatting and checking outside a field
+
+`formatMask(value, preset)` returns the text the field would show (`""` when nothing fills a slot), and
+`isMaskComplete(value, preset)` tells whether every slot is filled. Both take a preset or
+`{ mask, maskPlaceholder, formatChars }` and accept raw or formatted text:
+
+```ts
+import { formatMask, isMaskComplete } from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+formatMask("7011234567", kzPhone);          // "+7 (701) 123-45-67"
+isMaskComplete("+7 (701) 123-45-6_", kzPhone); // false
+```
 
 ## Presets
 
@@ -410,7 +435,7 @@ empty field, the country code is read as the operator code, as with `uzPhone`; p
 
 `phonePresets` maps ISO codes (`KZ`, `RU`, `UZ`, `KG`, `BY`, `TJ`, `AM`, `AZ`, `GE`, `MD`, `UA`, `TM`) to the
 phone presets. `detectPhoneCountry(text)` reads the country from an international number that starts with `+`
-or `00` (`+7 701…` → `KZ`, `+7 912…` → `RU`, `+998…` → `UZ`) and returns `null` for anything else, including
+or `00` (`+7 701…` → `KZ`, `+7 912…` → `RU`, `+998…` → `UZ`) and returns `undefined` for anything else, including
 domestic numbers. Together they switch the mask when a number of another country is pasted:
 
 ```tsx
@@ -562,11 +587,11 @@ import { TimeFormat, useTimeFormat, formatTime, parseTime } from "react-input-ma
 const ref = useTimeFormat({ onValueChange: (v) => setTime(v.value) }); // <input ref={ref} />
 
 formatTime("2999");  // "23:59"
-parseTime("14:30");  // { value: "14:30", formattedValue: "14:30", hours: 14, minutes: 30 }
+parseTime("14:30");  // { value: "14:30", formattedValue: "14:30", complete: true, hours: 14, minutes: 30 }
 ```
 
-- `onValueChange` receives `{ value, formattedValue, hours, minutes }`. `value` is `""` until the time is
-  complete and always uses `:`, whatever the `separator` option (default `:`).
+- `onValueChange` receives `{ value, formattedValue, complete, hours, minutes }`. `value` is `""` until the time
+  is complete and always uses `:`, whatever the `separator` option (default `:`).
 - Complete hours are clamped to ≤ 23, complete minutes to ≤ 59; a single digit is never clamped.
 - Backspace right after the separator in a full time deletes the hour digit before it (`12:|30` → `13:0`);
   Delete right before it deletes the minute digit after it.
@@ -589,13 +614,14 @@ const ref = useDateFormat({ order: "ymd", separator: "-" }); // <input ref={ref}
 
 formatDate("12052024");    // "12.05.2024"
 formatDate("2024-05-12");  // "12.05.2024"
-parseDate("12.05.2024");   // { value: "2024-05-12", formattedValue: "12.05.2024", day: 12, month: 5, year: 2024 }
+parseDate("12.05.2024");   // { value: "2024-05-12", formattedValue: "12.05.2024", complete: true, day: 12, month: 5, year: 2024 }
 ```
 
 - `order` is `"dmy"` (default), `"mdy"` or `"ymd"`; `separator` defaults to `.`.
-- `onValueChange` receives `{ value, formattedValue, day, month, year }`. `value` is the ISO `YYYY-MM-DD`
-  date, whatever `order` and `separator` are, and is `""` until the date is complete and exists:
-  `31.04.2024` and `29.02.2023` keep their parts but have no `value`.
+- `onValueChange` receives `{ value, formattedValue, complete, day, month, year }`. `value` is the ISO
+  `YYYY-MM-DD` date, whatever `order` and `separator` are, and is `""` until the date is complete and exists:
+  `31.04.2024` and `29.02.2023` keep their parts but have no `value`. `complete` is `true` once every digit is
+  typed, so `complete && !value` means "a date that does not exist".
 - A day is clamped to 01–31 and a month to 01–12 when a key completes it, or when the whole value is set,
   pasted or autofilled; a single digit is never clamped and the year is not clamped. Typing a later field
   never changes an earlier one.
@@ -653,7 +679,7 @@ parseCardNumber("4111 1111 1111 1111"); // { value: "4111111111111111", formatte
                                         //   brand: "visa", complete: true, valid: true }
 detectCardBrand("2200");                // "mir"
 formatCardExpiry("12/2026");            // "12/26"
-parseCardExpiry("12/26");               // { value: "12/26", formattedValue: "12/26", month: 12, year: 2026 }
+parseCardExpiry("12/26");               // { value: "12/26", formattedValue: "12/26", complete: true, month: 12, year: 2026 }
 isCardExpired(10, 2026, new Date(2026, 9, 31)); // false: valid through the last day of the month
 formatCardCvc("12345", { brand: "amex" });      // "1234"
 ```
@@ -690,7 +716,7 @@ const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir
 - Typing or pasting past the brand's longest length drops the extra digits. Backspace right after a group
   separator deletes the digit before it and regroups (`4111 |1111` → `4111 111`).
 - Expiry: `value` is `MM/YY` with `/` whatever the `separator` option (default `/`), and `""` until month and
-  year are complete. The month is clamped to 01–12 when a key completes it; the year is not clamped, and
+  year are complete; `complete` says the same. The month is clamped to 01–12 when a key completes it; the year is not clamped, and
   `year` is `2000 + YY`. A pasted or autofilled `12/2026` or `1/26` lands in the right fields.
   `isCardExpired(month, year, now = new Date())` uses local time.
 - CVC: 4 digits for `amex`, otherwise 3 (also when `brand` is undefined). When `brand` changes from `amex`
@@ -738,6 +764,19 @@ function onAmount({ floatValue }: NumberFormatValues) {
 
 ## Known issues
 
+### Values written by form libraries
+
+react-hook-form's `setValue` and `reset(values)` write `input.value` directly, without an event, so a field bound
+with `register` (`useMask`, the number, date, time and card fields) shows that text as it is until the next edit.
+Pass the formatted text yourself (`setValue("phone", formatMask(raw, kzPhone))`), or use `Controller`, which
+renders the value through the component. `useForm({ defaultValues })` is formatted on mount.
+
+### `required` with a visible template
+
+While the template is shown (`alwaysShowMask`, or a focused empty field with a prefix such as `+7 (`), the input's
+value is not empty, so the native `required` attribute does not reject it. Validate with
+`isMaskComplete(value, preset)` instead.
+
 ### Autofill
 
 Browser autofill needs an empty input or a value that matches the start of the autofilled one: `+1` or
@@ -774,12 +813,12 @@ command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `
 ### react-hook-form: `InputMask` with `Controller`
 
 `InputMask` is controlled, so use `Controller` and spread `field` onto it. `field.ref` reaches the input,
-so focus-on-error and `setFocus` work. A mask with a placeholder keeps `_` in an incomplete value, which
+so focus-on-error and `setFocus` work. `isMaskComplete(value, preset)` tells whether every slot is filled, which
 makes a one-line `validate` enough (add `required` for the empty value); for documents add the checksum validator.
 
 ```tsx
 import { useForm, Controller } from "react-hook-form";
-import InputMask from "react-input-mask-format";
+import InputMask, { isMaskComplete } from "react-input-mask-format";
 import { kzPhone, kzIin } from "react-input-mask-format/presets";
 import { isValidIin } from "react-input-mask-format/validators";
 
@@ -794,7 +833,7 @@ function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
         control={control}
         rules={{
           required: "Enter a phone",
-          validate: (v) => !v.includes("_") || "Enter the full number",
+          validate: (v) => isMaskComplete(v, kzPhone) || "Enter the full number",
         }}
         render={({ field, fieldState }) => (
           <>
@@ -829,14 +868,14 @@ every ref change, so the mask survives re-renders from `formState`.
 
 ```tsx
 import { useForm } from "react-hook-form";
-import { useMask } from "react-input-mask-format";
+import { useMask, isMaskComplete } from "react-input-mask-format";
 import { kzPhone } from "react-input-mask-format/presets";
 
 function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
   const { register, handleSubmit, formState } = useForm<{ phone: string }>();
   const { ref, ...rest } = register("phone", {
     required: "Enter a phone",
-    validate: (v) => !v.includes("_") || "Enter the full number",
+    validate: (v) => isMaskComplete(v, kzPhone) || "Enter the full number",
   });
   const maskRef = useMask(kzPhone);
   return (
@@ -984,6 +1023,23 @@ Any component that forwards its ref to the native `<input>` works as an `InputMa
 `useMask` (see [`children`](#children)).
 
 ## Migration
+
+### Upgrading from 2.x to 3.0
+
+Most apps need no code change. Check these:
+
+| Change | What to do |
+|---|---|
+| The published code is ES2020 (`??`, `?.`): Chrome 80, Firefox 72, Safari 13.1, Node 14 or newer | Nothing for current bundlers. A toolchain that cannot parse ES2020 (webpack 4 without Babel for `node_modules`) has to transpile the package. |
+| React 17 or newer is required | Upgrade React 16 apps first. |
+| `defaultFormatChars` and `extendedFormatChars` are frozen | Assigning a token to them throws in strict code (ES modules) and is ignored in sloppy-mode scripts. Spread them into your own map: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`. |
+| `detectPhoneCountry` returns `undefined` instead of `null` | Replace `=== null` checks with a falsy check. |
+| Text from an input method (Android Gboard, CJK IMEs) is masked once, when it is committed | Components call `onChange` once per commit. With the hooks, your own `onChange` sees the raw text while composing, then the masked text. |
+
+New in 3.0, no action needed: components that bundlers drop when you import only a function or a hook (much
+smaller bundles for `formatDate`, `useMask`, …), `formatMask` and `isMaskComplete`, `complete` in the date, time and
+expiry values, Arabic-Indic, Persian and full-width digits read as `0-9`, and a ready
+[StackBlitz example](https://stackblitz.com/github/Temirtator/react-input-mask-format/tree/master/examples/basic).
 
 ### Migrating from react-input-mask
 

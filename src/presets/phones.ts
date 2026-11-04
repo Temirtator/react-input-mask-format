@@ -34,9 +34,9 @@ const CODES: Array<[string, PhoneCountry]> = [
   ["994", "AZ"], ["995", "GE"], ["996", "KG"], ["998", "UZ"], ["7", "RU"]
 ];
 
-export function detectPhoneCountry(value: string): PhoneCountry | null {
+export function detectPhoneCountry(value: string): PhoneCountry | undefined {
   const match = /^\s*(?:\+|00)([\d\s().-]*)/.exec(value ?? "");
   const digits = match ? match[1].replace(/\D/g, "") : "";
   const found = CODES.find(([code]) => digits.startsWith(code) && digits.length > code.length);
-  return !found ? null : found[1] === "RU" && /^7[67]/.test(digits) ? "KZ" : found[1];
+  return !found ? undefined : found[1] === "RU" && /^7[67]/.test(digits) ? "KZ" : found[1];
 }

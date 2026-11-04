@@ -1,5 +1,67 @@
 # Changelog
 
+## 3.0.0
+
+One larger update. See "Upgrading from 2.x to 3.0" in the README for what to check.
+
+### Added
+- Arabic-Indic (`٠١٢…`), Persian (`۰۱۲…`) and full-width (`０１２…`) digits are read as `0-9` everywhere: typed,
+  pasted or passed as `value` to `InputMask` / `useMask`, the number, date, time and card fields, and in
+  `formatNumber`, `parseNumber`, `formatDate`, `formatTime`, `formatCardNumber`, `detectCardBrand` and friends.
+  Before, they were dropped (`formatNumber("١٢٣")` gave `""`). The number fields also read the Arabic decimal
+  separator `٫` and the full-width full stop `．` as `.` (`۱۲٫۵` → `12.5`). Masks whose own `formatChars` or
+  `maskPlaceholder` use such digits keep them as they are.
+- `formatMask(value, preset)` returns the text a field with that mask shows (`""` when nothing fills a slot), for
+  example to pass a formatted value to react-hook-form's `setValue`.
+- `isMaskComplete(value, preset)` (or `{ mask, maskPlaceholder, formatChars }`) tells whether every slot of the mask
+  is filled; it accepts formatted or raw text. Use it instead of checking for `_`, which breaks with a custom
+  `maskPlaceholder` or `maskPlaceholder={null}`. For variable-length masks such as `iban`, use the validator.
+- `complete` in the values of `DateFormat`, `TimeFormat` and `CardExpiryFormat` (and their hooks and `parse*`
+  functions), as the card number and CVC already had: `true` once every digit is typed. For a date, `complete`
+  without a `value` means a day that does not exist (`31.02.2024`).
+
+### Changed
+- **Breaking:** the published code targets ES2020 and keeps `??` and `?.`. Supported: Chrome 80, Firefox 72,
+  Safari 13.1, Node 14 and newer. A toolchain that cannot parse ES2020, such as webpack 4 without Babel for
+  `node_modules`, has to transpile the package. Bundles get smaller: index −77 B, number −100 B, time, date and card
+  −70 to −90 B.
+- Importing one function no longer pulls in the components of its entry. `InputMask`, `NumberFormat`,
+  `DateFormat`, `TimeFormat` and the card fields are marked as pure, so bundlers drop them when unused. Measured
+  with esbuild (brotli): `useMask` alone 6.2 → 4.8 kB, `formatDate` 2.0 → 0.7 kB, `detectCardBrand` 2.4 → 0.7 kB,
+  `formatNumber` 2.0 → 0.9 kB, `extendedFormatChars` 5.5 → 0.3 kB. A Vite app that imports only `formatDate` is
+  3.8 kB (minified) smaller. `displayName`s are unchanged.
+- Internal property names are shortened in the published code (esbuild `mangleProps` with an explicit list of
+  names that are never part of the API): index 6.24 → 5.95 kB, `useMask` alone 4.78 → 4.50 kB.
+- **Breaking:** React 17 or newer is required (`peerDependencies.react` is `>=17.0.0`). React 16 was listed as
+  supported but never tested, and two tests fail on 16.14; CI tests 17, 18 and 19.
+- **Breaking:** `defaultFormatChars` and `extendedFormatChars` are frozen. Assigning a token to them now throws a
+  `TypeError` in strict code (ES modules, classes; ignored without an error in sloppy-mode scripts) instead of
+  silently changing every mask in the app, presets included. Spread them into a map of your
+  own: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`.
+- **Breaking:** `detectPhoneCountry` returns `undefined` instead of `null` when the text is not an international
+  number of a known country, like `detectCardBrand`. Code that compares with `=== null` must check for a falsy
+  value instead.
+
+### Fixed
+- `InputMask` and `useMask` read the selection again right before each edit (`beforeinput`). Before, it was read once
+  per animation frame, so a key pressed in the same frame as a caret move (End, an arrow key, a script calling
+  `setSelectionRange`) could be applied at the old caret position: after End in a partly filled phone field the first
+  digit was sometimes lost.
+- Text typed through an input method (Android Gboard, Chinese, Japanese and Korean IMEs) is no longer corrupted.
+  Before, every field masked the text while it was still being composed, so the browser restarted the composition
+  and characters were duplicated: composing `123` into `99/99/9999` gave `11/21/2312`, and `kzbn` into an uppercase
+  `aaaa` mask gave `KKZK`. Now the composed text stays as typed until it is committed, then it is masked once,
+  like a paste (`12/3_/____`, `KZBN`). `InputMask`, `NumberFormat`, `DateFormat`, `TimeFormat` and the card fields
+  call `onChange` once per commit with the masked value; with the hooks (`useMask`, `useNumberFormat`,
+  `useDateFormat`, …) your own `onChange` also sees the raw text while composing, then the masked text.
+  `onCompositionStart` and `onCompositionEnd` props are still called.
+
+### Internal
+- size-limit also checks what importing one name costs (`useMask`, `formatNumber`, `formatDate`, `detectCardBrand`,
+  `CardNumberFormat`, …), so tree-shaking cannot regress unnoticed.
+- CI runs the whole test suite a second time against the built `dist` files (`npm run test:dist`), and also on
+  pushes to `next`.
+
 ## 2.15.0
 
 ### Fixed

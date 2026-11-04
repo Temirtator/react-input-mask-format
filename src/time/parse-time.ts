@@ -12,7 +12,7 @@ export function parseTime(formatted: string, options?: TimeFormatOptions): TimeF
   const minutes = parts.minutes.length === 2 ? parseInt(parts.minutes, 10) : undefined;
   const value =
     hours !== undefined && minutes !== undefined ? `${parts.hours}:${parts.minutes}` : "";
-  return { value, formattedValue, hours, minutes };
+  return { value, formattedValue, complete: value !== "", hours, minutes };
 }
 
 export function resolveCaret(
