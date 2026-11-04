@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Changed
+- **Breaking:** `detectPhoneCountry` returns `undefined` instead of `null` when the text is not an international
+  number of a known country, like `detectCardBrand`. Code that compares with `=== null` must check for a falsy
+  value instead.
 - **Breaking:** the published code targets ES2020 and keeps `??` and `?.`. Supported: Chrome 80, Firefox 72,
   Safari 13.1, Node 14 and newer. A toolchain that cannot parse ES2020, such as webpack 4 without Babel for
   `node_modules`, has to transpile the package. Bundles get smaller: index −77 B, number −100 B, time, date and card
@@ -21,6 +24,12 @@
   own: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`.
 
 ### Added
+- `isMaskComplete(value, preset)` (or `{ mask, maskPlaceholder, formatChars }`) tells whether every slot of the mask
+  is filled; it accepts formatted or raw text. Use it instead of checking for `_`, which breaks with a custom
+  `maskPlaceholder` or `maskPlaceholder={null}`. For variable-length masks such as `iban`, use the validator.
+- `complete` in the values of `DateFormat`, `TimeFormat` and `CardExpiryFormat` (and their hooks and `parse*`
+  functions), as the card number and CVC already had: `true` once every digit is typed. For a date, `complete`
+  without a `value` means a day that does not exist (`31.02.2024`).
 - Arabic-Indic (`٠١٢…`), Persian (`۰۱۲…`) and full-width (`０１２…`) digits are read as `0-9` everywhere: typed,
   pasted or passed as `value` to `InputMask` / `useMask`, the number, date, time and card fields, and in
   `formatNumber`, `parseNumber`, `formatDate`, `formatTime`, `formatCardNumber`, `detectCardBrand` and friends.

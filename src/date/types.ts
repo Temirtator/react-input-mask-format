@@ -8,6 +8,7 @@ export interface DateFormatOptions {
 export interface DateFormatValues {
   value: string;
   formattedValue: string;
+  complete: boolean;
   day: number | undefined;
   month: number | undefined;
   year: number | undefined;
