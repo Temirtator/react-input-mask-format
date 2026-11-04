@@ -228,6 +228,60 @@
     {
       "path": "dist/card.js",
       "limit": "3.5 KB"
+    },
+    {
+      "name": "index { useMask }",
+      "path": "dist/index.js",
+      "import": "{ useMask }",
+      "limit": "5 KB"
+    },
+    {
+      "name": "index { extendedFormatChars }",
+      "path": "dist/index.js",
+      "import": "{ extendedFormatChars }",
+      "limit": "0.4 KB"
+    },
+    {
+      "name": "number { formatNumber }",
+      "path": "dist/number.js",
+      "import": "{ formatNumber }",
+      "limit": "1 KB"
+    },
+    {
+      "name": "number { useNumberFormat }",
+      "path": "dist/number.js",
+      "import": "{ useNumberFormat }",
+      "limit": "2 KB"
+    },
+    {
+      "name": "time { formatTime }",
+      "path": "dist/time.js",
+      "import": "{ formatTime }",
+      "limit": "0.45 KB"
+    },
+    {
+      "name": "date { formatDate }",
+      "path": "dist/date.js",
+      "import": "{ formatDate }",
+      "limit": "0.8 KB"
+    },
+    {
+      "name": "card { detectCardBrand }",
+      "path": "dist/card.js",
+      "import": "{ detectCardBrand }",
+      "limit": "0.75 KB"
+    },
+    {
+      "name": "card { CardNumberFormat }",
+      "path": "dist/card.js",
+      "import": "{ CardNumberFormat }",
+      "limit": "2.3 KB"
+    },
+    {
+      "name": "presets { kzPhone }",
+      "path": "dist/presets.js",
+      "import": "{ kzPhone }",
+      "limit": "0.15 KB"
     }
   ],
   "scripts": {

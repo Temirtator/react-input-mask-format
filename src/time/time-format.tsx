@@ -1,8 +1,8 @@
 import * as React from "react";
-import { forwardRef } from "react";
 import type { TimeFormatOptions, TimeFormatValues } from "./types";
 import { timeKind } from "./use-time-format";
 import { useDigitInput } from "../utils/digit-format";
+import { component } from "../utils/component";
 
 export interface TimeFormatProps
   extends TimeFormatOptions,
@@ -12,7 +12,7 @@ export interface TimeFormatProps
   onValueChange?: (values: TimeFormatValues) => void;
 }
 
-export const TimeFormat = forwardRef<HTMLInputElement, TimeFormatProps>(function TimeFormat(
+export const TimeFormat = /* @__PURE__ */ component<HTMLInputElement, TimeFormatProps>("TimeFormat", function TimeFormat(
   props,
   forwardedRef
 ) {
@@ -21,4 +21,3 @@ export const TimeFormat = forwardRef<HTMLInputElement, TimeFormatProps>(function
   return <input inputMode="numeric" {...domProps} {...input} />;
 });
 
-TimeFormat.displayName = "TimeFormat";
