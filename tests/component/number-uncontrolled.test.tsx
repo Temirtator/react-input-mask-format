@@ -79,7 +79,7 @@ describe("NumberFormat without value", () => {
 });
 
 describe("onChange on number, date, time and card fields", () => {
-  it.each<[string, React.ReactElement, string, string]>([
+  it.each<[string, React.ReactElement<Record<string, unknown>>, string, string]>([
     ["NumberFormat", <NumberFormat thousandSeparator="," />, "1234", "1,234"],
     ["DateFormat", <DateFormat />, "12052024", "12.05.2024"],
     ["TimeFormat", <TimeFormat />, "0930", "09:30"],
