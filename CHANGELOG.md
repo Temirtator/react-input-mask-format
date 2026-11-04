@@ -28,6 +28,12 @@
   runtime).
 - A form reset brings an uncontrolled `DateFormat`, `TimeFormat` or card field back to its `defaultValue` (or
   empty), like a plain input. A controlled field keeps showing its `value`.
+- `InputMask` and `useMask` no longer drop what you type after moving the caret past the last slot of a focused
+  field (a click at its right edge or End). Before, every character was lost (`+7 (701) ___-__-__` stayed as
+  is); now typing and pasting go to the slot after the last filled one, where focus puts the caret (`2345678`
+  gives `+7 (701) 234-56-78`), and a key no slot accepts moves the caret there. A field whose last slot is
+  filled still ignores typing at the end. A placeholder character typed into the last slot is replaced by the
+  next typed character.
 
 ## 2.13.0
 

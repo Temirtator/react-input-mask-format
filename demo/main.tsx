@@ -138,6 +138,11 @@ function UseMaskField() {
   );
 }
 
+function PhoneHookField() {
+  const ref = useMask(kzPhone);
+  return <input ref={ref} data-testid="kzPhone-hook" style={fieldStyle} />;
+}
+
 function NumericHookField() {
   const ref = useNumberFormat({ thousandSeparator: " " });
   return <input ref={ref} data-testid="numeric-hook" style={fieldStyle} />;
@@ -390,6 +395,7 @@ function App() {
         <section style={{ display: "grid", gap: 9 }}>
           <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: dim }}>Hook API · useMask</div>
           <Row label="useMask" sub="ref on your own <input>"><UseMaskField /></Row>
+          <Row label="Phone hook" sub="useMask(kzPhone)"><PhoneHookField /></Row>
         </section>
 
         <section style={{ display: "grid", gap: 9 }}>

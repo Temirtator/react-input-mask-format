@@ -11,6 +11,22 @@ export const known = {
     const slots = slotIndices(d);
     return literalsAfterFirstSlot(d).some(char => slots.some(i => accepts(d, i, char) || d.placeholder?.[i] === char));
   },
+  typesPlaceholderIntoLastSlot(d: MaskDescription, text: string): boolean {
+    const slots = slotIndices(d);
+    let next = 0;
+    for (let i = 0; i < text.length && next < slots.length; i++) {
+      const slot = slots[next];
+      const accepted = accepts(d, slot, text[i]);
+      if (!accepted && d.placeholder?.[slot] !== d.transform(text[i], slot)) {
+        continue;
+      }
+      if (next === slots.length - 1 && !accepted) {
+        return text.slice(i + 1).split("").some(char => slots.some(position => accepts(d, position, char)));
+      }
+      next++;
+    }
+    return false;
+  },
   entersPrefixStart(d: MaskDescription, text: string, start: number): boolean {
     if (start >= d.prefix.length || !text.length) {
       return false;

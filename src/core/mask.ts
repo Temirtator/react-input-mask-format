@@ -335,6 +335,19 @@ export default class MaskUtils {
     const { value, selection } = currentState;
     const previousValue = previousState.value;
     const previousSelection = previousState.selection;
+    if (
+      !this.isValueFilled(previousValue) &&
+      previousSelection.start! > lastEditablePosition! &&
+      selection.end! > previousSelection.start!
+    ) {
+      const free = this.getDefaultSelectionForValue(previousValue).start!;
+      const typed = value.slice(previousSelection.start!, selection.end!);
+      const caret = free + typed.length;
+      return this.processChange(
+        { value: previousValue.slice(0, free) + typed + previousValue.slice(free), selection: { start: caret, end: caret } },
+        { value: previousValue, selection: { start: free, end: free } }
+      );
+    }
     let newValue = value;
     let enteredString = "";
     let formattedEnteredStringLength = 0;
