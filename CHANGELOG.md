@@ -5,6 +5,9 @@
 ### Added
 - `vin` preset in `react-input-mask-format/presets` (17 characters, uppercase, Cyrillic look-alikes become
   Latin, `I` becomes `1`, `O`/`Q` become `0`) and `isValidVin` validator (format only, no check digit).
+- `iban` preset (any country, up to 34 characters grouped by 4, uppercase, Cyrillic look-alikes become Latin)
+  and `isValidIban(value, country?)` validator (ISO 13616 structure and MOD-97 for any country; `country`
+  restricts the code). Georgia, Moldova, Ukraine and other IBAN countries without a pack can use them.
 
 ## 2.13.0
 

@@ -216,6 +216,7 @@ Masks are shown as users see them. PRs adding other countries are welcome; see [
 | --- | --- | --- |
 | `card` | `9999 9999 9999 9999` | `4242 4242 4242 4242` |
 | `vin` | 17 characters, no `I`, `O`, `Q` | `WVWZZZ1JZ3W386752` |
+| `iban` | any country, up to 34 characters in groups of 4 | `GB82 WEST 1234 5698 7654 32` |
 
 `card` is a fixed 16-digit mask. For Amex, 19-digit numbers and brand detection, use
 [`react-input-mask-format/card`](#cards--react-input-mask-formatcard).
@@ -225,6 +226,10 @@ with `1` and `O`/`Q` (also Cyrillic `О`) with `0`, since VINs never contain tho
 contrast, rejects a raw `I`, `O` or `Q`. Paste a VIN without its label: `VIN WVWZZZ1JZ3W386752` is read as
 `V1NWVWZZZ1JZ3W386` (the label's `I` becomes `1`) and a Cyrillic `ВИН` becomes `BH` (the `И` is dropped).
 Limitation: VINs issued before 1981 are shorter and non-standard, so they do not fit the mask.
+
+`iban` takes two letters, two digits and up to 30 letters or digits, uppercased, with Cyrillic look-alikes
+turned into Latin. It has no placeholder, so a value that ends on a full group also ends with a space; trim it
+before saving. The country packs have exact-length IBAN presets (`kzIban`, `ruIban`, …).
 
 ### Kazakhstan
 
@@ -419,6 +424,7 @@ luhn("4242 4242 4242 4242");                           // true
 | --- | --- |
 | `luhn` | card number, Luhn |
 | `isValidVin` | format only (17 characters, no `I`, `O`, `Q`), no check digit |
+| `isValidIban(value, country?)` | any IBAN: ISO 13616 structure (check digits 02–98) and MOD-97; with `country` the code must match; the length per country is not checked |
 | `isValidIin`, `isValidBin` | KZ IIN / BIN, mod-11 |
 | `isValidKzIban` | KZ IBAN, ISO 7064 MOD-97 |
 | `isValidRuInn` | RU INN, 10 (company) or 12 (person) digits |

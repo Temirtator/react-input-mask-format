@@ -8,3 +8,4 @@ export * from "./tj";
 export * from "./am";
 export * from "./az";
 export * from "./vin";
+export * from "./iban";
