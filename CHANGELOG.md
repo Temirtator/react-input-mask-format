@@ -7,6 +7,8 @@
   pasted or passed as `value` to `InputMask` / `useMask`, the number, date, time and card fields, and in
   `formatNumber`, `parseNumber`, `formatDate`, `formatTime`, `formatCardNumber`, `detectCardBrand` and friends.
   Before, they were dropped (`formatNumber("١٢٣")` gave `""`).
+- `formatMask(value, preset)` returns the text a field with that mask shows (`""` when nothing fills a slot), for
+  example to pass a formatted value to react-hook-form's `setValue`.
 - `isMaskComplete(value, preset)` (or `{ mask, maskPlaceholder, formatChars }`) tells whether every slot of the mask
   is filled; it accepts formatted or raw text. Use it instead of checking for `_`, which breaks with a custom
   `maskPlaceholder` or `maskPlaceholder={null}`. For variable-length masks such as `iban`, use the validator.

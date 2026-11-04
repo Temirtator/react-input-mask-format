@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isMaskComplete } from "../../src/index";
+import { formatMask, isMaskComplete } from "../../src/index";
 import { kzPhone, iban, detectPhoneCountry } from "../../src/presets";
 import { parseDate } from "../../src/date";
 import { parseTime } from "../../src/time";
@@ -55,5 +55,19 @@ describe("isMaskComplete", () => {
 describe("detectPhoneCountry", () => {
   it("returns undefined when nothing matches, like detectCardBrand", () => {
     expect(detectPhoneCountry("12345")).toBeUndefined();
+  });
+});
+
+describe("formatMask", () => {
+  it("formats raw or formatted text the way the field shows it", () => {
+    expect(formatMask("7011234567", kzPhone)).toBe("+7 (701) 123-45-67");
+    expect(formatMask("+7 (701) 123-45-67", kzPhone)).toBe("+7 (701) 123-45-67");
+    expect(formatMask("1205", { mask: "99/99/9999" })).toBe("12/05/____");
+    expect(formatMask("1205", { mask: "99/99/9999", maskPlaceholder: null })).toBe("12/05/");
+  });
+
+  it("returns an empty string when nothing fills a slot", () => {
+    expect(formatMask("", kzPhone)).toBe("");
+    expect(formatMask("abc", { mask: "99/99" })).toBe("");
   });
 });
