@@ -276,6 +276,8 @@ export function useDigitInput<O, V extends DigitValues>(
     const reset = (event: Event): void => {
       if (event.target === form && !event.defaultPrevented && uncontrolledRef.current) {
         lastValuesRef.current = null;
+        composingRef.current = false;
+        composingTextRef.current = null;
         forceUpdate();
       }
     };

@@ -6,7 +6,9 @@
 - Arabic-Indic (`٠١٢…`), Persian (`۰۱۲…`) and full-width (`０１２…`) digits are read as `0-9` everywhere: typed,
   pasted or passed as `value` to `InputMask` / `useMask`, the number, date, time and card fields, and in
   `formatNumber`, `parseNumber`, `formatDate`, `formatTime`, `formatCardNumber`, `detectCardBrand` and friends.
-  Before, they were dropped (`formatNumber("١٢٣")` gave `""`).
+  Before, they were dropped (`formatNumber("١٢٣")` gave `""`). The number fields also read the Arabic decimal
+  separator `٫` and the full-width full stop `．` as `.` (`۱۲٫۵` → `12.5`). Masks whose own `formatChars` or
+  `maskPlaceholder` use such digits keep them as they are.
 - `formatMask(value, preset)` returns the text a field with that mask shows (`""` when nothing fills a slot), for
   example to pass a formatted value to react-hook-form's `setValue`.
 - `isMaskComplete(value, preset)` (or `{ mask, maskPlaceholder, formatChars }`) tells whether every slot of the mask
@@ -31,7 +33,8 @@
 - **Breaking:** React 17 or newer is required (`peerDependencies.react` is `>=17.0.0`). React 16 was listed as
   supported but never tested, and two tests fail on 16.14; CI tests 17, 18 and 19.
 - **Breaking:** `defaultFormatChars` and `extendedFormatChars` are frozen. Assigning a token to them now throws a
-  `TypeError` instead of silently changing every mask in the app, presets included. Spread them into a map of your
+  `TypeError` in strict code (ES modules, classes; ignored without an error in sloppy-mode scripts) instead of
+  silently changing every mask in the app, presets included. Spread them into a map of your
   own: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`.
 - **Breaking:** `detectPhoneCountry` returns `undefined` instead of `null` when the text is not an international
   number of a known country, like `detectCardBrand`. Code that compares with `=== null` must check for a falsy

@@ -1,4 +1,5 @@
 import { isSingleKeystroke } from "../utils/digit-format";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export interface CardExpiryOptions {
   separator?: string;
@@ -17,7 +18,7 @@ function layout(
   options: CardExpiryOptions | undefined,
   keystrokeDigits?: number
 ): CardExpiryValues {
-  const groups = String(raw ?? "").match(/\d+/g) || [];
+  const groups = toAsciiDigits(String(raw ?? "")).match(/\d+/g) || [];
   const [first = "", second = ""] = groups;
   const digits = (
     keystrokeDigits === undefined &&
