@@ -1,5 +1,5 @@
 import type { MaskConfig } from "./core/config";
-import { decideChange, decideFocus, decideBlur, decideClickSelection } from "./core/decide";
+import { decideChange, decideFocus, decideBlur, decideClickSelection, decideUpdate } from "./core/decide";
 import { createSelectionTracker } from "./core/selection-tracker";
 import { watchClick } from "./core/click-tracker";
 import type { InputState } from "./types";
@@ -121,6 +121,12 @@ export function createMaskController(config: MaskConfig): MaskController {
 
   function update(nextConfig: MaskConfig): void {
     config = nextConfig;
+    if (input) {
+      const nextState = decideUpdate(config, getInputState(), isInputFocused(input));
+      if (nextState.value !== input.value) {
+        setInputState(nextState);
+      }
+    }
   }
 
   return { bind, unbind, update };

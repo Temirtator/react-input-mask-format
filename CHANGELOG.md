@@ -78,6 +78,10 @@
   Before, a typed or pasted `.` stayed at the end (`12.`) and the next digits went nowhere until it was
   deleted; now `12.` shows `12`, a pasted `1,234.56` becomes `1,234`, and a `.` typed in the middle of
   `1,234` changes nothing.
+- `useMask` re-formats the text already in the input when `mask`, `maskPlaceholder`, `alwaysShowMask`,
+  `formatChars` or `transform` change, like `<InputMask>` does. Before, the hook kept the old layout until the
+  next edit (`12/34` stayed after switching to `99-99-99`; now it shows `12-34-__`), and turning
+  `alwaysShowMask` on did not show the template.
 
 ### Internal
 - React StrictMode tests for `useMask`, `./number`, `./time`, `./date` and `./card` components and hooks, and more
