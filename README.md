@@ -17,7 +17,7 @@ fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 npm install react-input-mask-format
 ```
 
-Requires React 16.8 or later and an ES2020 environment (Chrome 80, Firefox 72, Safari 13.1, Node 14 or newer).
+Requires React 17 or later and an ES2020 environment (Chrome 80, Firefox 72, Safari 13.1, Node 14 or newer).
 
 Works with server rendering and the Next.js App Router. Under the `react-server` export condition, which React Server
 Components bundlers use, the component entries (`react-input-mask-format`, `/number`, `/time`, `/date`, `/card`)
@@ -48,7 +48,7 @@ const ref = useMask({ mask: "+7 (999) 999-99-99" });
 The original `react-input-mask` has had no release since 2.0.4 (September 2018), and its repository is
 archived. Its 2.x uses `findDOMNode`, which React 19 removed. This fork is:
 
-- **React 16.8 – 19 compatible** — no `defaultProps`, no `findDOMNode`, StrictMode-safe
+- **React 17 – 19 compatible** — no `defaultProps`, no `findDOMNode`, StrictMode-safe
 - **TypeScript-first**, **zero runtime dependencies**, ESM + CJS, tree-shakable entry points
 - **Drop-in compatible** with `react-input-mask` v2 and v3-alpha APIs ([migration](#migrating-from-react-input-mask))
 - **Custom `children` work again** — broken upstream since v1.0.x
@@ -155,6 +155,14 @@ import InputMask, { extendedFormatChars } from "react-input-mask-format";
 ```
 
 String values (`{ w: "[a-z]" }`) still work but are deprecated.
+
+`defaultFormatChars` and `extendedFormatChars` are frozen. To add a token everywhere, spread them into a map of your
+own and pass it, or wrap `InputMask` in a component that does:
+
+```jsx
+const formatChars = { ...defaultFormatChars, "#": /[0-9A-F]/ };
+const HexInput = props => <InputMask formatChars={formatChars} {...props} />;
+```
 
 ### `beforeMaskedStateChange`
 
