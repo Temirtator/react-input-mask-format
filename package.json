@@ -239,6 +239,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:dist": "vitest run --config vitest.dist.config.ts",
     "test:e2e": "playwright test",
     "size": "size-limit",
     "prepublishOnly": "npm run build"

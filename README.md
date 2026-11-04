@@ -17,7 +17,7 @@ fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 npm install react-input-mask-format
 ```
 
-Requires React 16.8 or later.
+Requires React 16.8 or later and an ES2020 environment (Chrome 80, Firefox 72, Safari 13.1, Node 14 or newer).
 
 Works with server rendering and the Next.js App Router. Under the `react-server` export condition, which React Server
 Components bundlers use, the component entries (`react-input-mask-format`, `/number`, `/time`, `/date`, `/card`)
