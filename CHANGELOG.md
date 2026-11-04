@@ -83,6 +83,9 @@
 - React StrictMode tests for `useMask`, `./number`, `./time`, `./date` and `./card` components and hooks, and more
   cases for `InputMask`: each scenario runs with and without `<StrictMode>` and must show the same value, caret and
   emitted values.
+- Property-based tests (fast-check) for `./number`, `./time`, `./date`, `./card` and the shared digit-field
+  helpers: idempotence, format/parse round trips, output shape and ranges, truncation, separator and brand
+  invariants, and Backspace/Delete next to a separator.
 
 ## 2.13.0
 
