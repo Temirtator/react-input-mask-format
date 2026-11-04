@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Changed
+- **Breaking:** `defaultFormatChars` and `extendedFormatChars` are frozen. Assigning a token to them now throws a
+  `TypeError` instead of silently changing every mask in the app, presets included. Spread them into a map of your
+  own: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`.
 - **Breaking:** the published code targets ES2020 and keeps `??` and `?.`. Supported: Chrome 80, Firefox 72,
   Safari 13.1, Node 14 and newer. A toolchain that cannot parse ES2020, such as webpack 4 without Babel for
   `node_modules`, has to transpile the package. Bundles get smaller: index −77 B, number −100 B, time, date and card
