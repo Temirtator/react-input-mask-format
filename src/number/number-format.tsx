@@ -72,6 +72,9 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
   // real commit happens with the preserved `formatted` string, so the DOM
   // node's committed value is updated and nothing gets restored away.
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
+  const composingRef = useRef(false);
+  const composingTextRef = useRef<string | null>(null);
+  const composedRef = useRef(false);
 
   const controlledRef = useRef(false);
   if (valueProp !== undefined) controlledRef.current = true;
@@ -124,13 +127,40 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const el = event.target;
+    if (composingRef.current || (event.nativeEvent as InputEvent).isComposing) {
+      composingRef.current = true;
+      composingTextRef.current = el.value;
+      forceUpdate();
+      return;
+    }
+    if (composedRef.current) {
+      composedRef.current = false;
+      if (el.value === lastFormattedRef.current) return;
+    }
     const inputType = (event.nativeEvent as InputEvent).inputType;
-    const typed = readTyped(
-      el.value,
-      el.selectionStart ?? el.value.length,
-      options,
-      inputType ? inputType.startsWith("insert") : el.value.length > lastFormattedRef.current.length
-    );
+    apply(event, inputType ? inputType.startsWith("insert") : el.value.length > lastFormattedRef.current.length);
+  }
+
+  function handleCompositionStart(event: React.CompositionEvent<HTMLInputElement>): void {
+    composingRef.current = true;
+    domProps.onCompositionStart?.(event);
+  }
+
+  function handleCompositionEnd(event: React.CompositionEvent<HTMLInputElement>): void {
+    composingRef.current = false;
+    composingTextRef.current = null;
+    if (event.currentTarget.value !== lastFormattedRef.current) {
+      composedRef.current = true;
+      apply(event, true);
+    } else {
+      forceUpdate();
+    }
+    domProps.onCompositionEnd?.(event);
+  }
+
+  function apply(event: React.SyntheticEvent<HTMLInputElement>, inserted: boolean): void {
+    const el = event.currentTarget;
+    const typed = readTyped(el.value, el.selectionStart ?? el.value.length, options, inserted);
     const digits = digitsBeforeCaret(typed.raw, typed.caret);
     const values = parseNumber(typed.raw, options);
 
@@ -154,7 +184,7 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
     onValueChange?.(values);
     if (onChange) {
       el.value = values.formattedValue;
-      onChange(event);
+      onChange(event as React.ChangeEvent<HTMLInputElement>);
     }
   }
 
@@ -166,7 +196,14 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
       setInputSelection(el, caretRef.current, caretRef.current);
       caretRef.current = null;
     }
-    if (el && uncontrolled && caretRef.current === null && el.value !== lastFormattedRef.current && el.selectionStart !== null) {
+    if (
+      el &&
+      uncontrolled &&
+      !composingRef.current &&
+      caretRef.current === null &&
+      el.value !== lastFormattedRef.current &&
+      el.selectionStart !== null
+    ) {
       const adopted = parseNumber(el.value, options);
       if (adopted.formattedValue !== lastFormattedRef.current) {
         lastValuesRef.current = adopted;
@@ -181,6 +218,15 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
     else if (forwardedRef) (forwardedRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
   }
 
-  return <input {...domProps} ref={setRef} value={formatted} onChange={handleChange} />;
+  return (
+    <input
+      {...domProps}
+      ref={setRef}
+      value={composingTextRef.current ?? formatted}
+      onChange={handleChange}
+      onCompositionStart={handleCompositionStart}
+      onCompositionEnd={handleCompositionEnd}
+    />
+  );
 });
 

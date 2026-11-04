@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useReducer, useRef } from "react";
 import { useIsomorphicLayoutEffect } from "./utils/layout-effect";
 
 import { useInputState, useInputElement, usePrevious } from "./hooks";
@@ -57,12 +58,54 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
     getLastInputState
   } = useInputState(initialValue, isMasked);
   const getInputElement = useInputElement(inputRef);
+  const compositionRef = useRef<InputState | null>(null);
+  const composingTextRef = useRef<string | null>(null);
+  const composedRef = useRef(false);
+  const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
 
   function onChange(event: React.ChangeEvent<HTMLInputElement>): void {
+    if (compositionRef.current || (event.nativeEvent as InputEvent).isComposing) {
+      compositionRef.current = compositionRef.current || getLastInputState();
+      if (isControlled) {
+        composingTextRef.current = event.target.value;
+        forceUpdate();
+      }
+      return;
+    }
+    if (composedRef.current) {
+      composedRef.current = false;
+      if (event.target.value === getLastInputState().value) return;
+    }
     const newInputState = decideChange(config, getInputState(), getLastInputState());
     setInputState(newInputState);
     if (props.onChange) {
       props.onChange(event);
+    }
+  }
+
+  function onCompositionStart(event: React.CompositionEvent<HTMLInputElement>): void {
+    compositionRef.current = { value: getLastInputState().value, selection: getInputSelection(event.currentTarget) };
+    if (props.onCompositionStart) {
+      props.onCompositionStart(event);
+    }
+  }
+
+  function onCompositionEnd(event: React.CompositionEvent<HTMLInputElement>): void {
+    const before = compositionRef.current;
+    compositionRef.current = null;
+    composingTextRef.current = null;
+    if (before && event.currentTarget.value !== before.value) {
+      setInputState(decideChange(config, getInputState(), before));
+      composedRef.current = true;
+      if (props.onChange) {
+        props.onChange(event as unknown as React.ChangeEvent<HTMLInputElement>);
+      }
+    }
+    if (isControlled) {
+      forceUpdate();
+    }
+    if (props.onCompositionEnd) {
+      props.onCompositionEnd(event);
     }
   }
 
@@ -92,6 +135,8 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
   }
 
   function onBlur(event: React.FocusEvent<HTMLInputElement>): void {
+    compositionRef.current = null;
+    composingTextRef.current = null;
     const currentState = getInputState();
     const newInputState = isMasked
       ? decideBlur(config, currentState, getLastInputState().value)
@@ -154,7 +199,7 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
   const lastSelection = getLastInputState().selection;
 
   useIsomorphicLayoutEffect(() => {
-    if (isMasked && isControlled) {
+    if (isMasked && isControlled && !compositionRef.current) {
       setInputState({
         ...getLastInputState(),
         value: renderValue as string
@@ -163,7 +208,7 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
   });
 
   useIsomorphicLayoutEffect(() => {
-    if (!isMasked) {
+    if (!isMasked || compositionRef.current) {
       return;
     }
 
@@ -216,6 +261,8 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
     onBlur,
     onChange: isMasked && isEditable ? onChange : props.onChange,
     onMouseDown: isMasked && isEditable ? onMouseDown : props.onMouseDown,
+    onCompositionStart: isMasked && isEditable ? onCompositionStart : props.onCompositionStart,
+    onCompositionEnd: isMasked && isEditable ? onCompositionEnd : props.onCompositionEnd,
     // `ref` may target either the plain <input> DOM node or, when custom
     // children are used, whatever node the child's own ref forwards to.
     ref: (ref: unknown) => {
@@ -227,7 +274,7 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
         (forwardedRef as React.MutableRefObject<unknown>).current = ref;
       }
     },
-    value: isMasked && isControlled ? renderValue : props.value,
+    value: isMasked && isControlled ? (composingTextRef.current ?? renderValue) : props.value,
     ...(isMasked && !isControlled && (initialValue || alwaysShowMask)
       ? { defaultValue: formatDefaultValue(config, initialValue) }
       : {})

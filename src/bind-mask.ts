@@ -18,6 +18,8 @@ export function createMaskController(config: MaskConfig): MaskController {
   let input: HTMLInputElement | null = null;
   let lastValue = "";
   let form: HTMLFormElement | null = null;
+  let composition: InputState | null = null;
+  let dispatching = false;
   const tracker = createSelectionTracker(() => input);
 
   function getInputState(): InputState {
@@ -59,12 +61,33 @@ export function createMaskController(config: MaskConfig): MaskController {
     return !!config.maskUtils.maskOptions.mask;
   }
 
-  function handleInput(): void {
+  function handleInput(event: Event): void {
+    if (dispatching) return;
+    if (isMasked() && (composition || (event as InputEvent).isComposing)) {
+      composition = composition || getLastInputState();
+      return;
+    }
     if (isMasked()) {
       setInputState(decideChange(config, getInputState(), getLastInputState()));
     } else {
       lastValue = input!.value;
     }
+  }
+
+  function handleCompositionStart(): void {
+    if (input && isMasked()) {
+      composition = { value: lastValue, selection: getInputSelection(input) };
+    }
+  }
+
+  function handleCompositionEnd(): void {
+    const before = composition;
+    composition = null;
+    if (!input || !before || !isMasked() || input.value === before.value) return;
+    setInputState(decideChange(config, getInputState(), before));
+    dispatching = true;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    dispatching = false;
   }
 
   function handleFocus(): void {
@@ -92,6 +115,7 @@ export function createMaskController(config: MaskConfig): MaskController {
   }
 
   function handleBlur(): void {
+    composition = null;
     tracker.stop();
     const nextState = isMasked() && decideBlur(config, getInputState(), lastValue);
     if (nextState) {
@@ -133,6 +157,8 @@ export function createMaskController(config: MaskConfig): MaskController {
     watchForm();
     format();
     el.addEventListener("input", handleInput);
+    el.addEventListener("compositionstart", handleCompositionStart);
+    el.addEventListener("compositionend", handleCompositionEnd);
     el.addEventListener("focusin", handleFocus);
     el.addEventListener("blur", handleBlur);
     el.addEventListener("mousedown", handleMouseDown);
@@ -145,6 +171,8 @@ export function createMaskController(config: MaskConfig): MaskController {
     tracker.stop();
     if (input) {
       input.removeEventListener("input", handleInput);
+      input.removeEventListener("compositionstart", handleCompositionStart);
+      input.removeEventListener("compositionend", handleCompositionEnd);
       input.removeEventListener("focusin", handleFocus);
       input.removeEventListener("blur", handleBlur);
       input.removeEventListener("mousedown", handleMouseDown);
@@ -157,7 +185,7 @@ export function createMaskController(config: MaskConfig): MaskController {
     const wasMasked = isMasked();
     config = nextConfig;
     watchForm();
-    if (input && isMasked()) {
+    if (input && isMasked() && !composition) {
       const nextState = decideUpdate(config, getInputState(), isInputFocused(input), wasMasked);
       if (nextState.value !== input.value || !wasMasked) {
         setInputState(nextState);

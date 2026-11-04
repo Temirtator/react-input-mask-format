@@ -14,6 +14,16 @@
   `formatNumber` 2.0 → 0.9 kB, `extendedFormatChars` 5.5 → 0.3 kB. A Vite app that imports only `formatDate` is
   3.8 kB (minified) smaller. `displayName`s are unchanged.
 
+### Fixed
+- Text typed through an input method (Android Gboard, Chinese, Japanese and Korean IMEs) is no longer corrupted.
+  Before, every field masked the text while it was still being composed, so the browser restarted the composition
+  and characters were duplicated: composing `123` into `99/99/9999` gave `11/21/2312`, and `kzbn` into an uppercase
+  `aaaa` mask gave `KKZK`. Now the composed text stays as typed until it is committed, then it is masked once,
+  like a paste (`12/3_/____`, `KZBN`). `InputMask`, `NumberFormat`, `DateFormat`, `TimeFormat` and the card fields
+  call `onChange` once per commit with the masked value; with the hooks (`useMask`, `useNumberFormat`,
+  `useDateFormat`, …) your own `onChange` also sees the raw text while composing, then the masked text.
+  `onCompositionStart` and `onCompositionEnd` props are still called.
+
 ### Internal
 - size-limit also checks what importing one name costs (`useMask`, `formatNumber`, `formatDate`, `detectCardBrand`,
   `CardNumberFormat`, …), so tree-shaking cannot regress unnoticed.

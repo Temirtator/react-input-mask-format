@@ -31,7 +31,8 @@ export function cardInput<O, V extends DigitValues, P>(
       onValueChange,
       forwardedRef,
       defaultValue,
-      onChange
+      onChange,
+      domProps as React.InputHTMLAttributes<HTMLInputElement>
     );
     return <input inputMode="numeric" autoComplete={autoComplete} {...domProps} {...input} />;
   });

@@ -17,7 +17,16 @@ export const TimeFormat = /* @__PURE__ */ component<HTMLInputElement, TimeFormat
   forwardedRef
 ) {
   const { value, defaultValue, onValueChange, onChange, separator, ...domProps } = props;
-  const input = useDigitInput(timeKind, value, { separator }, onValueChange, forwardedRef, defaultValue, onChange);
+  const input = useDigitInput(
+    timeKind,
+    value,
+    { separator },
+    onValueChange,
+    forwardedRef,
+    defaultValue,
+    onChange,
+    domProps
+  );
   return <input inputMode="numeric" {...domProps} {...input} />;
 });
 

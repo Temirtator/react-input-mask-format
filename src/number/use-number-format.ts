@@ -25,12 +25,13 @@ export function useNumberFormat(
   const handlerRef = useRef<((event: Event) => void) | null>(null);
   const shownRef = useRef("");
   const shownOptionsRef = useRef(options);
+  const composingRef = useRef(false);
 
   useIsomorphicLayoutEffect(() => {
     const previous = shownOptionsRef.current;
     shownOptionsRef.current = options;
     const el = inputRef.current;
-    if (!el || !el.value || JSON.stringify(previous) === JSON.stringify(options)) return;
+    if (!el || !el.value || composingRef.current || JSON.stringify(previous) === JSON.stringify(options)) return;
     const text = formatCanonical(parseNumber(el.value, previous).value, options);
     if (text !== el.value) {
       const focused = isInputFocused(el);
@@ -47,15 +48,32 @@ export function useNumberFormat(
   return useCallback((el: HTMLInputElement | null) => {
     if (el) {
       shownRef.current = el.value;
+      let dispatching = false;
       const handler = (event: Event): void => {
-        const opts = optionsRef.current;
+        if (event.type === "compositionstart") {
+          composingRef.current = true;
+          return;
+        }
+        if (event.type === "compositionend") {
+          composingRef.current = false;
+          if (el.value === shownRef.current) return;
+          run(true);
+          dispatching = true;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          dispatching = false;
+          return;
+        }
+        if (dispatching) return;
+        if (composingRef.current || (event as InputEvent).isComposing) {
+          composingRef.current = true;
+          return;
+        }
         const inputType = (event as InputEvent).inputType;
-        const typed = readTyped(
-          el.value,
-          el.selectionStart ?? el.value.length,
-          opts,
-          inputType ? inputType.startsWith("insert") : el.value.length > shownRef.current.length
-        );
+        run(inputType ? inputType.startsWith("insert") : el.value.length > shownRef.current.length);
+      };
+      const run = (inserted: boolean): void => {
+        const opts = optionsRef.current;
+        const typed = readTyped(el.value, el.selectionStart ?? el.value.length, opts, inserted);
         const digits = digitsBeforeCaret(typed.raw, typed.caret);
         const values = parseNumber(typed.raw, opts);
         setNativeValue(el, values.formattedValue);
@@ -85,6 +103,8 @@ export function useNumberFormat(
         opts.onValueChange?.(values);
       };
       el.addEventListener("input", handler);
+      el.addEventListener("compositionstart", handler);
+      el.addEventListener("compositionend", handler);
       handlerRef.current = handler;
       inputRef.current = el;
       // format any initial (defaultValue) content
@@ -95,6 +115,8 @@ export function useNumberFormat(
     } else {
       if (inputRef.current && handlerRef.current) {
         inputRef.current.removeEventListener("input", handlerRef.current);
+        inputRef.current.removeEventListener("compositionstart", handlerRef.current);
+        inputRef.current.removeEventListener("compositionend", handlerRef.current);
       }
       inputRef.current = null;
       handlerRef.current = null;
