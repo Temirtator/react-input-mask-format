@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import MaskUtils from "../../src/core/mask";
 import { resolveTransform } from "../../src/utils/transform";
 import {
-  card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
+  card, vin, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
   ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
   uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
@@ -290,5 +290,27 @@ describe("Azerbaijan presets format their sample values", () => {
   });
   it("azPassport uppercases", () => {
     expect(format(azPassport, "c01234567")).toBe("C01234567");
+  });
+});
+
+describe("vin preset", () => {
+  it("uppercases a typed VIN", () => {
+    expect(format(vin, "wvwzzz1jz3w386752")).toBe("WVWZZZ1JZ3W386752");
+  });
+  it("turns I, O and Q into digits", () => {
+    expect(format(vin, "1HGCM8263OA004352")).toBe("1HGCM82630A004352");
+    expect(format(vin, "1HGCM8263iA004352")).toBe("1HGCM82631A004352");
+    expect(format(vin, "1HGCM8263qA004352")).toBe("1HGCM82630A004352");
+  });
+  it("converts Cyrillic look-alikes to Latin", () => {
+    expect(format(vin, "ХТА210930У0000001")).toBe("XTA210930Y0000001");
+    expect(format(vin, "хта210930y0000001")).toBe("XTA210930Y0000001");
+  });
+  it("reads a pasted label as characters", () => {
+    expect(format(vin, "VIN: WVWZZZ1JZ3W386752")).toBe("V1NWVWZZZ1JZ3W386");
+    expect(format(vin, "ВИН WVWZZZ1JZ3W386752")).toBe("BHWVWZZZ1JZ3W3867");
+  });
+  it("keeps a trailing placeholder for 16 characters", () => {
+    expect(format(vin, "WVWZZZ1JZ3W38675")).toBe("WVWZZZ1JZ3W38675_");
   });
 });

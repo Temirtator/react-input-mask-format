@@ -215,9 +215,16 @@ Masks are shown as users see them. PRs adding other countries are welcome; see [
 | export | mask | example |
 | --- | --- | --- |
 | `card` | `9999 9999 9999 9999` | `4242 4242 4242 4242` |
+| `vin` | 17 characters, no `I`, `O`, `Q` | `WVWZZZ1JZ3W386752` |
 
 `card` is a fixed 16-digit mask. For Amex, 19-digit numbers and brand detection, use
 [`react-input-mask-format/card`](#cards--react-input-mask-formatcard).
+
+`vin` uppercases, turns Cyrillic look-alikes typed on a Russian layout into Latin, and replaces a typed `I`
+with `1` and `O`/`Q` (also Cyrillic `О`) with `0`, since VINs never contain those letters; `isValidVin`, in
+contrast, rejects a raw `I`, `O` or `Q`. Paste a VIN without its label: `VIN WVWZZZ1JZ3W386752` is read as
+`V1NWVWZZZ1JZ3W386` (the label's `I` becomes `1`) and a Cyrillic `ВИН` becomes `BH` (the `И` is dropped).
+Limitation: VINs issued before 1981 are shorter and non-standard, so they do not fit the mask.
 
 ### Kazakhstan
 
@@ -411,6 +418,7 @@ luhn("4242 4242 4242 4242");                           // true
 | function | checks |
 | --- | --- |
 | `luhn` | card number, Luhn |
+| `isValidVin` | format only (17 characters, no `I`, `O`, `Q`), no check digit |
 | `isValidIin`, `isValidBin` | KZ IIN / BIN, mod-11 |
 | `isValidKzIban` | KZ IBAN, ISO 7064 MOD-97 |
 | `isValidRuInn` | RU INN, 10 (company) or 12 (person) digits |
@@ -435,6 +443,9 @@ luhn("4242 4242 4242 4242");                           // true
 | `isValidAzFin` | structure only (7 characters, no `O`) |
 | `isValidAzVoen` | AZ VÖEN, VÖEN mod-11 checksum |
 | `isValidAzIban` | AZ IBAN, MOD-97 |
+
+`isValidVin` does not verify the check digit: only North American and Chinese VINs are required to carry one,
+so European and Russian-market VINs would be rejected.
 
 ## Numbers & currency — `react-input-mask-format/number`
 

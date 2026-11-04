@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask, { useMask } from "../../src/index";
-import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone, byPhone, byPersonalId, byIban, byPlate, tjPhone, amPhone, azPhone, azPostal, azFin } from "../../src/presets";
+import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone, byPhone, byPersonalId, byIban, byPlate, tjPhone, amPhone, azPhone, azPostal, azFin, vin } from "../../src/presets";
 import type { MaskPreset } from "../../src/presets";
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -704,5 +704,28 @@ describe("Azerbaijan presets on InputMask", () => {
     await user.click(input);
     await user.keyboard("5vbkovr");
     expect(input.value).toBe("5VBK0VR");
+  });
+});
+
+describe("vin on InputMask", () => {
+  it("typing uppercases, maps O to 0 and Cyrillic to Latin", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...vin} data-testid="vin" />);
+    const input = screen.getByTestId("vin") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard("1hgcm8263oa004352");
+    expect(input.value).toBe("1HGCM82630A004352");
+    await user.clear(input);
+    await user.keyboard("хта210930y0000001");
+    expect(input.value).toBe("XTA210930Y0000001");
+  });
+
+  it("pasting a spaced VIN fills the mask", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...vin} data-testid="vin" />);
+    const input = screen.getByTestId("vin") as HTMLInputElement;
+    await user.click(input);
+    await user.paste("WVW ZZZ 1JZ 3W3 86752");
+    expect(input.value).toBe("WVWZZZ1JZ3W386752");
   });
 });

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate } from "../../src/validators";
 import { digitsOnly, remainder, isIbanChecksumValid, isRealDate } from "../../src/validators/shared";
-import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik, isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn, isValidAmPsn, isValidAmTin, isValidAmAccount, isValidAzVoen, isValidAzIban, isValidAzFin } from "../../src/validators";
+import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik, isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn, isValidAmPsn, isValidAmTin, isValidAmAccount, isValidAzVoen, isValidAzIban, isValidAzFin, isValidVin } from "../../src/validators";
 
 describe("luhn", () => {
   it("accepts valid card numbers (raw and formatted)", () => {
@@ -526,5 +526,32 @@ describe("isValidAzFin", () => {
     for (const v of ["5VBK5V", "5VBKOVR", "5VBK5V_", "5VBK5VRR", ...EMPTY_VALUES]) {
       expect(isValidAzFin(v)).toBe(false);
     }
+  });
+});
+
+describe("isValidVin", () => {
+  it("accepts European, North American and Russian-market structures", () => {
+    expect(isValidVin("WVWZZZ1JZ3W386752")).toBe(true);
+    expect(isValidVin("1HGCM82633A004352")).toBe(true);
+    expect(isValidVin("XTA210930Y0000001")).toBe(true);
+  });
+  it("accepts lowercase and spaced input", () => {
+    expect(isValidVin("wvwzzz1jz3w386752")).toBe(true);
+    expect(isValidVin("WVW ZZZ 1JZ 3W3 86752")).toBe(true);
+  });
+  it("accepts Cyrillic look-alikes", () => {
+    expect(isValidVin("ХТА210930У0000001")).toBe(true);
+  });
+  it("rejects I, O and Q", () => {
+    expect(isValidVin("WVWZZZ1JZ3W38675I")).toBe(false);
+    expect(isValidVin("1HGCM8263OA004352")).toBe(false);
+    expect(isValidVin("XTA210930Q0000001")).toBe(false);
+  });
+  it("rejects wrong length and empty values", () => {
+    expect(isValidVin("WVWZZZ1JZ3W38675")).toBe(false);
+    expect(isValidVin("WVWZZZ1JZ3W3867521")).toBe(false);
+    expect(isValidVin("")).toBe(false);
+    expect(isValidVin(null as unknown as string)).toBe(false);
+    expect(isValidVin(undefined as unknown as string)).toBe(false);
   });
 });

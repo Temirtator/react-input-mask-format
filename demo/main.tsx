@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import InputMask, { useMask } from "react-input-mask-format";
 import { extendedFormatChars } from "react-input-mask-format";
 import {
-  card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
+  card, vin, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
   ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
   uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
@@ -21,7 +21,7 @@ import {
   isValidKgInn, isValidKgAccount, isValidKgBik,
   isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn,
   isValidAmPsn, isValidAmTin, isValidAmAccount,
-  isValidAzVoen, isValidAzIban, isValidAzFin
+  isValidAzVoen, isValidAzIban, isValidAzFin, isValidVin
 } from "react-input-mask-format/validators";
 import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
 import { TimeFormat, useTimeFormat } from "react-input-mask-format/time";
@@ -292,6 +292,7 @@ function App() {
             </>
           )}
           <Row label="Карта" sub="card · Luhn"><PresetField preset={card} testid="card" validate={luhn} /></Row>
+          <Row label="VIN" sub="vin · I→1, O/Q→0"><PresetField preset={vin} testid="vin" validate={isValidVin} /></Row>
         </section>
 
         <section style={{ display: "grid", gap: 9 }}>
