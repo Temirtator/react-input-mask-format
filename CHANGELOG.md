@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 3.0.0
+
+One larger update. See "Upgrading from 2.x to 3.0" in the README for what to check.
 
 ### Added
 - Arabic-Indic (`٠١٢…`), Persian (`۰۱۲…`) and full-width (`０１２…`) digits are read as `0-9` everywhere: typed,

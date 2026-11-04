@@ -1037,8 +1037,9 @@ Most apps need no code change. Check these:
 | Text from an input method (Android Gboard, CJK IMEs) is masked once, when it is committed | Components call `onChange` once per commit. With the hooks, your own `onChange` sees the raw text while composing, then the masked text. |
 
 New in 3.0, no action needed: components that bundlers drop when you import only a function or a hook (much
-smaller bundles for `formatDate`, `useMask`, …), `isMaskComplete`, `complete` in the date, time and expiry values,
-and Arabic-Indic, Persian and full-width digits read as `0-9`.
+smaller bundles for `formatDate`, `useMask`, …), `formatMask` and `isMaskComplete`, `complete` in the date, time and
+expiry values, Arabic-Indic, Persian and full-width digits read as `0-9`, and a ready
+[StackBlitz example](https://stackblitz.com/github/Temirtator/react-input-mask-format/tree/master/examples/basic).
 
 ### Migrating from react-input-mask
 
