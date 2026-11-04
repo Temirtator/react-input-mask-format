@@ -33,8 +33,14 @@ export function useNumberFormat(
     if (!el || !el.value || JSON.stringify(previous) === JSON.stringify(options)) return;
     const text = formatCanonical(parseNumber(el.value, previous).value, options);
     if (text !== el.value) {
+      const focused = isInputFocused(el);
+      const digits = digitsBeforeCaret(el.value, el.selectionStart ?? el.value.length);
       el.value = text;
       shownRef.current = text;
+      if (focused) {
+        const caret = resolveCaret(parseNumber(text, options), digits, options);
+        setInputSelection(el, caret, caret);
+      }
     }
   });
 

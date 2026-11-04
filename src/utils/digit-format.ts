@@ -225,14 +225,16 @@ export function useDigitInput<O, V extends DigitValues>(
 
   useEffect(() => {
     const form = innerRef.current && innerRef.current.form;
-    const reset = (): void => {
-      if (uncontrolledRef.current) {
+    if (!form) return;
+    const root = form.getRootNode();
+    const reset = (event: Event): void => {
+      if (event.target === form && !event.defaultPrevented && uncontrolledRef.current) {
         lastValuesRef.current = null;
         forceUpdate();
       }
     };
-    form?.addEventListener("reset", reset);
-    return () => form?.removeEventListener("reset", reset);
+    root.addEventListener("reset", reset);
+    return () => root.removeEventListener("reset", reset);
   });
 
   const last = lastValuesRef.current;
@@ -285,6 +287,11 @@ export function useDigitInput<O, V extends DigitValues>(
     if (el && caretRef.current !== null && isInputFocused(el)) {
       setInputSelection(el, caretRef.current);
       caretRef.current = null;
+    }
+    if (el && value === undefined && caretRef.current === null && el.value !== formatted) {
+      lastValuesRef.current = kind.parse(el.value, options, "", 0);
+      lastOptionsRef.current = options;
+      forceUpdate();
     }
   });
 
