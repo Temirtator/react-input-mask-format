@@ -3,18 +3,26 @@ import { createRoot } from "react-dom/client";
 import InputMask, { useMask } from "react-input-mask-format";
 import { extendedFormatChars } from "react-input-mask-format";
 import {
-  card, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
+  card, vin, iban, gePhone, gePostal, mdPhone, mdPostal, uaPhone, uaPostal, tmPhone, tmPostal, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
   ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
   uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
-  kgPhone, kgInnPerson, kgInnCompany, kgAccount, kgBik, kgPlate, kgPlateCompany, kgPostal, kgPassport, MaskPreset
+  kgPhone, kgInnPerson, kgInnCompany, kgAccount, kgBik, kgPlate, kgPlateCompany, kgPostal, kgPassport,
+  byPhone, byPersonalId, byUnp, byIban, byPlate, byPostal, byPassport,
+  tjPhone, tjInn, tjEin, tjAccount, tjBik, tjPlate, tjPlateCompany, tjPostal,
+  amPhone, amPsn, amTin, amAccount, amPlate, amPostal, amPassport,
+  azPhone, azFin, azVoen, azIban, azPlate, azPostal, azPassport, MaskPreset,
+  phonePresets, detectPhoneCountry, PhoneCountry
 } from "react-input-mask-format/presets";
 import {
   isValidIin, isValidBin, isValidKzIban, luhn,
   isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp,
   isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate,
   isValidUzPinfl, isValidUzInn,
-  isValidKgInn, isValidKgAccount, isValidKgBik
+  isValidKgInn, isValidKgAccount, isValidKgBik,
+  isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn,
+  isValidAmPsn, isValidAmTin, isValidAmAccount,
+  isValidAzVoen, isValidAzIban, isValidAzFin, isValidVin, isValidIban
 } from "react-input-mask-format/validators";
 import { NumberFormat, useNumberFormat } from "react-input-mask-format/number";
 import { TimeFormat, useTimeFormat } from "react-input-mask-format/time";
@@ -76,6 +84,42 @@ const FancyInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<
   (props, ref) => <input ref={ref} {...props} style={fieldStyle} />
 );
 
+function CountryPhoneField() {
+  const [country, setCountry] = useState<PhoneCountry>("KZ");
+  const [phone, setPhone] = useState("");
+  return (
+    <div style={{ display: "flex", gap: 8 }}>
+      <select
+        value={country}
+        onChange={e => {
+          setCountry(e.target.value as PhoneCountry);
+          setPhone("");
+        }}
+        data-testid="phone-country"
+        style={{ ...fieldStyle, width: 80 }}
+      >
+        {Object.keys(phonePresets).map(code => <option key={code}>{code}</option>)}
+      </select>
+      <InputMask
+        {...phonePresets[country]}
+        value={phone}
+        onChange={e => setPhone((e.target as HTMLInputElement).value)}
+        onPaste={e => {
+          const text = e.clipboardData.getData("text");
+          const detected = detectPhoneCountry(text);
+          if (detected && detected !== country) {
+            e.preventDefault();
+            setCountry(detected);
+            setPhone(text);
+          }
+        }}
+        data-testid="phone-any"
+        style={fieldStyle}
+      />
+    </div>
+  );
+}
+
 function UseMaskField() {
   const [readout, setReadout] = useState("");
   const ref = useMask({ mask: "99/99/9999", maskPlaceholder: "_" });
@@ -129,7 +173,15 @@ const COUNTRIES: { id: Country; label: string }[] = [
   { id: Country.Kz, label: "KZ" },
   { id: Country.Ru, label: "RU" },
   { id: Country.Uz, label: "UZ" },
-  { id: Country.Kg, label: "KG" }
+  { id: Country.Kg, label: "KG" },
+  { id: Country.By, label: "BY" },
+  { id: Country.Tj, label: "TJ" },
+  { id: Country.Am, label: "AM" },
+  { id: Country.Az, label: "AZ" },
+  { id: Country.Ge, label: "GE" },
+  { id: Country.Md, label: "MD" },
+  { id: Country.Ua, label: "UA" },
+  { id: Country.Tm, label: "TM" }
 ];
 const DEMO_BIK = "044525225";
 
@@ -179,7 +231,7 @@ function App() {
             <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: bg, background: gold, padding: "2px 7px", borderRadius: 20, fontWeight: 700 }}>v2.7</span>
           </div>
           <h1 style={{ fontSize: 26, margin: "10px 0 4px" }}>General-purpose input masks for React — with batteries</h1>
-          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia, Uzbekistan, Kyrgyzstan.</p>
+          <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, Armenia, Azerbaijan; phones and postal codes: Georgia, Moldova, Ukraine, Turkmenistan.</p>
         </header>
 
         <section style={{ display: "grid", gap: 9 }}>
@@ -240,7 +292,82 @@ function App() {
               <Row label="ID / паспорт" sub="kgPassport · UPPER"><PresetField preset={kgPassport} testid="kgPassport" /></Row>
             </>
           )}
+          {country === Country.By && (
+            <>
+              <Row label="Телефон" sub="byPhone"><PresetField preset={byPhone} testid="byPhone" /></Row>
+              <Row label="Личный номер" sub="byPersonalId · checksum"><PresetField preset={byPersonalId} testid="byPersonalId" validate={isValidByPersonalId} /></Row>
+              <Row label="УНП" sub="byUnp · checksum"><PresetField preset={byUnp} testid="byUnp" validate={isValidByUnp} /></Row>
+              <Row label="IBAN" sub="byIban · MOD-97"><PresetField preset={byIban} testid="byIban" validate={isValidByIban} /></Row>
+              <Row label="Госномер" sub="byPlate · UPPER"><PresetField preset={byPlate} testid="byPlate" /></Row>
+              <Row label="Индекс" sub="byPostal"><PresetField preset={byPostal} testid="byPostal" /></Row>
+              <Row label="Паспорт / ID" sub="byPassport · UPPER"><PresetField preset={byPassport} testid="byPassport" /></Row>
+            </>
+          )}
+          {country === Country.Tj && (
+            <>
+              <Row label="Телефон" sub="tjPhone"><PresetField preset={tjPhone} testid="tjPhone" /></Row>
+              <Row label="ИНН" sub="tjInn · structure"><PresetField preset={tjInn} testid="tjInn" validate={isValidTjInn} /></Row>
+              <Row label="ЕИН" sub="tjEin"><PresetField preset={tjEin} testid="tjEin" /></Row>
+              <Row label="Р/счёт" sub="tjAccount"><PresetField preset={tjAccount} testid="tjAccount" /></Row>
+              <Row label="БИК" sub="tjBik"><PresetField preset={tjBik} testid="tjBik" /></Row>
+              <Row label="Госномер" sub="tjPlate · UPPER"><PresetField preset={tjPlate} testid="tjPlate" /></Row>
+              <Row label="Госномер юрлица" sub="tjPlateCompany · UPPER"><PresetField preset={tjPlateCompany} testid="tjPlateCompany" /></Row>
+              <Row label="Индекс" sub="tjPostal"><PresetField preset={tjPostal} testid="tjPostal" /></Row>
+            </>
+          )}
+          {country === Country.Am && (
+            <>
+              <Row label="Телефон" sub="amPhone"><PresetField preset={amPhone} testid="amPhone" /></Row>
+              <Row label="ՀԾՀ (ОСН)" sub="amPsn · structure"><PresetField preset={amPsn} testid="amPsn" validate={isValidAmPsn} /></Row>
+              <Row label="ՀՎՀՀ (ИНН)" sub="amTin · structure"><PresetField preset={amTin} testid="amTin" validate={isValidAmTin} /></Row>
+              <Row label="Р/счёт" sub="amAccount · structure"><PresetField preset={amAccount} testid="amAccount" validate={isValidAmAccount} /></Row>
+              <Row label="Госномер" sub="amPlate · UPPER"><PresetField preset={amPlate} testid="amPlate" /></Row>
+              <Row label="Индекс" sub="amPostal"><PresetField preset={amPostal} testid="amPostal" /></Row>
+              <Row label="Паспорт" sub="amPassport · UPPER"><PresetField preset={amPassport} testid="amPassport" /></Row>
+            </>
+          )}
+          {country === Country.Az && (
+            <>
+              <Row label="Телефон" sub="azPhone"><PresetField preset={azPhone} testid="azPhone" /></Row>
+              <Row label="FIN" sub="azFin · structure · UPPER"><PresetField preset={azFin} testid="azFin" validate={isValidAzFin} /></Row>
+              <Row label="VÖEN" sub="azVoen · checksum"><PresetField preset={azVoen} testid="azVoen" validate={isValidAzVoen} /></Row>
+              <Row label="IBAN" sub="azIban · MOD-97"><PresetField preset={azIban} testid="azIban" validate={isValidAzIban} /></Row>
+              <Row label="Госномер" sub="azPlate · UPPER"><PresetField preset={azPlate} testid="azPlate" /></Row>
+              <Row label="Индекс" sub="azPostal"><PresetField preset={azPostal} testid="azPostal" /></Row>
+              <Row label="Паспорт" sub="azPassport · UPPER"><PresetField preset={azPassport} testid="azPassport" /></Row>
+            </>
+          )}
+          {country === Country.Ge && (
+            <>
+              <Row label="Телефон" sub="gePhone"><PresetField preset={gePhone} testid="gePhone" /></Row>
+              <Row label="Индекс" sub="gePostal"><PresetField preset={gePostal} testid="gePostal" /></Row>
+              <Row label="IBAN" sub="iban · MOD-97"><PresetField preset={iban} testid="geIban" validate={v => isValidIban(v, "GE")} /></Row>
+            </>
+          )}
+          {country === Country.Md && (
+            <>
+              <Row label="Телефон" sub="mdPhone"><PresetField preset={mdPhone} testid="mdPhone" /></Row>
+              <Row label="Индекс" sub="mdPostal"><PresetField preset={mdPostal} testid="mdPostal" /></Row>
+              <Row label="IBAN" sub="iban · MOD-97"><PresetField preset={iban} testid="mdIban" validate={v => isValidIban(v, "MD")} /></Row>
+            </>
+          )}
+          {country === Country.Ua && (
+            <>
+              <Row label="Телефон" sub="uaPhone"><PresetField preset={uaPhone} testid="uaPhone" /></Row>
+              <Row label="Индекс" sub="uaPostal"><PresetField preset={uaPostal} testid="uaPostal" /></Row>
+              <Row label="IBAN" sub="iban · MOD-97"><PresetField preset={iban} testid="uaIban" validate={v => isValidIban(v, "UA")} /></Row>
+            </>
+          )}
+          {country === Country.Tm && (
+            <>
+              <Row label="Телефон" sub="tmPhone"><PresetField preset={tmPhone} testid="tmPhone" /></Row>
+              <Row label="Индекс" sub="tmPostal"><PresetField preset={tmPostal} testid="tmPostal" /></Row>
+            </>
+          )}
           <Row label="Карта" sub="card · Luhn"><PresetField preset={card} testid="card" validate={luhn} /></Row>
+          <Row label="VIN" sub="vin · I→1, O/Q→0"><PresetField preset={vin} testid="vin" validate={isValidVin} /></Row>
+          <Row label="IBAN" sub="iban · MOD-97"><PresetField preset={iban} testid="iban-any" validate={isValidIban} /></Row>
+          <Row label="Телефон + страна" sub="phonePresets · detectPhoneCountry"><CountryPhoneField /></Row>
         </section>
 
         <section style={{ display: "grid", gap: 9 }}>
