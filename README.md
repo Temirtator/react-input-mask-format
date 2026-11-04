@@ -5,8 +5,9 @@
 [![CI](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml/badge.svg)](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml)
 
 Input masking for React — dates, phones, cards, custom tokens, numbers, time, and ready-made
-country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan). A maintained fork of
-[react-input-mask](https://github.com/sanniassin/react-input-mask).
+country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, Armenia, Azerbaijan; phones and
+postal codes for Georgia, Moldova, Ukraine, Turkmenistan). A maintained
+fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
 **[Live demo](https://temirtator.github.io/react-input-mask-format/)** · **[Changelog](CHANGELOG.md)**
 
@@ -37,12 +38,30 @@ const ref = useMask({ mask: "+7 (999) 999-99-99" });
 
 ## Why this fork
 
-The original `react-input-mask` has been unmaintained since 2021. This fork is:
+The original `react-input-mask` has had no release since 2.0.4 (September 2018), and its repository is
+archived. Its 2.x uses `findDOMNode`, which React 19 removed. This fork is:
 
 - **React 16.8 – 19 compatible** — no `defaultProps`, no `findDOMNode`, StrictMode-safe
 - **TypeScript-first**, **zero runtime dependencies**, ESM + CJS, tree-shakable entry points
 - **Drop-in compatible** with `react-input-mask` v2 and v3-alpha APIs ([migration](#migrating-from-react-input-mask))
 - **Custom `children` work again** — broken upstream since v1.0.x
+
+### Compared with other libraries
+
+| | this package | `react-input-mask` | `react-imask` | `react-number-format` | `@react-input/mask` |
+|---|---|---|---|---|---|
+| Last release | 2026 | 2018 | 2024 | 2026 | 2024 |
+| Bundled TypeScript types | ✓ | — | ✓ | ✓ | ✓ |
+| Main component, min+gzip | 5.8 kB | 4.8 kB | 17.5 kB | 6.8 kB | 5.4 kB |
+| Numbers and currency | ✓ | — | ✓ | ✓ | — |
+| Dates with day/month clamping | ✓ | — | ✓ | — | — |
+| Card numbers with brand detection | ✓ | — | — | — | — |
+| Country presets and validators | ✓ | — | — | — | — |
+| Hook for your own `<input>` | ✓ | — | ✓ | — | ✓ |
+
+Sizes: each main component bundled with `esbuild --minify`, `react` external, then gzipped, on 2026-11-03.
+`react-number-format` counts `NumericFormat` and `PatternFormat`; `react-imask` includes the whole `imask`
+core. `/number`, `/date` and `/card` are separate entry points of 1.7 kB, 2.0 kB and 2.4 kB.
 
 ## Contents
 
@@ -50,7 +69,7 @@ The original `react-input-mask` has been unmaintained since 2021. This fork is:
 - [Presets](#presets) · [Masks with a fixed prefix](#masks-with-a-fixed-prefix) · [Validators](#validators)
 - [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) · [Time](#time--react-input-mask-formattime)
   · [Date](#date--react-input-mask-formatdate) · [Cards](#cards--react-input-mask-formatcard)
-- [Known issues](#known-issues) · [Migration](#migration)
+- [Known issues](#known-issues) · [Recipes](#recipes) · [Migration](#migration)
 
 ## Properties
 
@@ -190,16 +209,28 @@ import { kzPhone, kzIban } from "react-input-mask-format/presets";
 <InputMask {...kzPhone} value={phone} onChange={onChange} />
 ```
 
-Masks are shown as users see them. PRs adding other countries are welcome.
+Masks are shown as users see them. PRs adding other countries are welcome; see [CONTRIBUTING](CONTRIBUTING.md).
 
 ### Generic
 
 | export | mask | example |
 | --- | --- | --- |
 | `card` | `9999 9999 9999 9999` | `4242 4242 4242 4242` |
+| `vin` | 17 characters, no `I`, `O`, `Q` | `WVWZZZ1JZ3W386752` |
+| `iban` | any country, up to 34 characters in groups of 4 | `GB82 WEST 1234 5698 7654 32` |
 
 `card` is a fixed 16-digit mask. For Amex, 19-digit numbers and brand detection, use
 [`react-input-mask-format/card`](#cards--react-input-mask-formatcard).
+
+`vin` uppercases, turns Cyrillic look-alikes typed on a Russian layout into Latin, and replaces a typed `I`
+with `1` and `O`/`Q` (also Cyrillic `О`) with `0`, since VINs never contain those letters; `isValidVin`, in
+contrast, rejects a raw `I`, `O` or `Q`. Paste a VIN without its label: `VIN WVWZZZ1JZ3W386752` is read as
+`V1NWVWZZZ1JZ3W386` (the label's `I` becomes `1`) and a Cyrillic `ВИН` becomes `BH` (the `И` is dropped).
+Limitation: VINs issued before 1981 are shorter and non-standard, so they do not fit the mask.
+
+`iban` takes two letters, two digits and up to 30 letters or digits, uppercased, with Cyrillic look-alikes
+turned into Latin. It has no placeholder, so a value that ends on a full group also ends with a space; trim it
+before saving. The country packs have exact-length IBAN presets (`kzIban`, `ruIban`, …).
 
 ### Kazakhstan
 
@@ -266,10 +297,143 @@ accounts are 20 digits plus a 5-digit MFO bank code.
 
 Plates: 2016+ format. There is no IBAN: accounts are 16 digits, the first 3 are the bank's BIK prefix.
 
+### Belarus
+
+| export | mask | example |
+| --- | --- | --- |
+| `byPhone` | `+375 (99) 999-99-99` (first code digit 1–5 or 7) | `+375 (29) 123-45-67` |
+| `byPersonalId` | `9999999a999aa9` (uppercase, Cyrillic look-alikes become Latin) | `7000000A000PB1` |
+| `byUnp` | 9 characters, 7 digits after two that may be letters (individuals; Cyrillic look-alikes become Latin) | `200988541`, `MA1953684` |
+| `byIban` | `BY99 **** 9999 **** **** **** ****` (uppercase) | `BY13 NBRB 3600 9000 0000 2Z00 AB00` |
+| `byPlate` | `9999 aa-9` (letters `ABEIKMHOPCTX`, region 0–8; Cyrillic look-alikes become Latin) | `1234 AB-7` |
+| `byPostal` | `999999` | `220050` |
+| `byPassport` | `aa9999999` (uppercase, Cyrillic look-alikes become Latin) | `MP1234567` |
+
+Plates: standard 2004+ plates only; not trucks and buses (`AB 1234-7`), electric (`E123 AB-7`), trailers,
+personalised, pre-2004 or region-0 plates with other Cyrillic letters. `byPassport` assumes 2 letters and
+7 digits: the series of biometric passports and ID cards (since 2021) are not published. There is no BIC
+preset: the IBAN already carries the bank code. Typed key by key into an empty field, `375…` is read as the
+operator code (same as `uzPhone`); pasting works. Paste a УНП or passport number without its label: in `byUnp`
+and `byPassport` a Cyrillic label is read as letters (`УНП 200988541` → `H20098854`, because the Cyrillic `Н`
+reads as Latin `H`, a valid first letter).
+
+### Tajikistan
+
+| export | mask | example |
+| --- | --- | --- |
+| `tjPhone` | `+992 (99) 999-99-99` | `+992 (93) 123-45-67` |
+| `tjInn` | `999999999` | `030026536` |
+| `tjEin` | `9999999999` | `0310015466` |
+| `tjAccount` | `99999 999 9 99999999999` | `22202 972 7 00007683505` |
+| `tjBik` | `999999999` | `350101900` |
+| `tjPlate` | `9999 aa 99` (uppercase, Cyrillic look-alikes become Latin) | `1234 AB 01` |
+| `tjPlateCompany` | `999 aa 99` (uppercase, Cyrillic look-alikes become Latin) | `123 AB 01` |
+| `tjPostal` | `999999` | `734025` |
+
+`isValidTjInn` checks the format only. `tjAccount` fits 20-digit accounts; Islamic credit institutions use
+21 digits and accounts at the National Bank 14, so use a plain input for those. There is no passport preset:
+the passport number format is not published. Typed key by key into an empty field, `992…` is read as the
+operator code (same as `uzPhone`).
+
+### Armenia
+
+| export | mask | example |
+| --- | --- | --- |
+| `amPhone` | `+374 (99) 99-99-99` (first code digit 1–9) | `+374 (77) 12-34-56` |
+| `amPsn` | `9999999999` | `3014750025` |
+| `amTin` | `99999999` | `02502212` |
+| `amAccount` | `9999999999999999` | `1150013314754778` |
+| `amPlate` | `99 aa 999` (uppercase) | `35 OL 123` |
+| `amPostal` | `9999` | `0010` |
+| `amPassport` | `aa9999999` (uppercase) | `AM0565436` |
+
+`amAccount` has 16 slots; a shorter account (real ones are 11–16 digits) keeps trailing placeholders
+(`11500814802_____`), which `isValidAmAccount` accepts. `isValidAmTin` checks the format only. `amPassport`
+fits passports issued until 31.10.2026 (series of two letters, 7 digits); the number format of the biometric
+passports and ID cards issued from 01.11.2026 is not published yet. Plates: the standard format only.
+Typed key by key into an empty field, `374…` is read as the operator code; pasting works.
+
+### Azerbaijan
+
+| export | mask | example |
+| --- | --- | --- |
+| `azPhone` | `+994 (99) 999-99-99` (first code digit 1–9) | `+994 (50) 123-45-67` |
+| `azFin` | `*******` (uppercase, a typed `O` becomes `0`) | `5VBK0VR` |
+| `azVoen` | `9999999999` | `9900003871` |
+| `azIban` | `AZ99 aaaa **** **** **** **** ****` (uppercase) | `AZ21 NABZ 0000 0000 1370 1000 1944` |
+| `azPlate` | `99-aa-999` (uppercase) | `90-AA-001` |
+| `azPostal` | `AZ9999` | `AZ1000` |
+| `azPassport` | `a99999999` (uppercase) | `C01234567` |
+
+`azFin` never contains the letter `O` (only zero), so a typed `O` is turned into `0`. `azPostal` is the UPU
+form without a space; typing `1000` or pasting `AZ 1000` gives `AZ1000`. `azPlate` covers standard plates
+only (no diplomatic, foreign, motorcycle or trailer formats). `azPassport` is a letter and 8 digits; the 2024
+series was not verified. There is no ID-card preset. Typed key by key into an empty field, `994…` is read as
+the operator code; pasting works. A 9-digit `99 4…` number (Bakcell code 99, subscriber part starting with 4)
+passed as `value` or pasted without `0`/`+994` is read as the `+994` prefix (`994123456` →
+`+994 (12) 345-6_-__`); pass it with `0` or `+994`, as with `uzPhone`.
+
+### Georgia, Moldova, Ukraine, Turkmenistan
+
+Phones and postal codes. For IBANs use [`iban`](#generic) with `isValidIban(value, "GE")` (or `"MD"`, `"UA"`).
+
+| export | mask | example |
+| --- | --- | --- |
+| `gePhone` | `+995 (999) 99-99-99` (first digit 1–9) | `+995 (555) 12-34-56` |
+| `gePostal` | `9999` | `0105` |
+| `mdPhone` | `+373 (99) 999-999` (first digit 1–9) | `+373 (69) 123-456` |
+| `mdPostal` | `MD-9999` | `MD-2001` |
+| `uaPhone` | `+380 (99) 999-99-99` (first digit 1–9) | `+380 (67) 123-45-67` |
+| `uaPostal` | `99999` | `01001` |
+| `tmPhone` | `+993 (99) 99-99-99` (first digit 1–7) | `+993 (65) 12-34-56` |
+| `tmPostal` | `999999` | `744000` |
+
+A typed or pasted domestic `0` is skipped (`0671234567` → `+380 (67) 123-45-67`, `069 123 456` →
+`+373 (69) 123-456`), and so is Turkmenistan's domestic `8` (no Turkmen number starts with 8 or 9). The old
+Ukrainian long-distance `8` is skipped when pasted or passed as `value`, but not when typed, because Ukrainian
+numbers such as `800 …` start with 8. Typed key by key into an
+empty field, the country code is read as the operator code, as with `uzPhone`; pasting works.
+
+### Phone with a country picker
+
+`phonePresets` maps ISO codes (`KZ`, `RU`, `UZ`, `KG`, `BY`, `TJ`, `AM`, `AZ`, `GE`, `MD`, `UA`, `TM`) to the
+phone presets. `detectPhoneCountry(text)` reads the country from an international number that starts with `+`
+or `00` (`+7 701…` → `KZ`, `+7 912…` → `RU`, `+998…` → `UZ`) and returns `null` for anything else, including
+domestic numbers. Together they switch the mask when a number of another country is pasted:
+
+```tsx
+import InputMask from "react-input-mask-format";
+import { phonePresets, detectPhoneCountry, type PhoneCountry } from "react-input-mask-format/presets";
+
+const [country, setCountry] = useState<PhoneCountry>("KZ");
+const [phone, setPhone] = useState("");
+
+<select value={country} onChange={(e) => { setCountry(e.target.value as PhoneCountry); setPhone(""); }}>
+  {Object.keys(phonePresets).map((code) => <option key={code}>{code}</option>)}
+</select>
+<InputMask
+  {...phonePresets[country]}
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)}
+  onPaste={(e) => {
+    const text = e.clipboardData.getData("text");
+    const detected = detectPhoneCountry(text);
+    if (detected && detected !== country) {
+      e.preventDefault();
+      setCountry(detected);
+      setPhone(text);
+    }
+  }}
+/>
+```
+
+Clear the number when the country is picked by hand: the digits of one country's number are not a number of
+another. Typed numbers do not switch the country, because the current mask accepts only its own code.
+
 ### Masks with a fixed prefix
 
-Masks that start with fixed text (`kzPhone`, `ruPhone`, `uzPhone`, `kgPhone`, `kzIban`) read pasted text and
-programmatic `value`s with or without the prefix:
+Masks that start with fixed text (`kzPhone`, `ruPhone`, `uzPhone`, `kgPhone`, `byPhone`, `tjPhone`, `amPhone`, `azPhone`, `kzIban`, `byIban`,
+`azIban`, `azPostal`) read pasted text and programmatic `value`s with or without the prefix:
 
 | preset | accepted forms |
 | --- | --- |
@@ -277,6 +441,13 @@ programmatic `value`s with or without the prefix:
 | `ruPhone` | `+7 912 …`, `8 912 …`, `"89123456789"` |
 | `uzPhone` | `+998 90 …`, `998 90 …`, `8 90 …`, `"901234567"`, `"+998901234567"`, `"+998 90 123 45 6"` |
 | `kgPhone` | `+996 555 …`, `0555 12 34 56`, `"555123456"`, `"+996555123456"` |
+| `byPhone` | `+375 29 …`, `8 029 …`, `"80291234567"`, `"375291234567"` |
+| `tjPhone` | `+992 93 …`, `"931234567"`, `"992931234567"` |
+| `amPhone` | `+374 77 …`, `077 123456`, `"077123456"` |
+| `azPhone` | `+994 50 …`, `050 123 45 67`, `00994 50 …` |
+| `byIban` | `BY13 NBRB …`, `"BY13NBRB3600900000002Z00AB00"`, `"13nbrb…"` |
+| `azIban` | `AZ21 NABZ …`, `"AZ21NABZ00000000137010001944"` |
+| `azPostal` | `AZ1000`, `AZ 1000`, `"1000"` |
 
 - Pasted text longer than the mask keeps its **last** characters (the prefix part is dropped), unless it starts
   with `+` and the country code: then extra characters at the end (an extension, a typo) are dropped
@@ -285,10 +456,12 @@ programmatic `value`s with or without the prefix:
   otherwise it starts after the prefix (`33 …` in `uzPhone`).
 - Typed key by key, a number that starts with the prefix's own digits is read as the prefix: `uzPhone`
   `90 …` and `kzPhone` `777 …` over a selection, a leading `8` in `ruPhone` (area code `8xx`), `998 …`
-  in an empty `uzPhone`. Pasting these works.
+  in an empty `uzPhone`; likewise `375…`, `374…`, `994…` and `992…` in an empty `byPhone`, `amPhone`,
+  `azPhone` and `tjPhone` fill the operator code. Pasting these works.
 - Text without `+` pasted into an empty field or over the whole value, or a `value` without `+`, that is
-  shorter than a national number (9 digits in `uzPhone` and `kgPhone`, 10 in `kzPhone` and `ruPhone`) is
-  read as the start of a national number, even when it begins with the country code: `uzPhone` `"90"` → `+998 (90) ___-__-__`, `"99890"` → `+998 (99) 890-__-__`;
+  shorter than a national number (9 digits in `uzPhone`, `kgPhone`, `byPhone`, `tjPhone` and `azPhone`, 8 in
+  `amPhone`, 10 in `kzPhone` and `ruPhone`) is read as the start of a national number, even when it begins
+  with the country code: `uzPhone` `"90"` → `+998 (90) ___-__-__`, `"99890"` → `+998 (99) 890-__-__`;
   `kzPhone` `"701"` → `+7 (701) ___-__-__`. Longer digit strings follow the rules above (`uzPhone`
   `"998901234"` → `+998 (90) 123-4_-__`). For a partial international number, pass `+` and the country code.
 
@@ -308,6 +481,8 @@ luhn("4242 4242 4242 4242");                           // true
 | function | checks |
 | --- | --- |
 | `luhn` | card number, Luhn |
+| `isValidVin` | format only (17 characters, no `I`, `O`, `Q`), no check digit |
+| `isValidIban(value, country?)` | any IBAN: ISO 13616 structure (check digits 02–98) and MOD-97; with `country` the code must match; the length per country is not checked |
 | `isValidIin`, `isValidBin` | KZ IIN / BIN, mod-11 |
 | `isValidKzIban` | KZ IBAN, ISO 7064 MOD-97 |
 | `isValidRuInn` | RU INN, 10 (company) or 12 (person) digits |
@@ -322,6 +497,19 @@ luhn("4242 4242 4242 4242");                           // true
 | `isValidKgAccount` | KG account, NBKR MOD-97 |
 | `isValidKgInn` | structure + embedded date (check digit not published) |
 | `isValidKgBik` | format |
+| `isValidByPersonalId` | BY personal ID, 7-3-1 checksum (date, region letter and status code are not checked) |
+| `isValidByUnp` | BY UNP, MNS mod-11 checksum |
+| `isValidByIban` | BY IBAN, MOD-97 |
+| `isValidTjInn` | structure only (9 digits; check digit not published) |
+| `isValidAmPsn` | AM public service number, structure (sex, birth date, serial; no check digit) |
+| `isValidAmTin` | format only (8 digits; check digit not published) |
+| `isValidAmAccount` | structure only (11–16 digits, trailing placeholders accepted) |
+| `isValidAzFin` | structure only (7 characters, no `O`) |
+| `isValidAzVoen` | AZ VÖEN, VÖEN mod-11 checksum |
+| `isValidAzIban` | AZ IBAN, MOD-97 |
+
+`isValidVin` does not verify the check digit: only North American and Chinese VINs are required to carry one,
+so European and Russian-market VINs would be rejected.
 
 ## Numbers & currency — `react-input-mask-format/number`
 
@@ -465,7 +653,7 @@ const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir
 | `visa` | 4 | 13, 16, 19 | 4-4-4-4-3 | 3 |
 | `mastercard` | 51–55, 2221–2720 | 16 | 4-4-4-4 | 3 |
 | `amex` | 34, 37 | 15 | 4-6-5 | 4 |
-| `diners` | 300–305, 36, 38–39 | 14–19 | 4-6-4 at 14, else 4-4-4-4-3 | 3 |
+| `diners` | 300–305, 36, 38–39 | 14–19 | 4-6-4 up to 14 digits, then 4-4-4-4-3 | 3 |
 | `discover` | 6011, 644–659 | 16–19 | 4-4-4-4-3 | 3 |
 | `unionpay` | 62, 81 | 16–19 | 4-4-4-4-3 | 3 |
 | `jcb` | 3528–3589 | 16–19 | 4-4-4-4-3 | 3 |
@@ -507,10 +695,239 @@ Browser autofill needs an empty input or a value that matches the start of the a
 `maskPlaceholder={null}`, apply the mask only to a non-empty value, or use less formatting. Phones and
 postal codes are often autofilled; one-time codes are not.
 
+### Playwright
+
+`locator.fill()` on an unfocused field that already has text can insert at the caret instead of replacing the
+value in Chromium (`12/3_/____` filled with `87654321` gives `12/38/7654`): the field puts its caret on focus one
+frame later. Click the field and wait a frame first: `await input.click(); await page.waitForTimeout(50);`.
+
+### Testing Library
+
+The mask reads the caret once per animation frame. After moving it from a test with `setSelectionRange`, wait a
+frame before the next key, or the edit is read as a replacement of the whole value:
+
+```ts
+input.setSelectionRange(4, 4);
+await new Promise((resolve) => requestAnimationFrame(resolve));
+await user.keyboard("{Backspace}");
+```
+
+Typing with `user.click()` and `user.keyboard()` alone needs no waits.
+
 ### Cypress
 
 `cy.get("input").focus().type("12345")` can produce `23/45/____`, because `focus()` is not an action
 command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `.wait(50)` after `.focus()`.
+
+## Recipes
+
+### react-hook-form: `InputMask` with `Controller`
+
+`InputMask` is controlled, so use `Controller` and spread `field` onto it. `field.ref` reaches the input,
+so focus-on-error and `setFocus` work. A mask with a placeholder keeps `_` in an incomplete value, which
+makes a one-line `validate` enough (add `required` for the empty value); for documents add the checksum validator.
+
+```tsx
+import { useForm, Controller } from "react-hook-form";
+import InputMask from "react-input-mask-format";
+import { kzPhone, kzIin } from "react-input-mask-format/presets";
+import { isValidIin } from "react-input-mask-format/validators";
+
+type FormValues = { phone: string; iin: string };
+
+function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
+  const { control, handleSubmit } = useForm<FormValues>({ defaultValues: { phone: "", iin: "" } });
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="phone"
+        control={control}
+        rules={{
+          required: "Enter a phone",
+          validate: (v) => !v.includes("_") || "Enter the full number",
+        }}
+        render={({ field, fieldState }) => (
+          <>
+            <InputMask {...kzPhone} {...field} />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <Controller
+        name="iin"
+        control={control}
+        rules={{ validate: (v) => isValidIin(v) || "Invalid IIN" }}
+        render={({ field, fieldState }) => (
+          <>
+            <InputMask {...kzIin} {...field} />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+The form value is the masked text (`"+7 (701) 234-56-78"`). Strip it in `onSubmit` if the API wants digits.
+
+### react-hook-form: `useMask` with `register`
+
+For an uncontrolled input, merge the ref from `register` with the one from `useMask`. Both are called on
+every ref change, so the mask survives re-renders from `formState`.
+
+```tsx
+import { useForm } from "react-hook-form";
+import { useMask } from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
+  const { register, handleSubmit, formState } = useForm<{ phone: string }>();
+  const { ref, ...rest } = register("phone", {
+    required: "Enter a phone",
+    validate: (v) => !v.includes("_") || "Enter the full number",
+  });
+  const maskRef = useMask(kzPhone);
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input
+        {...rest}
+        ref={(el) => {
+          ref(el);
+          maskRef(el);
+        }}
+      />
+      {formState.errors.phone && <p role="alert">{formState.errors.phone.message}</p>}
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+### react-hook-form: number, date and card components
+
+Pass the value, store what you need from `onValueChange`, and give `ref={field.ref}` so `setFocus` and
+focus-on-error reach the input. `onBlur={field.onBlur}` is what makes `mode: "onBlur"` validate.
+
+```tsx
+import { useForm, Controller } from "react-hook-form";
+import { NumberFormat } from "react-input-mask-format/number";
+import { DateFormat } from "react-input-mask-format/date";
+
+type FormValues = { amount: string; born: string };
+
+function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
+  const { control, handleSubmit } = useForm<FormValues>({
+    mode: "onBlur",
+    defaultValues: { amount: "", born: "" },
+  });
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="amount"
+        control={control}
+        render={({ field }) => (
+          <NumberFormat
+            name={field.name}
+            ref={field.ref}
+            value={field.value}
+            onValueChange={(v) => field.onChange(v.value)}
+            onBlur={field.onBlur}
+            thousandSeparator=","
+            decimalScale={2}
+          />
+        )}
+      />
+      <Controller
+        name="born"
+        control={control}
+        rules={{ required: "Enter a date" }}
+        render={({ field, fieldState }) => (
+          <>
+            <DateFormat
+              name={field.name}
+              ref={field.ref}
+              value={field.value}
+              onValueChange={(v) => field.onChange(v.value)}
+              onBlur={field.onBlur}
+            />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+Typing `1234.5` and `12052024` submits `{ amount: "1234.5", born: "2024-05-12" }`: the unformatted number and
+the ISO date. `born` stays `""` until the date is complete and exists, so `required` rejects a partial date,
+on blur and on submit. `CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` take the same props; wire
+them the same way (`CardNumberFormat` gives the digits without spaces in `v.value`, `CardExpiryFormat`
+gives `"05/30"`).
+
+### MUI `TextField`
+
+Wrap the `TextField` in `InputMask`. The mask finds the `<input>` inside it. MUI sees the value, so the
+floating label moves up and does not overlap the mask or the typed text.
+
+```tsx
+import { useState } from "react";
+import InputMask from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+import TextField from "@mui/material/TextField";
+
+function PhoneField() {
+  const [phone, setPhone] = useState("");
+  return (
+    <InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+      <TextField label="Phone" />
+    </InputMask>
+  );
+}
+```
+
+Checked with MUI 9. To reach the `<input>` props in MUI 9 use `slotProps.htmlInput`; MUI 5 and 6 use
+`inputProps`.
+
+### Ant Design `Input`
+
+antd's `Input` ref is an `InputRef`, not the element, so a plain `<Input>` as an `InputMask` child throws.
+Forward `.input` through a small wrapper:
+
+```tsx
+import React, { useState } from "react";
+import { Input } from "antd";
+import type { InputProps, InputRef } from "antd";
+import InputMask from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+const AntInput = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+  const inner = React.useRef<InputRef>(null);
+  React.useImperativeHandle(ref, () => inner.current!.input!, []);
+  return <Input {...props} ref={inner} />;
+});
+
+function PhoneField() {
+  const [phone, setPhone] = useState("");
+  return (
+    <InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+      <AntInput />
+    </InputMask>
+  );
+}
+```
+
+Checked with Ant Design 6. For an uncontrolled field, `useMask` also works on antd's `Input` through its
+`.input` element: `ref={(r) => maskRef(r?.input ?? null)}`. antd controls the input's value, so the mask
+template shows once the user types rather than on focus.
+
+### Other kits
+
+Any component that forwards its ref to the native `<input>` works as an `InputMask` child, or with
+`useMask` (see [`children`](#children)).
 
 ## Migration
 
@@ -535,3 +952,189 @@ Replace `NumericFormat` with `NumberFormat` from `react-input-mask-format/number
 [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) are the same. Differences:
 `decimalScale` truncates instead of rounding while typing, and there is no `PatternFormat` — use
 `<InputMask>` for pattern masks.
+
+### Migrating from react-imask
+
+Replace `IMaskInput` with `InputMask` and `useIMask` with `useMask`. Pattern masks translate token by token
+(`0` → `9`); `mask={Number}` and `mask={Date}` move to the [`/number`](#numbers--currency--react-input-mask-formatnumber)
+and [`/date`](#date--react-input-mask-formatdate) modules. `onChange` receives the masked value: there is no
+`onAccept` and no `unmask`.
+
+| react-imask | this package |
+| --- | --- |
+| `<IMaskInput mask="…" />` | `<InputMask mask="…" />` |
+| `useIMask(opts, { onAccept })` → `{ ref, value, unmaskedValue, … }` | `useMask(options)` → a ref only; read the value in the input's `onChange` |
+| `0` | `9` |
+| `a` (any letter) | `a` (A–Z, a–z); `Я` from `extendedFormatChars` for Cyrillic |
+| `*` (any character) | `*` (A–Z, a–z, 0–9) |
+| `\\0` (a fixed `0`) | `0` |
+| a fixed `9`, e.g. `+998` | `"+\\9\\98"` |
+| `{7}` (fixed part kept in the unmasked value) | `7`: the value always contains the fixed parts |
+| `[…]` (optional part) | not supported |
+| `lazy` (default): only typed characters | `maskPlaceholder={null}` |
+| `lazy={false}` | `alwaysShowMask` |
+| `placeholderChar="#"` | `maskPlaceholder="#"` |
+| `definitions={{ "#": /[1-6]/ }}` | `formatChars={{ ...defaultFormatChars, "#": /[1-6]/ }}` |
+| `prepareChar={(str) => str.toUpperCase()}` | `transform="uppercase"` or `transform={(char, position) => …}` |
+| `unmask` | no helper; `value.replace(/\D/g, "")` for digit masks |
+| `onAccept={(value) => …}` | `onChange={(e) => …}` with `e.target.value` |
+| `onComplete` | no event; check the value in `onChange` |
+| `inputRef` | `ref` |
+| `IMaskMixin(Component)` | [`children`](#children) |
+| `mask={Date}` | `DateFormat` from `react-input-mask-format/date` |
+| `mask={Number}` with `scale`, `radix`, `thousandsSeparator`, `padFractionalZeros`, `min` / `max` | `NumberFormat` with `decimalScale`, `decimalSeparator`, `thousandSeparator`, `fixedDecimalScale`, `isAllowed` |
+| an array of masks, `dispatch` | change the `mask` prop from your state; `CardNumberFormat` for card numbers |
+| `blocks`, `MaskedRange`, `MaskedEnum` | an array mask with a `RegExp` per position, `DateFormat`, `TimeFormat` |
+
+Phone with the mask always shown and the digits extracted:
+
+```jsx
+// react-imask
+<IMaskInput
+  mask="+{7} (000) 000-00-00"
+  lazy={false}
+  unmask
+  value={phone}
+  onAccept={(value) => setPhone(value)} // "77012345678"
+  onComplete={(value) => save(value)}
+/>
+
+// react-input-mask-format
+<InputMask
+  mask="+7 (999) 999-99-99" // or {...kzPhone}, {...ruPhone}
+  alwaysShowMask
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)} // "+7 (701) 234-56-78"
+/>
+const digits = phone.replace(/\D/g, ""); // "77012345678"
+const complete = digits.length === 11;
+```
+
+Keep the masked value in state and derive the digits from it.
+
+Custom definitions and uppercase input:
+
+```jsx
+// react-imask
+<IMaskInput mask="#00000" definitions={{ "#": /[1-6]/ }} />
+<IMaskInput mask="aa0000000" prepareChar={(str) => str.toUpperCase()} />
+
+// react-input-mask-format
+import InputMask, { defaultFormatChars } from "react-input-mask-format";
+
+<InputMask mask="#99999" formatChars={{ ...defaultFormatChars, "#": /[1-6]/ }} />
+<InputMask mask="aa9999999" transform="uppercase" /> // same as the uzPassport preset
+```
+
+Date:
+
+```jsx
+// react-imask
+<IMaskInput mask={Date} unmask="typed" onAccept={(date) => setDate(date)} /> // Date, null until complete
+
+// react-input-mask-format
+import { DateFormat } from "react-input-mask-format/date";
+
+<DateFormat value={date} onValueChange={(v) => setDate(v.value)} /> // "2024-05-12", "" until complete
+```
+
+Differences:
+
+- `InputMask` and `useMask` report only the masked value. The `/number`, `/date`, `/time` and `/card`
+  components report parsed values in `onValueChange`.
+- `formatChars` replaces the default tokens: spread `defaultFormatChars` to keep `9`, `a` and `*`.
+- No optional parts, `blocks`, `overwrite`, `eager`, `skipInvalid`, `displayChar`, `validate` or `commit`.
+- No pipe for pattern masks; a controlled `value` is formatted on render. The modules export `formatNumber`,
+  `formatDate`, `formatTime` and `formatCardNumber`.
+- `DateFormat` has no `min` / `max` and gives an ISO string, not a `Date`; build one from `day`, `month` and
+  `year` if you need it.
+
+### Migrating from @react-input/mask
+
+`InputMask` and `useMask` keep their names. Slots in the mask are the format characters `9`, `a`, `*` (or your
+`formatChars`) instead of `replacement` keys, and `maskPlaceholder` sets what unfilled slots show.
+
+| @react-input/mask | this package |
+| --- | --- |
+| `mask="+7 (___) ___-__-__" replacement={{ _: /\d/ }}` | `mask="+7 (999) 999-99-99"` |
+| `replacement={{ _: /[A-Z]/ }}` | `formatChars={{ "#": /[A-Z]/ }}` with `#` in the mask, or an array mask |
+| `replacement="_"` (any character) | `*` (A–Z, a–z, 0–9), or a `formatChars` token that does not match the placeholder: `/[^_]/` |
+| `showMask` | `alwaysShowMask` |
+| no `showMask`: `+7 (912` | `maskPlaceholder={null}`: `+7 (912) ` |
+| replacement keys as the placeholder: `dd.mm.yyyy` | `maskPlaceholder="dd.mm.yyyy"` |
+| `separate` | the default with a `maskPlaceholder`: a deleted character leaves its slot empty; with `maskPlaceholder={null}` the following characters shift left |
+| `track` | `transform` per character, `beforeMaskedStateChange` for the whole value and selection |
+| `modify` | change `mask` and the other props from your state |
+| `onMask` (v1), `unformat` | `onChange`; `value.replace(/\D/g, "")` for digit masks |
+| `format` for an initial value | not needed: a raw `value` or `defaultValue` is formatted on render |
+| `generatePattern`, `formatToParts` | not supported; checksums in [Validators](#validators) |
+| `component={CustomInput}` | `<InputMask><CustomInput /></InputMask>`, see [children](#children) |
+| `useMask({ mask, replacement })` | `useMask({ mask })` |
+
+Phone with the mask always shown and the digits extracted:
+
+```jsx
+// @react-input/mask
+import { InputMask, unformat } from "@react-input/mask";
+
+const options = { mask: "+7 (___) ___-__-__", replacement: { _: /\d/ } };
+<InputMask
+  {...options}
+  showMask
+  onChange={(e) => setDigits(unformat(e.target.value, options))} // "9123456789"
+/>
+
+// react-input-mask-format
+import InputMask from "react-input-mask-format";
+import { ruPhone } from "react-input-mask-format/presets";
+
+<InputMask
+  {...ruPhone}
+  alwaysShowMask
+  onChange={(e) => setDigits(e.target.value.replace(/\D/g, "").slice(1))} // "9123456789"
+/>
+```
+
+`.slice(1)` drops the `7` of `+7`, which `unformat` leaves out. `ruPhone` also reads a pasted `8 912 …` or
+`+7 912 …`, see [Masks with a fixed prefix](#masks-with-a-fixed-prefix).
+
+Date with letters as the placeholder:
+
+```jsx
+// @react-input/mask
+<InputMask mask="dd.mm.yyyy" replacement={{ d: /\d/, m: /\d/, y: /\d/ }} showMask separate />
+
+// react-input-mask-format
+<InputMask mask="99.99.9999" maskPlaceholder="dd.mm.yyyy" alwaysShowMask />
+
+// or, with day and month clamping and an ISO value:
+import { DateFormat } from "react-input-mask-format/date";
+
+<DateFormat value={date} onValueChange={(v) => setDate(v.value)} />
+```
+
+Custom token with uppercase input:
+
+```jsx
+// @react-input/mask
+<InputMask
+  mask="____ ____"
+  replacement={{ _: /[0-9A-F]/ }}
+  track={({ data }) => data && data.toUpperCase()}
+/>
+
+// react-input-mask-format
+<InputMask mask="#### ####" formatChars={{ "#": /[0-9A-F]/ }} transform="uppercase" />
+```
+
+Differences:
+
+- `onChange` receives the masked value with placeholders (`+7 (912) ___-__-__`). There is no `unformat`, and
+  `value.replace(/\D/g, "")` keeps the digits of fixed parts (the `7` of `+7`).
+- `9`, `a` and `*` are always slots unless escaped (`"+\\9\\98"`). `formatChars` replaces them: spread
+  `defaultFormatChars` to use them next to your own tokens.
+- Deleting in the middle keeps positions while a `maskPlaceholder` is set (`12/34/5678`, Backspace after the
+  `3` → `12/_4/5678`), like `separate`. With `maskPlaceholder={null}` the following characters shift left
+  (`12/45/678`); there is no option to shift while a placeholder is shown.
+- `beforeMaskedStateChange` receives the previous, current and next `{ value, selection }` instead of
+  `inputType` and `data`.

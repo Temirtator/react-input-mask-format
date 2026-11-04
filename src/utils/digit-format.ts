@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from "react";
 import type React from "react";
 import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "./input";
@@ -218,8 +218,22 @@ export function useDigitInput<O, V extends DigitValues>(
   const caretRef = useRef<number | null>(null);
   const lastValuesRef = useRef<V | null>(null);
   const lastOptionsRef = useRef<O>(options);
+  const uncontrolledRef = useRef(value === undefined);
+  uncontrolledRef.current = value === undefined;
 
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
+
+  useEffect(() => {
+    const form = innerRef.current && innerRef.current.form;
+    const reset = (): void => {
+      if (uncontrolledRef.current) {
+        lastValuesRef.current = null;
+        forceUpdate();
+      }
+    };
+    form?.addEventListener("reset", reset);
+    return () => form?.removeEventListener("reset", reset);
+  });
 
   const last = lastValuesRef.current;
   const echo =
