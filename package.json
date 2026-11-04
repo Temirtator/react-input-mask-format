@@ -1,7 +1,7 @@
 {
   "name": "react-input-mask-format",
   "description": "Input masks for React: phones, dates, cards, numbers, time and country presets. A maintained fork of react-input-mask.",
-  "version": "2.14.0",
+  "version": "2.15.0",
   "type": "module",
   "homepage": "https://github.com/Temirtator/react-input-mask-format",
   "license": "MIT",

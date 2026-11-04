@@ -10,6 +10,7 @@ const moveToEnd: Record<string, (page: Page, input: Locator) => Promise<void>> =
   },
   "the End key": async page => {
     await page.keyboard.press(process.platform === "darwin" ? "Meta+ArrowRight" : "End");
+    await page.evaluate(() => new Promise(requestAnimationFrame));
   }
 };
 
