@@ -24,6 +24,8 @@
   more than once (`1.234.567` stays `1 234 567`). A string `value` such as `"12.5"` is read the same way. The
   `prefix` and `suffix` are removed before, also when the user typed outside them, so the dot of ` руб.` never
   becomes the separator (a digit typed after the suffix joins the number: `123 руб.`).
+- Demo: a playground to try any mask, `maskPlaceholder`, `alwaysShowMask` and `transform`, or start from a
+  preset, with the matching JSX to copy.
 
 ### Changed
 - `DateFormat` and `TimeFormat` render `inputMode="numeric"` by default, like the card components, so phones show

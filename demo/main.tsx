@@ -35,6 +35,7 @@ import {
 } from "react-input-mask-format/card";
 import type { CardBrand } from "react-input-mask-format/card";
 import { Country } from "./countries";
+import { Playground } from "./playground";
 
 const bg = "#0e1420", panel = "#131c2c", line = "#223049", ink = "#f4f8ff", dim = "#6b7f9c", gold = "#FFC800";
 
@@ -233,6 +234,8 @@ function App() {
           <h1 style={{ fontSize: 26, margin: "10px 0 4px" }}>General-purpose input masks for React — with batteries</h1>
           <p style={{ color: dim, margin: 0 }}>Zero-deps · presets are a country-agnostic system · country packs: Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, Armenia, Azerbaijan; phones and postal codes: Georgia, Moldova, Ukraine, Turkmenistan.</p>
         </header>
+
+        <Playground />
 
         <section style={{ display: "grid", gap: 9 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
