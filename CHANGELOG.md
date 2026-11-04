@@ -86,6 +86,18 @@
   `Cannot read properties of null` on mount; the input works as a plain input, and a mask passed later is applied
   to the text already typed with the caret on the first empty slot, as in `<InputMask>`. `<InputMask>`'s `mask`
   prop is now typed `Mask | null` too (it already worked without a mask at runtime).
+- Form reset brings back the formatted `defaultValue` (`12/12/2020`) for `<InputMask>` and `useMask`. Before, the
+  browser restored the raw `defaultValue` (`12122020`). `<InputMask>` now renders the formatted `defaultValue` on
+  the `<input>`; `useMask` re-formats after the form's `reset` event.
+- Focusing a field whose value is full but was not formatted by the mask (set with `el.value = …` without an
+  event, as form libraries do on reset) puts the caret at the end. Before, it went to the start, so Backspace did
+  nothing and typing replaced the first digit.
+- A value written into the input without an input event (form reset, `el.value = …` from a form library) is
+  taken as the current value on focus, in `<InputMask>` and `useMask`. Before, the mask kept its previous value:
+  blurring cleared a reset or written `01/02/2003`, and the next edit was read as a replacement of the whole
+  value.
+- `useMask` binds an input that remounts (for example through `key`) with the current options, not the ones of
+  the first render.
 
 ### Internal
 - React StrictMode tests for `useMask`, `./number`, `./time`, `./date` and `./card` components and hooks, and more

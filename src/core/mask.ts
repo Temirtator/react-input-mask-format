@@ -85,7 +85,7 @@ export default class MaskUtils {
 
   getDefaultSelectionForValue = (value: string): Selection => {
     const filledLength = this.getFilledLength(value);
-    const cursorPosition = this.getRightEditablePosition(filledLength);
+    const cursorPosition = this.getRightEditablePosition(filledLength) ?? value.length;
     return { start: cursorPosition, end: cursorPosition };
   };
 
