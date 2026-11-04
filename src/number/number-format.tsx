@@ -7,6 +7,7 @@ import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
 import { useIsomorphicLayoutEffect } from "../utils/layout-effect";
 import { component } from "../utils/component";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export interface NumberFormatProps
   extends NumberFormatOptions,
@@ -170,7 +171,7 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
 
   function apply(event: React.SyntheticEvent<HTMLInputElement>, inserted: boolean): void {
     const el = event.currentTarget;
-    const typed = readTyped(el.value, el.selectionStart ?? el.value.length, options, inserted);
+    const typed = readTyped(toAsciiDigits(el.value), el.selectionStart ?? el.value.length, options, inserted);
     const digits = digitsBeforeCaret(typed.raw, typed.caret);
     const values = parseNumber(typed.raw, options);
 

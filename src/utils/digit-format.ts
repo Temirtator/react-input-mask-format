@@ -4,6 +4,7 @@ import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "./input";
 import { useIsomorphicLayoutEffect } from "./layout-effect";
 import { isTestDom } from "./test-dom";
+import { toAsciiDigits } from "./ascii-digits";
 
 export interface DigitValues {
   value: string;
@@ -186,10 +187,11 @@ export function useDigitFormat<O, V extends DigitValues>(
         const opts = optionsRef.current;
         const separator = kind.separator(opts);
         const previous = previousRef.current;
+        const text = toAsciiDigits(el.value);
         const { raw, caret } = deleteAcrossSeparator(
-          collapseTrailingSeparator(el.value, previous, separator),
+          collapseTrailingSeparator(text, previous, separator),
           previous,
-          el.selectionStart ?? el.value.length,
+          el.selectionStart ?? text.length,
           forward
         );
         const digits = digitsBeforeCaret(raw, caret);
@@ -337,10 +339,11 @@ export function useDigitInput<O, V extends DigitValues>(
   function apply(event: React.SyntheticEvent<HTMLInputElement>, forward: boolean): void {
     const el = event.currentTarget;
     const separator = kind.separator(options);
+    const text = toAsciiDigits(el.value);
     const { raw, caret } = deleteAcrossSeparator(
-      collapseTrailingSeparator(el.value, formatted, separator),
+      collapseTrailingSeparator(text, formatted, separator),
       formatted,
-      el.selectionStart ?? el.value.length,
+      el.selectionStart ?? text.length,
       forward
     );
     const digits = digitsBeforeCaret(raw, caret);

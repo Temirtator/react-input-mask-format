@@ -241,3 +241,59 @@ describe("IME composition, review cases", () => {
     expect(onValueChange.mock.calls.filter(call => call[0].formattedValue === "1,234")).toHaveLength(1);
   });
 });
+
+describe("IME composition, endings without compositionend", () => {
+  function startComposing(el: HTMLInputElement, text: string): number {
+    const at = el.selectionStart ?? 0;
+    act(() => {
+      fireEvent.compositionStart(el, { data: "" });
+      setValue(el, el.value.slice(0, at) + text + el.value.slice(at));
+      el.setSelectionRange(at + text.length, at + text.length);
+      fireEvent.input(el, { isComposing: true, inputType: "insertCompositionText", data: text });
+    });
+    return at;
+  }
+
+  it.each<[string, (onChange: (value: string) => void) => React.ReactElement]>([
+    ["InputMask", onChange => <InputMask mask="99/99/9999" onChange={e => onChange(e.target.value)} data-testid="field" />],
+    ["controlled InputMask", onChange => <Controlled onChange={onChange} />],
+    ["useMask", onChange => <MaskHook onChange={onChange} />]
+  ])("%s masks the text on the next non-composing input", async (_name, element) => {
+    const onChange = vi.fn();
+    render(element(onChange));
+    await focusField();
+    const el = field();
+    const text = _name === "controlled InputMask" ? "01" : "12";
+    const at = startComposing(el, text);
+    const end = at + text.length;
+    act(() => {
+      setValue(el, el.value.slice(0, end - 1) + el.value.slice(end));
+      el.setSelectionRange(end - 1, end - 1);
+      fireEvent.input(el, { isComposing: false, inputType: "deleteContentBackward" });
+    });
+    const expected = _name === "controlled InputMask" ? "+7 (70_) ___-__-__" : "1_/__/____";
+    expect(el).toHaveValue(expected);
+    expect(onChange).toHaveBeenLastCalledWith(expected);
+  });
+
+  it("InputMask reports a composition ended by blur through onChange", async () => {
+    const onChange = vi.fn();
+    render(
+      <>
+        <InputMask mask="99/99/9999" onChange={e => onChange(e.target.value)} data-testid="field" />
+        <button type="button">other</button>
+      </>
+    );
+    await focusField();
+    startComposing(field(), "12");
+    await userEvent.click(screen.getByText("other"));
+    expect(onChange).toHaveBeenCalledWith("12/__/____");
+  });
+
+  it("InputMask still calls the consumer's onMouseDown", async () => {
+    const onMouseDown = vi.fn();
+    render(<InputMask mask="99/99/9999" onMouseDown={onMouseDown} data-testid="field" />);
+    await userEvent.click(field());
+    expect(onMouseDown).toHaveBeenCalledTimes(1);
+  });
+});
