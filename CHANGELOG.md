@@ -7,6 +7,12 @@
   makes the bundles smaller: index −0.1 kB, number, time, date and card −50 to −70 B.
 - `useMask` throws when `maskPlaceholder` is neither one character nor as long as the mask, like `<InputMask>` always
   did. Before, the hook showed broken text (`mask: "99-99"`, `maskPlaceholder: "ab"` gave `ab-`, then `1b-`).
+- Presets set keyboard and autofill hints, so phones show the right keypad. Phone presets add `inputMode="tel"` and
+  `autoComplete="tel"`. Presets that take only digits (IINs, INNs, accounts, postal codes, `card`, …) add
+  `inputMode="numeric"`, postal codes also add `autoComplete="postal-code"`, and `card` adds
+  `autoComplete="cc-number"`. Presets with letters (IBANs, plates, passports, `vin`) are unchanged. Spread onto
+  `<InputMask>`, the hints reach the `<input>`; a prop passed explicitly wins. `MaskPreset` has the new optional
+  `inputMode` and `autoComplete` fields.
 
 ### Fixed
 - Next.js App Router: rendering `<InputMask>`, `NumberFormat`, `DateFormat`, `TimeFormat` or a card field in a Server

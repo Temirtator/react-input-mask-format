@@ -3,6 +3,8 @@ import type { MaskPreset } from "./types";
 const DIGIT = /[0-9]/;
 
 export const azPhone: MaskPreset = {
+  inputMode: "tel",
+  autoComplete: "tel",
   mask: ["+", "9", "9", "4", " ", "(", /[1-9]/, DIGIT, ")", " ", DIGIT, DIGIT, DIGIT, "-", DIGIT, DIGIT, "-", DIGIT, DIGIT],
   maskPlaceholder: "_"
 };
@@ -14,6 +16,7 @@ export const azFin: MaskPreset = {
 };
 
 export const azVoen: MaskPreset = {
+  inputMode: "numeric",
   mask: "9999999999",
   maskPlaceholder: "_"
 };
@@ -31,6 +34,8 @@ export const azPlate: MaskPreset = {
 };
 
 export const azPostal: MaskPreset = {
+  inputMode: "numeric",
+  autoComplete: "postal-code",
   mask: "AZ9999",
   maskPlaceholder: "_"
 };

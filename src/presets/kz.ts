@@ -1,16 +1,20 @@
 import type { MaskPreset } from "./types";
 
 export const kzPhone: MaskPreset = {
+  inputMode: "tel",
+  autoComplete: "tel",
   mask: "+7 (799) 999-99-99",
   maskPlaceholder: "_"
 };
 
 export const kzIin: MaskPreset = {
+  inputMode: "numeric",
   mask: "999999999999",
   maskPlaceholder: "_"
 };
 
 export const kzBin: MaskPreset = {
+  inputMode: "numeric",
   mask: "999999999999",
   maskPlaceholder: "_"
 };
@@ -35,6 +39,8 @@ export const kzPlate: MaskPreset = {
 };
 
 export const kzPostal: MaskPreset = {
+  inputMode: "numeric",
+  autoComplete: "postal-code",
   mask: "999999",
   maskPlaceholder: "_"
 };

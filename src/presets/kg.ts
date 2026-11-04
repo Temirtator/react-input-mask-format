@@ -3,6 +3,8 @@ import type { MaskPreset } from "./types";
 const DIGIT = /[0-9]/;
 
 export const kgPhone: MaskPreset = {
+  inputMode: "tel",
+  autoComplete: "tel",
   // operator/area codes start with 2-9, so a domestic leading 0 is skipped
   mask: [
     "+", "9", "9", "6", " ", "(", /[2-9]/, DIGIT, DIGIT, ")", " ",
@@ -12,22 +14,26 @@ export const kgPhone: MaskPreset = {
 };
 
 export const kgInnPerson: MaskPreset = {
+  inputMode: "numeric",
   mask: "99999999999999",
   maskPlaceholder: "_"
 };
 
 export const kgInnCompany: MaskPreset = {
+  inputMode: "numeric",
   mask: "99999999999999",
   maskPlaceholder: "_"
 };
 
 export const kgAccount: MaskPreset = {
+  inputMode: "numeric",
   // bank code (BIK prefix) · account · 2 control digits
   mask: "999 99999999999 99",
   maskPlaceholder: "_"
 };
 
 export const kgBik: MaskPreset = {
+  inputMode: "numeric",
   mask: "999999",
   maskPlaceholder: "_"
 };
@@ -47,6 +53,8 @@ export const kgPlateCompany: MaskPreset = {
 };
 
 export const kgPostal: MaskPreset = {
+  inputMode: "numeric",
+  autoComplete: "postal-code",
   mask: "999999",
   maskPlaceholder: "_"
 };

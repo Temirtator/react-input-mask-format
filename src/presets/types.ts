@@ -5,4 +5,6 @@ export interface MaskPreset {
   maskPlaceholder?: string | null;
   transform?: Transform;
   formatChars?: FormatChars;
+  inputMode?: "numeric" | "tel";
+  autoComplete?: string;
 }

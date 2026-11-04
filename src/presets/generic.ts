@@ -2,6 +2,8 @@ import type { MaskPreset } from "./types";
 import { toLatinLookalike } from "../utils/latin-lookalike";
 
 export const card: MaskPreset = {
+  inputMode: "numeric",
+  autoComplete: "cc-number",
   mask: "9999 9999 9999 9999",
   maskPlaceholder: "_"
 };
