@@ -3,8 +3,102 @@
 ## Unreleased
 
 ### Added
+- `vin` preset in `react-input-mask-format/presets` (17 characters, uppercase, Cyrillic look-alikes become
+  Latin, `I` becomes `1`, `O`/`Q` become `0`) and `isValidVin` validator (format only, no check digit).
+- `iban` preset (any country, up to 34 characters grouped by 4, uppercase, Cyrillic look-alikes become Latin)
+  and `isValidIban(value, country?)` validator (ISO 13616 structure and MOD-97 for any country; `country`
+  restricts the code). Georgia, Moldova, Ukraine and other IBAN countries without a pack can use them.
+- Phone and postal presets for Georgia (`gePhone`, `gePostal`), Moldova (`mdPhone`, `mdPostal`), Ukraine
+  (`uaPhone`, `uaPostal`) and Turkmenistan (`tmPhone`, `tmPostal`). Phones read international, domestic (`0…`,
+  Turkmen `8…`, pasted Ukrainian `8…`) and national forms; demo tabs GE, MD, UA, TM.
+- `phonePresets` (ISO code → phone preset for the 12 countries) and `detectPhoneCountry(text)` (country of an
+  international `+…` or `00…` number, `+7` split into Kazakhstan and Russia) in `react-input-mask-format/presets`,
+  with a README recipe for a phone field with a country picker that switches when another country's number is
+  pasted.
+- `valueIsNumericString` on `NumberFormat`: a string `value` is read as a canonical number (`"1234.5"`) whatever
+  `thousandSeparator` and `decimalSeparator` are, as in react-number-format.
+- `allowedDecimalSeparators` for `NumberFormat`, `useNumberFormat`, `formatNumber` and `parseNumber`: characters
+  also read as the decimal separator, as in react-number-format. The default `["."]` means a `.` typed or pasted
+  into a `decimalSeparator=","` field becomes `,` (`12.5` → `12,5`; before, it was dropped and gave `125`). It is
+  ignored when it equals `thousandSeparator`, when the text already has the decimal separator, and when it occurs
+  more than once (`1.234.567` stays `1 234 567`). A string `value` such as `"12.5"` is read the same way. The
+  `prefix` and `suffix` are removed before, also when the user typed outside them, so the dot of ` руб.` never
+  becomes the separator (a digit typed after the suffix joins the number: `123 руб.`).
 - Demo: a playground to try any mask, `maskPlaceholder`, `alwaysShowMask` and `transform`, or start from a
   preset, with the matching JSX to copy.
+
+### Changed
+- `DateFormat` and `TimeFormat` render `inputMode="numeric"` by default, like the card components, so phones show
+  a digit keypad. Pass `inputMode` to override it.
+
+### Fixed
+- `DateFormat` and `TimeFormat` without a `value` prop are now uncontrolled. Before, they were controlled with
+  `""`, so the field was emptied as soon as the date or time was complete (`12052024` typed into `<DateFormat />`
+  became empty); now it keeps `12.05.2024` and still calls `onValueChange` on every edit. `value={undefined}`
+  counts as no `value`; pass `""` to clear the field.
+- `DateFormat`, `TimeFormat`, `CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` support `defaultValue`.
+  Before, it reached the `<input>` next to `value`, React warned and the text was ignored; now
+  `<DateFormat defaultValue="2024-05-12" />` shows `12.05.2024` and is not reported through `onValueChange`.
+  `defaultValue` is now typed `string`; a number or array `defaultValue` no longer compiles (it never worked at
+  runtime).
+- A form reset brings an uncontrolled `DateFormat`, `TimeFormat` or card field back to its `defaultValue` (or
+  empty), like a plain input. A controlled field keeps showing its `value`.
+- `InputMask` and `useMask` no longer drop what you type after moving the caret past the last slot of a focused
+  field (a click at its right edge or End). Before, every character was lost (`+7 (701) ___-__-__` stayed as
+  is); now typing and pasting go to the slot after the last filled one, where focus puts the caret (`2345678`
+  gives `+7 (701) 234-56-78`), and a key no slot accepts moves the caret there. A field whose last slot is
+  filled still ignores typing at the end. A placeholder character typed into the last slot is replaced by the
+  next typed character.
+- Pasting a complete international number (`+`, the country code and every digit of the national number) into a
+  partly or fully filled field of a phone preset or a custom mask whose prefix is `+` and the country code
+  (`+1 (999) 999-9999`) now replaces the whole value, wherever the caret or selection is. Before, the country code was read as national digits at the caret
+  (`+7 (701) ___-__-__` + paste `+7 701 234 56 78` → `+7 (701) 770-12-34`); now it gives `+7 (701) 234-56-78`.
+  A number with digits missing is still inserted at the caret, and typing is unchanged.
+- Masked inputs inside a shadow root (web components) work. Focus was checked against
+  `document.activeElement`, which is the shadow host there, so `<InputMask>` and `useMask` dropped typed
+  characters and moved the caret to the end; `./date`, `./time`, `./card` and `./number` lost their caret
+  placement. Focus is now checked against the input's own root.
+- A selection made while a partly filled `<InputMask>` or `useMask` field takes focus now survives the click,
+  so `onFocus={e => e.target.select()}` selects the whole value and the next key replaces it. Before, the click
+  moved the caret to the first empty slot. Only a selection of the whole value is kept: an empty field still
+  gets the caret on its first slot, and a quick click, also one that moves the mouse a little and selects a few
+  characters, still moves the caret there.
+- `NumberFormat` and `useNumberFormat`: a typed decimal separator puts the caret right after the separator in the
+  result, so with `fixedDecimalScale` `1234.5` gives `1,234.50` (before: `12,345.00`, the caret stayed in front
+  of `.00`), `.5` in an empty field gives `0.5` (before: `50.`), and a separator typed into the integer part or
+  in front of an existing one moves the caret into the fraction. Deleting never steps over the separator, so
+  holding Backspace from the end of `1,234.00` walks into the integer part.
+- `NumberFormat` with a `decimalSeparator` other than `.`: passing the `value` from `onValueChange` back as the
+  `value` prop no longer re-reads its `.` as a thousands mark (`12,5` stayed, but with `fixedDecimalScale` typing
+  `12` showed `1 200,00`).
+- `NumberFormat` re-formats when its options change. Before, a controlled field kept showing the text formatted
+  with the old options (a `prefix` switched from `$ ` to `€ ` still showed `$ 12`). The text being edited is
+  kept, also when an option changes in the same render as the edit (a suffix that depends on the value).
+- `NumberFormat`, `useNumberFormat` and `formatNumber` with `decimalScale: 0` ignore the decimal separator.
+  Before, a typed or pasted `.` stayed at the end (`12.`) and the next digits went nowhere until it was
+  deleted; now `12.` shows `12`, a pasted `1,234.56` becomes `1,234`, and a `.` typed in the middle of
+  `1,234` changes nothing.
+
+## 2.13.0
+
+### Added
+- Belarus pack in `react-input-mask-format/presets`: `byPhone`, `byPersonalId`, `byUnp`, `byIban`, `byPlate`,
+  `byPostal`, `byPassport`. `byPhone` skips the domestic `8 0…` prefix (`"80291234567"` becomes
+  `+375 (29) 123-45-67`); `byPersonalId`, `byUnp`, `byPlate` and `byPassport` turn typed Cyrillic look-alikes
+  into Latin. Validators `isValidByPersonalId` (7-3-1), `isValidByUnp` (MNS mod-11) and `isValidByIban`
+  (MOD-97).
+- Tajikistan pack: `tjPhone`, `tjInn`, `tjEin`, `tjAccount`, `tjBik`, `tjPlate`, `tjPlateCompany`
+  (Cyrillic look-alikes typed on a Russian layout become Latin), `tjPostal`, and `isValidTjInn` (9 digits; the check digit is not published, so format only).
+- Armenia pack: `amPhone` (skips the domestic leading `0`), `amPsn`, `amTin`, `amAccount`, `amPlate`,
+  `amPostal`, `amPassport`, and the structure validators `isValidAmPsn`, `isValidAmTin` and
+  `isValidAmAccount`.
+- Azerbaijan pack: `azPhone` (skips the domestic `0` and `00994`), `azFin` (a typed `O` becomes `0`),
+  `azVoen`, `azIban`, `azPlate`, `azPostal` (`1000` and `AZ 1000` become `AZ1000`), `azPassport`, and
+  validators `isValidAzVoen` (VÖEN mod-11), `isValidAzIban` (MOD-97) and `isValidAzFin` (structure).
+- The demo has BY, TJ, AM and AZ tabs.
+
+### Notes
+- Additive: no existing preset, validator or component changes behavior.
 
 ## 2.12.0
 
