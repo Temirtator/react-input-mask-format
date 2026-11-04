@@ -39,5 +39,6 @@ function valuesOf(parts: DateParts, options?: DateFormatOptions): DateFormatValu
     day <= daysInMonth(year, month)
       ? `${parts.year}-${parts.month}-${parts.day}`
       : "";
-  return { value, formattedValue, day, month, year };
+  const complete = day !== undefined && month !== undefined && year !== undefined;
+  return { value, formattedValue, complete, day, month, year };
 }
