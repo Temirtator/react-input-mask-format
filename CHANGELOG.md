@@ -98,6 +98,13 @@
   value.
 - `useMask` binds an input that remounts (for example through `key`) with the current options, not the ones of
   the first render.
+- Delete (forward delete) in `<InputMask>` and `useMask` with a `maskPlaceholder` moves the caret past the slot it
+  cleared, so pressing it again deletes the next character (`|12/34/5678` → `_|2/34/5678` → `__|/34/5678` →
+  `__/_|4/5678`). Before, the caret stayed in front of the cleared slot and every further Delete did nothing.
+  Without a placeholder the following characters still shift left and the caret stays. Delete on a slot that is
+  already empty leaves the caret there, and once everything is deleted the caret goes back to the first slot.
+- Delete in front of fixed characters at the end of the mask (`12| kg` with `99 kg`) does nothing. Before, it
+  cleared the first slot (`_2 kg`).
 
 ### Internal
 - React StrictMode tests for `useMask`, `./number`, `./time`, `./date` and `./card` components and hooks, and more

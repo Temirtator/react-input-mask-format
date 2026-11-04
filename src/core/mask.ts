@@ -332,7 +332,7 @@ export default class MaskUtils {
   };
 
   processChange = (currentState: InputState, previousState: InputState): InputState & { enteredString: string } => {
-    const { mask, prefix, lastEditablePosition } = this.maskOptions;
+    const { mask, prefix, lastEditablePosition, maskPlaceholder } = this.maskOptions;
     const { value, selection } = currentState;
     const previousValue = previousState.value;
     const previousSelection = previousState.selection;
@@ -394,12 +394,23 @@ export default class MaskUtils {
 
     newValue = previousValue;
 
+    let deletedForward = 0;
     if (removedLength) {
       if (removedLength === 1 && !previousSelection.length) {
         const deleteFromRight = previousSelection.start === selection.start;
-        cursorPosition = (deleteFromRight
+        const position = deleteFromRight
           ? this.getRightEditablePosition(selection.start!)
-          : this.getLeftEditablePosition(selection.start!))!;
+          : this.getLeftEditablePosition(selection.start!);
+        if (position === null) {
+          removedLength = 0;
+          cursorPosition = previousSelection.start!;
+        } else {
+          cursorPosition = position;
+          deletedForward =
+            deleteFromRight && maskPlaceholder && this.isCharacterFillingPosition(previousValue[position], position)
+              ? 1
+              : 0;
+        }
       }
       newValue = this.clearRange(newValue, cursorPosition, removedLength);
     }
@@ -417,7 +428,7 @@ export default class MaskUtils {
       cursorPosition
     );
 
-    cursorPosition += formattedEnteredStringLength;
+    cursorPosition += formattedEnteredStringLength + deletedForward;
     if (cursorPosition >= mask!.length) {
       cursorPosition = mask!.length;
     } else if (
@@ -434,6 +445,9 @@ export default class MaskUtils {
     }
 
     newValue = this.formatValue(newValue);
+    if (deletedForward && this.isValueEmpty(newValue)) {
+      cursorPosition = this.getDefaultSelectionForValue(newValue).start!;
+    }
 
     return {
       value: newValue,
