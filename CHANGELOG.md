@@ -34,6 +34,9 @@
   on React 17, 18 and 19 without console errors, types under `bundler`, `node16` and `node` resolution with and
   without `esModuleInterop`, and a Next.js App Router build.
 - Hydration tests for every component, and the server-render tests fail on any console error.
+- CI: read-only token by default, PR runs cancel superseded ones, the React matrix no longer stops at the first
+  failure, the Playwright report and traces are uploaded when e2e fails, coverage is measured with thresholds (lines
+  99%, branches 96%), and an e2e run on WebKit (Safari's engine) reports without blocking yet.
 
 ## 2.13.0
 
