@@ -156,6 +156,14 @@ import InputMask, { extendedFormatChars } from "react-input-mask-format";
 
 String values (`{ w: "[a-z]" }`) still work but are deprecated.
 
+`defaultFormatChars` and `extendedFormatChars` are frozen. To add a token everywhere, spread them into a map of your
+own and pass it, or wrap `InputMask` in a component that does:
+
+```jsx
+const formatChars = { ...defaultFormatChars, "#": /[0-9A-F]/ };
+const HexInput = props => <InputMask formatChars={formatChars} {...props} />;
+```
+
 ### `beforeMaskedStateChange`
 
 Change the masked value and selection before they are applied. Receives:

@@ -10,15 +10,15 @@ export const CONTROLLED_PROPS = [
   "value"
 ] as const;
 
-export const defaultFormatChars: FormatChars = {
+export const defaultFormatChars: Readonly<FormatChars> = /* @__PURE__ */ Object.freeze({
   "9": /[0-9]/,
   a: /[A-Za-z]/,
   "*": /[A-Za-z0-9]/
-};
+});
 
-export const extendedFormatChars: FormatChars = {
+export const extendedFormatChars: Readonly<FormatChars> = /* @__PURE__ */ Object.freeze({
   ...defaultFormatChars,
   A: /[A-Z]/,
   "Я": /[А-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]/,
   "#": /[0-9A-Fa-f]/
-};
+});

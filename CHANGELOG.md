@@ -16,6 +16,9 @@
   names that are never part of the API): index 6.24 → 5.95 kB, `useMask` alone 4.78 → 4.50 kB.
 - **Breaking:** React 17 or newer is required (`peerDependencies.react` is `>=17.0.0`). React 16 was listed as
   supported but never tested, and two tests fail on 16.14; CI tests 17, 18 and 19.
+- **Breaking:** `defaultFormatChars` and `extendedFormatChars` are frozen. Assigning a token to them now throws a
+  `TypeError` instead of silently changing every mask in the app, presets included. Spread them into a map of your
+  own: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`.
 
 ### Internal
 - size-limit also checks what importing one name costs (`useMask`, `formatNumber`, `formatDate`, `detectCardBrand`,
