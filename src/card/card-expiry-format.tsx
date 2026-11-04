@@ -5,8 +5,9 @@ import { cardInput } from "./card-input";
 
 export interface CardExpiryFormatProps
   extends CardExpiryOptions,
-    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> {
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "defaultValue"> {
   value?: string;
+  defaultValue?: string;
   onValueChange?: (values: CardExpiryValues) => void;
 }
 

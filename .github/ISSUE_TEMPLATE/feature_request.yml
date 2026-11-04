@@ -1,0 +1,21 @@
+name: Feature or preset request
+description: A new option, module or country preset
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need?
+      description: The input you are building and what is missing.
+    validations:
+      required: true
+  - type: textarea
+    id: format
+    attributes:
+      label: Formats and sources
+      description: For presets, examples of real values and a link to an official description of the format or checksum.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you use now
+      description: A workaround or another library, if any.
