@@ -127,12 +127,14 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const el = event.target;
-    if (composingRef.current || (event.nativeEvent as InputEvent).isComposing) {
+    if ((event.nativeEvent as InputEvent).isComposing) {
       composingRef.current = true;
       composingTextRef.current = el.value;
       forceUpdate();
       return;
     }
+    composingRef.current = false;
+    composingTextRef.current = null;
     if (composedRef.current) {
       composedRef.current = false;
       if (el.value === lastFormattedRef.current) return;
@@ -146,16 +148,24 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
     domProps.onCompositionStart?.(event);
   }
 
-  function handleCompositionEnd(event: React.CompositionEvent<HTMLInputElement>): void {
+  function endComposition(event: React.SyntheticEvent<HTMLInputElement>): void {
     composingRef.current = false;
     composingTextRef.current = null;
     if (event.currentTarget.value !== lastFormattedRef.current) {
       composedRef.current = true;
       apply(event, true);
-    } else {
-      forceUpdate();
     }
+    forceUpdate();
+  }
+
+  function handleCompositionEnd(event: React.CompositionEvent<HTMLInputElement>): void {
+    endComposition(event);
     domProps.onCompositionEnd?.(event);
+  }
+
+  function handleBlur(event: React.FocusEvent<HTMLInputElement>): void {
+    if (composingRef.current) endComposition(event);
+    domProps.onBlur?.(event);
   }
 
   function apply(event: React.SyntheticEvent<HTMLInputElement>, inserted: boolean): void {
@@ -226,6 +236,7 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
       onChange={handleChange}
       onCompositionStart={handleCompositionStart}
       onCompositionEnd={handleCompositionEnd}
+      onBlur={handleBlur}
     />
   );
 });

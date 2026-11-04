@@ -63,8 +63,14 @@ export function createMaskController(config: MaskConfig): MaskController {
 
   function handleInput(event: Event): void {
     if (dispatching) return;
-    if (isMasked() && (composition || (event as InputEvent).isComposing)) {
+    if (isMasked() && (event as InputEvent).isComposing) {
       composition = composition || getLastInputState();
+      return;
+    }
+    const before = composition;
+    composition = null;
+    if (isMasked() && before) {
+      setInputState(decideChange(config, getInputState(), before));
       return;
     }
     if (isMasked()) {
@@ -115,7 +121,9 @@ export function createMaskController(config: MaskConfig): MaskController {
   }
 
   function handleBlur(): void {
-    composition = null;
+    if (composition) {
+      handleCompositionEnd();
+    }
     tracker.stop();
     const nextState = isMasked() && decideBlur(config, getInputState(), lastValue);
     if (nextState) {

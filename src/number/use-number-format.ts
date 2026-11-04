@@ -49,24 +49,32 @@ export function useNumberFormat(
     if (el) {
       shownRef.current = el.value;
       let dispatching = false;
+      let composed = false;
       const handler = (event: Event): void => {
         if (event.type === "compositionstart") {
           composingRef.current = true;
           return;
         }
-        if (event.type === "compositionend") {
+        if (event.type === "compositionend" || event.type === "blur") {
+          if (event.type === "blur" && !composingRef.current) return;
           composingRef.current = false;
           if (el.value === shownRef.current) return;
           run(true);
+          composed = true;
           dispatching = true;
           el.dispatchEvent(new Event("input", { bubbles: true }));
           dispatching = false;
           return;
         }
         if (dispatching) return;
-        if (composingRef.current || (event as InputEvent).isComposing) {
+        if ((event as InputEvent).isComposing) {
           composingRef.current = true;
           return;
+        }
+        composingRef.current = false;
+        if (composed) {
+          composed = false;
+          if (el.value === shownRef.current) return;
         }
         const inputType = (event as InputEvent).inputType;
         run(inputType ? inputType.startsWith("insert") : el.value.length > shownRef.current.length);
@@ -105,6 +113,7 @@ export function useNumberFormat(
       el.addEventListener("input", handler);
       el.addEventListener("compositionstart", handler);
       el.addEventListener("compositionend", handler);
+      el.addEventListener("blur", handler);
       handlerRef.current = handler;
       inputRef.current = el;
       // format any initial (defaultValue) content
@@ -117,6 +126,7 @@ export function useNumberFormat(
         inputRef.current.removeEventListener("input", handlerRef.current);
         inputRef.current.removeEventListener("compositionstart", handlerRef.current);
         inputRef.current.removeEventListener("compositionend", handlerRef.current);
+        inputRef.current.removeEventListener("blur", handlerRef.current);
       }
       inputRef.current = null;
       handlerRef.current = null;

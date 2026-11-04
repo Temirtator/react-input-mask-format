@@ -131,3 +131,111 @@ describe("IME composition", () => {
     expect(field()).toHaveValue("12/3_/____");
   });
 });
+
+describe("IME composition, review cases", () => {
+  it("a composition rejected by isAllowed does not come back on the next rejected key", async () => {
+    render(<NumberFormat isAllowed={v => (v.floatValue ?? 0) < 1000} data-testid="field" />);
+    await focusField();
+    await userEvent.keyboard("123");
+    compose(field(), ["4"], "4", "chrome");
+    expect(field()).toHaveValue("123");
+    await userEvent.keyboard("5");
+    expect(field()).toHaveValue("123");
+  });
+
+  it("works when the child renders the input inside a wrapper element", async () => {
+    const Wrapped = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+      function Wrapped({ onCompositionStart, onCompositionEnd, ...rest }, ref) {
+        return (
+          <div onCompositionStart={onCompositionStart} onCompositionEnd={onCompositionEnd}>
+            <input ref={ref} {...rest} />
+          </div>
+        );
+      }
+    );
+    render(
+      <InputMask mask="99/99/9999">
+        <Wrapped data-testid="field" />
+      </InputMask>
+    );
+    await focusField();
+    compose(field(), ["1", "12"], "123", "chrome");
+    expect(field()).toHaveValue("12/3_/____");
+  });
+
+  it("calls the child's own composition handlers", async () => {
+    const start = vi.fn();
+    const end = vi.fn();
+    render(
+      <InputMask mask="99/99/9999">
+        <input onCompositionStart={start} onCompositionEnd={end} data-testid="field" />
+      </InputMask>
+    );
+    await focusField();
+    compose(field(), ["1"], "12", "chrome");
+    expect(start).toHaveBeenCalledTimes(1);
+    expect(end).toHaveBeenCalledTimes(1);
+  });
+
+  it.each<[string, () => React.ReactElement, string]>([
+    ["InputMask", () => <InputMask mask="99/99/9999" data-testid="field" />, "12/__/____"],
+    ["useMask", () => <MaskHook onChange={() => {}} />, "12/__/____"],
+    ["NumberFormat", () => <NumberFormat thousandSeparator="," data-testid="field" />, "12"],
+    ["useNumberFormat", () => <NumberHook onChange={() => {}} />, "12"],
+    ["DateFormat", () => <DateFormat data-testid="field" />, "12."],
+    ["useDateFormat", () => <DateHook onChange={() => {}} />, "12."]
+  ])("%s masks a composition that ends with a blur and keeps masking afterwards", async (_name, element, expected) => {
+    render(
+      <>
+        {element()}
+        <button type="button">other</button>
+      </>
+    );
+    await focusField();
+    const el = field();
+    act(() => {
+      fireEvent.compositionStart(el, { data: "" });
+      setValue(el, "12" + el.value);
+      el.setSelectionRange(2, 2);
+      fireEvent.input(el, { isComposing: true, inputType: "insertCompositionText", data: "12" });
+    });
+    await userEvent.click(screen.getByText("other"));
+    expect(field().value.startsWith(expected) || field().value === "").toBe(true);
+    await focusField();
+    await userEvent.keyboard("{End}34");
+    expect(field().value).not.toContain("1234");
+  });
+
+  it("a composition that the browser ends silently is masked by the next input", async () => {
+    render(<DateFormat data-testid="field" />);
+    await focusField();
+    const el = field();
+    act(() => {
+      fireEvent.compositionStart(el, { data: "" });
+      setValue(el, "123");
+      el.setSelectionRange(3, 3);
+      fireEvent.input(el, { isComposing: true, inputType: "insertCompositionText", data: "123" });
+    });
+    act(() => {
+      setValue(el, "12");
+      el.setSelectionRange(2, 2);
+      fireEvent.input(el, { isComposing: false, inputType: "deleteContentBackward" });
+    });
+    expect(el).toHaveValue("12.");
+    await userEvent.keyboard("05");
+    expect(el).toHaveValue("12.05.");
+  });
+
+  it("hooks report one value per commit in the Firefox event order", async () => {
+    const onValueChange = vi.fn();
+    function Hook() {
+      const ref = useNumberFormat({ thousandSeparator: ",", onValueChange });
+      return <input ref={ref} data-testid="field" />;
+    }
+    render(<Hook />);
+    await focusField();
+    compose(field(), ["1"], "1234", "firefox");
+    expect(field()).toHaveValue("1,234");
+    expect(onValueChange.mock.calls.filter(call => call[0].formattedValue === "1,234")).toHaveLength(1);
+  });
+});

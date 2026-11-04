@@ -63,12 +63,32 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
   const composedRef = useRef(false);
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
 
+  function endComposition(): boolean {
+    const before = compositionRef.current;
+    compositionRef.current = null;
+    composingTextRef.current = null;
+    const input = getInputElement();
+    if (!before || !input || input.value === before.value) return false;
+    setInputState(decideChange(config, getInputState(), before));
+    return true;
+  }
+
   function onChange(event: React.ChangeEvent<HTMLInputElement>): void {
-    if (compositionRef.current || (event.nativeEvent as InputEvent).isComposing) {
+    if ((event.nativeEvent as InputEvent).isComposing) {
       compositionRef.current = compositionRef.current || getLastInputState();
       if (isControlled) {
         composingTextRef.current = event.target.value;
         forceUpdate();
+      }
+      return;
+    }
+    if (compositionRef.current) {
+      endComposition();
+      if (isControlled) {
+        forceUpdate();
+      }
+      if (props.onChange) {
+        props.onChange(event);
       }
       return;
     }
@@ -83,19 +103,18 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
     }
   }
 
+  const childProps = children ? (children.props as React.InputHTMLAttributes<HTMLInputElement>) : null;
+
   function onCompositionStart(event: React.CompositionEvent<HTMLInputElement>): void {
-    compositionRef.current = { value: getLastInputState().value, selection: getInputSelection(event.currentTarget) };
-    if (props.onCompositionStart) {
-      props.onCompositionStart(event);
-    }
+    const input = getInputElement();
+    const last = getLastInputState();
+    compositionRef.current = { value: last.value, selection: input ? getInputSelection(input) : last.selection };
+    props.onCompositionStart?.(event);
+    childProps?.onCompositionStart?.(event);
   }
 
   function onCompositionEnd(event: React.CompositionEvent<HTMLInputElement>): void {
-    const before = compositionRef.current;
-    compositionRef.current = null;
-    composingTextRef.current = null;
-    if (before && event.currentTarget.value !== before.value) {
-      setInputState(decideChange(config, getInputState(), before));
+    if (endComposition()) {
       composedRef.current = true;
       if (props.onChange) {
         props.onChange(event as unknown as React.ChangeEvent<HTMLInputElement>);
@@ -104,9 +123,8 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
     if (isControlled) {
       forceUpdate();
     }
-    if (props.onCompositionEnd) {
-      props.onCompositionEnd(event);
-    }
+    props.onCompositionEnd?.(event);
+    childProps?.onCompositionEnd?.(event);
   }
 
   function onFocus(event: React.FocusEvent<HTMLInputElement>): void {
@@ -135,8 +153,9 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
   }
 
   function onBlur(event: React.FocusEvent<HTMLInputElement>): void {
-    compositionRef.current = null;
-    composingTextRef.current = null;
+    if (compositionRef.current && endComposition() && props.onChange) {
+      props.onChange(event as unknown as React.ChangeEvent<HTMLInputElement>);
+    }
     const currentState = getInputState();
     const newInputState = isMasked
       ? decideBlur(config, currentState, getLastInputState().value)
@@ -261,8 +280,7 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
     onBlur,
     onChange: isMasked && isEditable ? onChange : props.onChange,
     onMouseDown: isMasked && isEditable ? onMouseDown : props.onMouseDown,
-    onCompositionStart: isMasked && isEditable ? onCompositionStart : props.onCompositionStart,
-    onCompositionEnd: isMasked && isEditable ? onCompositionEnd : props.onCompositionEnd,
+    ...(isMasked && isEditable ? { onCompositionStart, onCompositionEnd } : {}),
     // `ref` may target either the plain <input> DOM node or, when custom
     // children are used, whatever node the child's own ref forwards to.
     ref: (ref: unknown) => {
