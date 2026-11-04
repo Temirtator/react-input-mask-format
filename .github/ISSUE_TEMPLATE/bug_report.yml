@@ -1,0 +1,58 @@
+name: Bug report
+description: Something an input shows, reports or does is wrong
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: "2.12.0"
+    validations:
+      required: true
+  - type: input
+    id: react
+    attributes:
+      label: React version
+      placeholder: "19.2.0"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: "Chrome 141, macOS 15 / Safari iOS 18"
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Component and props
+      description: The smallest code that shows the problem (mask, preset, value handling).
+      render: tsx
+      placeholder: |
+        <InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)} />
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps
+      description: What you type, paste or click, and where the caret is.
+      placeholder: |
+        1. Type 7012
+        2. Click after the last digit
+        3. Paste +7 701 234 56 78
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+    validations:
+      required: true

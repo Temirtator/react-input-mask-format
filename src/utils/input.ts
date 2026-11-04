@@ -23,6 +23,6 @@ export function getInputSelection(input: HTMLInputElement): Required<Selection> 
 }
 
 export function isInputFocused(input: HTMLInputElement): boolean {
-  const inputDocument = input.ownerDocument;
-  return inputDocument.hasFocus() && inputDocument.activeElement === input;
+  const root = input.getRootNode() as Document | ShadowRoot;
+  return input.ownerDocument.hasFocus() && root.activeElement === input;
 }
