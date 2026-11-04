@@ -1,5 +1,5 @@
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
-import { tokenize, buildFormatted, resolveSeparators, type NumberParts } from "./format-number";
+import { tokenize, buildFormatted, resolveSeparators, decimalSeparators, type NumberParts } from "./format-number";
 
 function buildValue(parts: NumberParts): string {
   const sign = parts.negative ? "-" : "";
@@ -55,13 +55,12 @@ export function readTyped(
   options: NumberFormatOptions,
   inserted: boolean
 ): { raw: string; caret: number; separator: boolean } {
-  const { decimal } = resolveSeparators(options);
-  const separator = inserted && !!decimal && raw.slice(0, caret).endsWith(decimal);
-  if (separator && options.decimalScale === 0) {
-    const at = caret - decimal.length;
+  const typed = inserted ? decimalSeparators(options).find(c => raw.slice(0, caret).endsWith(c)) : undefined;
+  if (typed && options.decimalScale === 0) {
+    const at = caret - typed.length;
     return { raw: raw.slice(0, at) + raw.slice(caret), caret: at, separator: false };
   }
-  return { raw, caret, separator };
+  return { raw, caret, separator: !!typed };
 }
 
 export function resolveCaret(

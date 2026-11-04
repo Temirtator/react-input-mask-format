@@ -3,6 +3,7 @@ export interface NumberFormatOptions {
   thousandSeparator?: string | boolean;
   /** Decimal separator. Default ".". */
   decimalSeparator?: string;
+  allowedDecimalSeparators?: string[];
   /** Max digits after the decimal separator (truncated, not rounded). */
   decimalScale?: number;
   /** Pad fraction to `decimalScale` with zeros. */

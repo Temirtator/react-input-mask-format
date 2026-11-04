@@ -529,7 +529,9 @@ const ref = useNumberFormat({ thousandSeparator: " ", decimalScale: 2 }); // <in
 formatNumber(1234.5, { thousandSeparator: ",", decimalScale: 2, fixedDecimalScale: true }); // "1,234.50"
 ```
 
-Options: `thousandSeparator` (`true` → `,`, or a string), `decimalSeparator` (`.`), `decimalScale`
+Options: `thousandSeparator` (`true` → `,`, or a string), `decimalSeparator` (`.`), `allowedDecimalSeparators`
+(characters also read as the decimal separator, default `["."]`; ignored when equal to `thousandSeparator`, and
+used only once in the text), `decimalScale`
 (truncates, no rounding; `0` ignores the decimal separator), `fixedDecimalScale`, `prefix`, `suffix`, `allowNegative` (`true`),
 `allowLeadingZeros`, `isAllowed(values) => boolean` (e.g. min/max). `parseNumber` is the inverse of
 `formatNumber`. A string `value` is read like typed text, in the `decimalSeparator` of the props; the `value`

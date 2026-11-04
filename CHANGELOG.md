@@ -17,6 +17,13 @@
   pasted.
 - `valueIsNumericString` on `NumberFormat`: a string `value` is read as a canonical number (`"1234.5"`) whatever
   `thousandSeparator` and `decimalSeparator` are, as in react-number-format.
+- `allowedDecimalSeparators` for `NumberFormat`, `useNumberFormat`, `formatNumber` and `parseNumber`: characters
+  also read as the decimal separator, as in react-number-format. The default `["."]` means a `.` typed or pasted
+  into a `decimalSeparator=","` field becomes `,` (`12.5` → `12,5`; before, it was dropped and gave `125`). It is
+  ignored when it equals `thousandSeparator`, when the text already has the decimal separator, and when it occurs
+  more than once (`1.234.567` stays `1 234 567`). A string `value` such as `"12.5"` is read the same way. The
+  `prefix` and `suffix` are removed before, also when the user typed outside them, so the dot of ` руб.` never
+  becomes the separator (a digit typed after the suffix joins the number: `123 руб.`).
 
 ### Changed
 - `DateFormat` and `TimeFormat` render `inputMode="numeric"` by default, like the card components, so phones show

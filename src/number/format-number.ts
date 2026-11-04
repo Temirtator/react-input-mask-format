@@ -15,6 +15,11 @@ export function resolveSeparators(options: NumberFormatOptions): { thousand: str
   return { thousand, decimal };
 }
 
+export function decimalSeparators(options: NumberFormatOptions): string[] {
+  const { thousand, decimal } = resolveSeparators(options);
+  return [decimal, ...(options.allowedDecimalSeparators ?? ["."])].filter(c => c && c !== thousand);
+}
+
 function extract(raw: string, decimal: string, options: NumberFormatOptions): NumberParts {
   const allowNegative = options.allowNegative ?? true;
   const negative = allowNegative && raw.indexOf("-") !== -1;
@@ -40,9 +45,12 @@ function extract(raw: string, decimal: string, options: NumberFormatOptions): Nu
 export function tokenize(rawInput: string, options: NumberFormatOptions): NumberParts {
   const { decimal } = resolveSeparators(options);
   let s = rawInput;
-  if (options.prefix && s.startsWith(options.prefix)) s = s.slice(options.prefix.length);
-  if (options.suffix && s.endsWith(options.suffix)) s = s.slice(0, s.length - options.suffix.length);
-  return extract(s, decimal, options);
+  const at = options.prefix ? s.indexOf(options.prefix) : -1;
+  if (at !== -1) s = s.slice(0, at) + s.slice(at + options.prefix!.length);
+  const end = options.suffix ? s.lastIndexOf(options.suffix) : -1;
+  if (end !== -1) s = s.slice(0, end) + s.slice(end + options.suffix!.length);
+  const sep = decimalSeparators(options).find(c => (c === decimal ? s.includes(c) : s.split(c).length === 2));
+  return extract(s, sep ?? decimal, options);
 }
 
 export function formatCanonical(value: string, options: NumberFormatOptions): string {
