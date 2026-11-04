@@ -29,6 +29,7 @@ describe("MaskUtils value state checks", () => {
 
   it("getDefaultSelectionForValue points to first empty editable position", () => {
     expect(date().getDefaultSelectionForValue("12/__/____")).toEqual({ start: 3, end: 3 });
+    expect(date().getDefaultSelectionForValue("12/34/5678")).toEqual({ start: 10, end: 10 });
   });
 });
 

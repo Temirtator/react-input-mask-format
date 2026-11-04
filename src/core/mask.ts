@@ -7,6 +7,7 @@ import {
   readUnprefixedInput,
   sameFillingCharacters,
   shouldInsertAfterPrefix,
+  stripInternationalPrefix,
   trimOverflowingPrefix
 } from "./prefix";
 import type { FormatChars, InputState, Selection } from "../types";
@@ -84,7 +85,7 @@ export default class MaskUtils {
 
   getDefaultSelectionForValue = (value: string): Selection => {
     const filledLength = this.getFilledLength(value);
-    const cursorPosition = this.getRightEditablePosition(filledLength);
+    const cursorPosition = this.getRightEditablePosition(filledLength) ?? value.length;
     return { start: cursorPosition, end: cursorPosition };
   };
 
@@ -335,6 +336,19 @@ export default class MaskUtils {
     const { value, selection } = currentState;
     const previousValue = previousState.value;
     const previousSelection = previousState.selection;
+    if (
+      !this.isValueFilled(previousValue) &&
+      previousSelection.start! > lastEditablePosition! &&
+      selection.end! > previousSelection.start!
+    ) {
+      const free = this.getDefaultSelectionForValue(previousValue).start!;
+      const typed = value.slice(previousSelection.start!, selection.end!);
+      const caret = free + typed.length;
+      return this.processChange(
+        { value: previousValue.slice(0, free) + typed + previousValue.slice(free), selection: { start: caret, end: caret } },
+        { value: previousValue, selection: { start: free, end: free } }
+      );
+    }
     let newValue = value;
     let enteredString = "";
     let formattedEnteredStringLength = 0;
@@ -345,6 +359,18 @@ export default class MaskUtils {
 
     if (selection.end! > previousSelection.start!) {
       const raw = newValue.slice(previousSelection.start!, selection.end!);
+      if (
+        stripInternationalPrefix(this.prefixHost, raw) &&
+        (previousSelection.start || previousSelection.end! < previousValue.length)
+      ) {
+        const whole = this.processChange(
+          { value: raw, selection: { start: raw.length, end: raw.length } },
+          { value: previousValue, selection: { start: 0, end: previousValue.length, length: previousValue.length } }
+        );
+        if (mask!.every((_, i) => !this.isPositionEditable(i) || this.isCharacterFillingPosition(whole.value[i], i))) {
+          return whole;
+        }
+      }
       const replacesAll =
         !cursorPosition ||
         (cursorPosition === prefix!.length && this.getFilledLength(previousValue) <= previousSelection.end!);

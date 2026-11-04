@@ -1,5 +1,5 @@
 import type { MaskConfig } from "./core/config";
-import { decideChange, decideFocus, decideBlur, decideClickSelection } from "./core/decide";
+import { decideChange, decideFocus, decideBlur, decideClickSelection, decideUpdate, formatDefaultValue } from "./core/decide";
 import { createSelectionTracker } from "./core/selection-tracker";
 import { watchClick } from "./core/click-tracker";
 import type { InputState } from "./types";
@@ -19,6 +19,7 @@ export interface MaskController {
 export function createMaskController(config: MaskConfig): MaskController {
   let input: HTMLInputElement | null = null;
   let lastValue = "";
+  let form: HTMLFormElement | null = null;
   const tracker = createSelectionTracker(() => input);
 
   function getInputState(): InputState {
@@ -45,24 +46,32 @@ export function createMaskController(config: MaskConfig): MaskController {
     // resync, so the gate is correct, not a workaround-hiding hack.
     if (IS_JSDOM) {
       const resyncValue = value;
-      const resyncSelection = selection;
       queueMicrotask(() => {
         if (!input || input.value !== resyncValue) return;
+        const { start, end } = getInputSelection(input);
         input.value = resyncValue;
-        if (isInputFocused(input) && resyncSelection.start !== null && resyncSelection.end !== null) {
-          setInputSelection(input, resyncSelection.start, resyncSelection.end);
+        if (isInputFocused(input) && start !== null && end !== null) {
+          setInputSelection(input, start, end);
         }
       });
     }
   }
 
+  function isMasked(): boolean {
+    return !!config.maskUtils.maskOptions.mask;
+  }
+
   function handleInput(): void {
-    setInputState(decideChange(config, getInputState(), getLastInputState()));
+    if (isMasked()) {
+      setInputState(decideChange(config, getInputState(), getLastInputState()));
+    } else {
+      lastValue = input!.value;
+    }
   }
 
   function handleFocus(): void {
     tracker.start();
-    const nextState = decideFocus(config, getInputState());
+    const nextState = isMasked() && decideFocus(config, getInputState());
     if (nextState) {
       setInputState(nextState);
       defer(() => {
@@ -70,35 +79,61 @@ export function createMaskController(config: MaskConfig): MaskController {
           tracker.set(tracker.getLast());
         }
       });
+    } else {
+      lastValue = input!.value;
+    }
+  }
+
+  function watchForm(): void {
+    const next = input && input.form;
+    if (next !== form) {
+      form?.removeEventListener("reset", handleReset);
+      form = next;
+      form?.addEventListener("reset", handleReset);
     }
   }
 
   function handleBlur(): void {
     tracker.stop();
-    const nextState = decideBlur(config, getInputState(), lastValue);
+    const nextState = isMasked() && decideBlur(config, getInputState(), lastValue);
     if (nextState) {
       setInputState(nextState);
     }
   }
 
   function handleMouseDown(event: MouseEvent): void {
-    if (!input) return;
+    if (!input || !isMasked()) return;
     const { value } = getInputState();
     if (!isInputFocused(input) && !config.maskUtils.isValueFilled(value)) {
       watchClick(input, event, () => {
-        tracker.set(decideClickSelection(config, lastValue));
+        tracker.set(decideClickSelection(config, lastValue, getInputSelection(input!)));
       });
     }
+  }
+
+  function format(): void {
+    if (!isMasked()) return;
+    const formatted = formatDefaultValue(config, input!.value);
+    if (formatted || config.alwaysShowMask) {
+      setNativeValue(input!, formatted);
+      lastValue = formatted;
+    }
+  }
+
+  function handleReset(): void {
+    defer(() => {
+      if (input) {
+        lastValue = input.value;
+        format();
+      }
+    });
   }
 
   function bind(el: HTMLInputElement): void {
     input = el;
     lastValue = el.value;
-    const formatted = config.maskUtils.formatValue(el.value);
-    if (!config.maskUtils.isValueEmpty(formatted) || config.alwaysShowMask) {
-      setNativeValue(el, formatted);
-      lastValue = formatted;
-    }
+    watchForm();
+    format();
     el.addEventListener("input", handleInput);
     el.addEventListener("focusin", handleFocus);
     el.addEventListener("blur", handleBlur);
@@ -117,10 +152,19 @@ export function createMaskController(config: MaskConfig): MaskController {
       input.removeEventListener("mousedown", handleMouseDown);
     }
     input = null;
+    watchForm();
   }
 
   function update(nextConfig: MaskConfig): void {
+    const wasMasked = isMasked();
     config = nextConfig;
+    watchForm();
+    if (input && isMasked()) {
+      const nextState = decideUpdate(config, getInputState(), isInputFocused(input), wasMasked);
+      if (nextState.value !== input.value || !wasMasked) {
+        setInputState(nextState);
+      }
+    }
   }
 
   return { bind, unbind, update };
