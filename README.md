@@ -5,8 +5,8 @@
 [![CI](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml/badge.svg)](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml)
 
 Input masking for React — dates, phones, cards, custom tokens, numbers, time, and ready-made
-country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan). A maintained fork of
-[react-input-mask](https://github.com/sanniassin/react-input-mask).
+country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, Armenia, Azerbaijan). A maintained
+fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
 **[Live demo](https://temirtator.github.io/react-input-mask-format/)** · **[Changelog](CHANGELOG.md)**
 
@@ -284,10 +284,86 @@ accounts are 20 digits plus a 5-digit MFO bank code.
 
 Plates: 2016+ format. There is no IBAN: accounts are 16 digits, the first 3 are the bank's BIK prefix.
 
+### Belarus
+
+| export | mask | example |
+| --- | --- | --- |
+| `byPhone` | `+375 (99) 999-99-99` (first code digit 1–5 or 7) | `+375 (29) 123-45-67` |
+| `byPersonalId` | `9999999a999aa9` (uppercase, Cyrillic look-alikes become Latin) | `7000000A000PB1` |
+| `byUnp` | 9 characters, 7 digits after two that may be letters (individuals; Cyrillic look-alikes become Latin) | `200988541`, `MA1953684` |
+| `byIban` | `BY99 **** 9999 **** **** **** ****` (uppercase) | `BY13 NBRB 3600 9000 0000 2Z00 AB00` |
+| `byPlate` | `9999 aa-9` (letters `ABEIKMHOPCTX`, region 0–8; Cyrillic look-alikes become Latin) | `1234 AB-7` |
+| `byPostal` | `999999` | `220050` |
+| `byPassport` | `aa9999999` (uppercase, Cyrillic look-alikes become Latin) | `MP1234567` |
+
+Plates: standard 2004+ plates only; not trucks and buses (`AB 1234-7`), electric (`E123 AB-7`), trailers,
+personalised, pre-2004 or region-0 plates with other Cyrillic letters. `byPassport` assumes 2 letters and
+7 digits: the series of biometric passports and ID cards (since 2021) are not published. There is no BIC
+preset: the IBAN already carries the bank code. Typed key by key into an empty field, `375…` is read as the
+operator code (same as `uzPhone`); pasting works. Paste a УНП or passport number without its label: in `byUnp`
+and `byPassport` a Cyrillic label is read as letters (`УНП 200988541` → `H20098854`, because the Cyrillic `Н`
+reads as Latin `H`, a valid first letter).
+
+### Tajikistan
+
+| export | mask | example |
+| --- | --- | --- |
+| `tjPhone` | `+992 (99) 999-99-99` | `+992 (93) 123-45-67` |
+| `tjInn` | `999999999` | `030026536` |
+| `tjEin` | `9999999999` | `0310015466` |
+| `tjAccount` | `99999 999 9 99999999999` | `22202 972 7 00007683505` |
+| `tjBik` | `999999999` | `350101900` |
+| `tjPlate` | `9999 aa 99` (uppercase, Cyrillic look-alikes become Latin) | `1234 AB 01` |
+| `tjPlateCompany` | `999 aa 99` (uppercase, Cyrillic look-alikes become Latin) | `123 AB 01` |
+| `tjPostal` | `999999` | `734025` |
+
+`isValidTjInn` checks the format only. `tjAccount` fits 20-digit accounts; Islamic credit institutions use
+21 digits and accounts at the National Bank 14, so use a plain input for those. There is no passport preset:
+the passport number format is not published. Typed key by key into an empty field, `992…` is read as the
+operator code (same as `uzPhone`).
+
+### Armenia
+
+| export | mask | example |
+| --- | --- | --- |
+| `amPhone` | `+374 (99) 99-99-99` (first code digit 1–9) | `+374 (77) 12-34-56` |
+| `amPsn` | `9999999999` | `3014750025` |
+| `amTin` | `99999999` | `02502212` |
+| `amAccount` | `9999999999999999` | `1150013314754778` |
+| `amPlate` | `99 aa 999` (uppercase) | `35 OL 123` |
+| `amPostal` | `9999` | `0010` |
+| `amPassport` | `aa9999999` (uppercase) | `AM0565436` |
+
+`amAccount` has 16 slots; a shorter account (real ones are 11–16 digits) keeps trailing placeholders
+(`11500814802_____`), which `isValidAmAccount` accepts. `isValidAmTin` checks the format only. `amPassport`
+fits passports issued until 31.10.2026 (series of two letters, 7 digits); the number format of the biometric
+passports and ID cards issued from 01.11.2026 is not published yet. Plates: the standard format only.
+Typed key by key into an empty field, `374…` is read as the operator code; pasting works.
+
+### Azerbaijan
+
+| export | mask | example |
+| --- | --- | --- |
+| `azPhone` | `+994 (99) 999-99-99` (first code digit 1–9) | `+994 (50) 123-45-67` |
+| `azFin` | `*******` (uppercase, a typed `O` becomes `0`) | `5VBK0VR` |
+| `azVoen` | `9999999999` | `9900003871` |
+| `azIban` | `AZ99 aaaa **** **** **** **** ****` (uppercase) | `AZ21 NABZ 0000 0000 1370 1000 1944` |
+| `azPlate` | `99-aa-999` (uppercase) | `90-AA-001` |
+| `azPostal` | `AZ9999` | `AZ1000` |
+| `azPassport` | `a99999999` (uppercase) | `C01234567` |
+
+`azFin` never contains the letter `O` (only zero), so a typed `O` is turned into `0`. `azPostal` is the UPU
+form without a space; typing `1000` or pasting `AZ 1000` gives `AZ1000`. `azPlate` covers standard plates
+only (no diplomatic, foreign, motorcycle or trailer formats). `azPassport` is a letter and 8 digits; the 2024
+series was not verified. There is no ID-card preset. Typed key by key into an empty field, `994…` is read as
+the operator code; pasting works. A 9-digit `99 4…` number (Bakcell code 99, subscriber part starting with 4)
+passed as `value` or pasted without `0`/`+994` is read as the `+994` prefix (`994123456` →
+`+994 (12) 345-6_-__`); pass it with `0` or `+994`, as with `uzPhone`.
+
 ### Masks with a fixed prefix
 
-Masks that start with fixed text (`kzPhone`, `ruPhone`, `uzPhone`, `kgPhone`, `kzIban`) read pasted text and
-programmatic `value`s with or without the prefix:
+Masks that start with fixed text (`kzPhone`, `ruPhone`, `uzPhone`, `kgPhone`, `byPhone`, `tjPhone`, `amPhone`, `azPhone`, `kzIban`, `byIban`,
+`azIban`, `azPostal`) read pasted text and programmatic `value`s with or without the prefix:
 
 | preset | accepted forms |
 | --- | --- |
@@ -295,6 +371,13 @@ programmatic `value`s with or without the prefix:
 | `ruPhone` | `+7 912 …`, `8 912 …`, `"89123456789"` |
 | `uzPhone` | `+998 90 …`, `998 90 …`, `8 90 …`, `"901234567"`, `"+998901234567"`, `"+998 90 123 45 6"` |
 | `kgPhone` | `+996 555 …`, `0555 12 34 56`, `"555123456"`, `"+996555123456"` |
+| `byPhone` | `+375 29 …`, `8 029 …`, `"80291234567"`, `"375291234567"` |
+| `tjPhone` | `+992 93 …`, `"931234567"`, `"992931234567"` |
+| `amPhone` | `+374 77 …`, `077 123456`, `"077123456"` |
+| `azPhone` | `+994 50 …`, `050 123 45 67`, `00994 50 …` |
+| `byIban` | `BY13 NBRB …`, `"BY13NBRB3600900000002Z00AB00"`, `"13nbrb…"` |
+| `azIban` | `AZ21 NABZ …`, `"AZ21NABZ00000000137010001944"` |
+| `azPostal` | `AZ1000`, `AZ 1000`, `"1000"` |
 
 - Pasted text longer than the mask keeps its **last** characters (the prefix part is dropped), unless it starts
   with `+` and the country code: then extra characters at the end (an extension, a typo) are dropped
@@ -303,10 +386,12 @@ programmatic `value`s with or without the prefix:
   otherwise it starts after the prefix (`33 …` in `uzPhone`).
 - Typed key by key, a number that starts with the prefix's own digits is read as the prefix: `uzPhone`
   `90 …` and `kzPhone` `777 …` over a selection, a leading `8` in `ruPhone` (area code `8xx`), `998 …`
-  in an empty `uzPhone`. Pasting these works.
+  in an empty `uzPhone`; likewise `375…`, `374…`, `994…` and `992…` in an empty `byPhone`, `amPhone`,
+  `azPhone` and `tjPhone` fill the operator code. Pasting these works.
 - Text without `+` pasted into an empty field or over the whole value, or a `value` without `+`, that is
-  shorter than a national number (9 digits in `uzPhone` and `kgPhone`, 10 in `kzPhone` and `ruPhone`) is
-  read as the start of a national number, even when it begins with the country code: `uzPhone` `"90"` → `+998 (90) ___-__-__`, `"99890"` → `+998 (99) 890-__-__`;
+  shorter than a national number (9 digits in `uzPhone`, `kgPhone`, `byPhone`, `tjPhone` and `azPhone`, 8 in
+  `amPhone`, 10 in `kzPhone` and `ruPhone`) is read as the start of a national number, even when it begins
+  with the country code: `uzPhone` `"90"` → `+998 (90) ___-__-__`, `"99890"` → `+998 (99) 890-__-__`;
   `kzPhone` `"701"` → `+7 (701) ___-__-__`. Longer digit strings follow the rules above (`uzPhone`
   `"998901234"` → `+998 (90) 123-4_-__`). For a partial international number, pass `+` and the country code.
 
@@ -340,6 +425,16 @@ luhn("4242 4242 4242 4242");                           // true
 | `isValidKgAccount` | KG account, NBKR MOD-97 |
 | `isValidKgInn` | structure + embedded date (check digit not published) |
 | `isValidKgBik` | format |
+| `isValidByPersonalId` | BY personal ID, 7-3-1 checksum (date, region letter and status code are not checked) |
+| `isValidByUnp` | BY UNP, MNS mod-11 checksum |
+| `isValidByIban` | BY IBAN, MOD-97 |
+| `isValidTjInn` | structure only (9 digits; check digit not published) |
+| `isValidAmPsn` | AM public service number, structure (sex, birth date, serial; no check digit) |
+| `isValidAmTin` | format only (8 digits; check digit not published) |
+| `isValidAmAccount` | structure only (11–16 digits, trailing placeholders accepted) |
+| `isValidAzFin` | structure only (7 characters, no `O`) |
+| `isValidAzVoen` | AZ VÖEN, VÖEN mod-11 checksum |
+| `isValidAzIban` | AZ IBAN, MOD-97 |
 
 ## Numbers & currency — `react-input-mask-format/number`
 
