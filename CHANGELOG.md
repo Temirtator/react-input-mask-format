@@ -10,6 +10,8 @@
 ### Internal
 - The WebKit e2e run marks the two "selection made on focus survives the click" tests as known failures (WebKit
   collapses that selection on mouseup), so CI is green; the issue stays tracked.
+- The "typing after the End key" e2e test waits one frame after End. A key pressed in the same frame as End could
+  still go to the old caret position (the selection is read once per frame); that race is tracked separately.
 
 ## 2.14.0
 
