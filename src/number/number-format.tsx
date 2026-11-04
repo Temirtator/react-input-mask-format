@@ -165,9 +165,12 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
       setInputSelection(el, caretRef.current, caretRef.current);
       caretRef.current = null;
     }
-    if (el && uncontrolled && caretRef.current === null && el.value !== lastFormattedRef.current) {
-      lastValuesRef.current = parseNumber(el.value, options);
-      forceUpdate();
+    if (el && uncontrolled && caretRef.current === null && el.value !== lastFormattedRef.current && el.selectionStart !== null) {
+      const adopted = parseNumber(el.value, options);
+      if (adopted.formattedValue !== lastFormattedRef.current) {
+        lastValuesRef.current = adopted;
+        forceUpdate();
+      }
     }
   });
 
