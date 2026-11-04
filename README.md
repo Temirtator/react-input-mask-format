@@ -37,12 +37,30 @@ const ref = useMask({ mask: "+7 (999) 999-99-99" });
 
 ## Why this fork
 
-The original `react-input-mask` has been unmaintained since 2021. This fork is:
+The original `react-input-mask` has had no release since 2.0.4 (September 2018), and its repository is
+archived. Its 2.x uses `findDOMNode`, which React 19 removed. This fork is:
 
 - **React 16.8 – 19 compatible** — no `defaultProps`, no `findDOMNode`, StrictMode-safe
 - **TypeScript-first**, **zero runtime dependencies**, ESM + CJS, tree-shakable entry points
 - **Drop-in compatible** with `react-input-mask` v2 and v3-alpha APIs ([migration](#migrating-from-react-input-mask))
 - **Custom `children` work again** — broken upstream since v1.0.x
+
+### Compared with other libraries
+
+| | this package | `react-input-mask` | `react-imask` | `react-number-format` | `@react-input/mask` |
+|---|---|---|---|---|---|
+| Last release | 2026 | 2018 | 2024 | 2026 | 2024 |
+| Bundled TypeScript types | ✓ | — | ✓ | ✓ | ✓ |
+| Main component, min+gzip | 5.8 kB | 4.8 kB | 17.5 kB | 6.8 kB | 5.4 kB |
+| Numbers and currency | ✓ | — | ✓ | ✓ | — |
+| Dates with day/month clamping | ✓ | — | ✓ | — | — |
+| Card numbers with brand detection | ✓ | — | — | — | — |
+| Country presets and validators | ✓ | — | — | — | — |
+| Hook for your own `<input>` | ✓ | — | ✓ | — | ✓ |
+
+Sizes: each main component bundled with `esbuild --minify`, `react` external, then gzipped, on 2026-11-03.
+`react-number-format` counts `NumericFormat` and `PatternFormat`; `react-imask` includes the whole `imask`
+core. `/number`, `/date` and `/card` are separate entry points of 1.7 kB, 2.0 kB and 2.4 kB.
 
 ## Contents
 
@@ -50,7 +68,7 @@ The original `react-input-mask` has been unmaintained since 2021. This fork is:
 - [Presets](#presets) · [Masks with a fixed prefix](#masks-with-a-fixed-prefix) · [Validators](#validators)
 - [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) · [Time](#time--react-input-mask-formattime)
   · [Date](#date--react-input-mask-formatdate) · [Cards](#cards--react-input-mask-formatcard)
-- [Known issues](#known-issues) · [Migration](#migration)
+- [Known issues](#known-issues) · [Recipes](#recipes) · [Migration](#migration)
 
 ## Properties
 
@@ -190,7 +208,7 @@ import { kzPhone, kzIban } from "react-input-mask-format/presets";
 <InputMask {...kzPhone} value={phone} onChange={onChange} />
 ```
 
-Masks are shown as users see them. PRs adding other countries are welcome.
+Masks are shown as users see them. PRs adding other countries are welcome; see [CONTRIBUTING](CONTRIBUTING.md).
 
 ### Generic
 
@@ -571,7 +589,7 @@ const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir
 | `visa` | 4 | 13, 16, 19 | 4-4-4-4-3 | 3 |
 | `mastercard` | 51–55, 2221–2720 | 16 | 4-4-4-4 | 3 |
 | `amex` | 34, 37 | 15 | 4-6-5 | 4 |
-| `diners` | 300–305, 36, 38–39 | 14–19 | 4-6-4 at 14, else 4-4-4-4-3 | 3 |
+| `diners` | 300–305, 36, 38–39 | 14–19 | 4-6-4 up to 14 digits, then 4-4-4-4-3 | 3 |
 | `discover` | 6011, 644–659 | 16–19 | 4-4-4-4-3 | 3 |
 | `unionpay` | 62, 81 | 16–19 | 4-4-4-4-3 | 3 |
 | `jcb` | 3528–3589 | 16–19 | 4-4-4-4-3 | 3 |
@@ -611,10 +629,239 @@ Browser autofill needs an empty input or a value that matches the start of the a
 `maskPlaceholder={null}`, apply the mask only to a non-empty value, or use less formatting. Phones and
 postal codes are often autofilled; one-time codes are not.
 
+### Playwright
+
+`locator.fill()` on an unfocused field that already has text can insert at the caret instead of replacing the
+value in Chromium (`12/3_/____` filled with `87654321` gives `12/38/7654`): the field puts its caret on focus one
+frame later. Click the field and wait a frame first: `await input.click(); await page.waitForTimeout(50);`.
+
+### Testing Library
+
+The mask reads the caret once per animation frame. After moving it from a test with `setSelectionRange`, wait a
+frame before the next key, or the edit is read as a replacement of the whole value:
+
+```ts
+input.setSelectionRange(4, 4);
+await new Promise((resolve) => requestAnimationFrame(resolve));
+await user.keyboard("{Backspace}");
+```
+
+Typing with `user.click()` and `user.keyboard()` alone needs no waits.
+
 ### Cypress
 
 `cy.get("input").focus().type("12345")` can produce `23/45/____`, because `focus()` is not an action
 command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `.wait(50)` after `.focus()`.
+
+## Recipes
+
+### react-hook-form: `InputMask` with `Controller`
+
+`InputMask` is controlled, so use `Controller` and spread `field` onto it. `field.ref` reaches the input,
+so focus-on-error and `setFocus` work. A mask with a placeholder keeps `_` in an incomplete value, which
+makes a one-line `validate` enough (add `required` for the empty value); for documents add the checksum validator.
+
+```tsx
+import { useForm, Controller } from "react-hook-form";
+import InputMask from "react-input-mask-format";
+import { kzPhone, kzIin } from "react-input-mask-format/presets";
+import { isValidIin } from "react-input-mask-format/validators";
+
+type FormValues = { phone: string; iin: string };
+
+function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
+  const { control, handleSubmit } = useForm<FormValues>({ defaultValues: { phone: "", iin: "" } });
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="phone"
+        control={control}
+        rules={{
+          required: "Enter a phone",
+          validate: (v) => !v.includes("_") || "Enter the full number",
+        }}
+        render={({ field, fieldState }) => (
+          <>
+            <InputMask {...kzPhone} {...field} />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <Controller
+        name="iin"
+        control={control}
+        rules={{ validate: (v) => isValidIin(v) || "Invalid IIN" }}
+        render={({ field, fieldState }) => (
+          <>
+            <InputMask {...kzIin} {...field} />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+The form value is the masked text (`"+7 (701) 234-56-78"`). Strip it in `onSubmit` if the API wants digits.
+
+### react-hook-form: `useMask` with `register`
+
+For an uncontrolled input, merge the ref from `register` with the one from `useMask`. Both are called on
+every ref change, so the mask survives re-renders from `formState`.
+
+```tsx
+import { useForm } from "react-hook-form";
+import { useMask } from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
+  const { register, handleSubmit, formState } = useForm<{ phone: string }>();
+  const { ref, ...rest } = register("phone", {
+    required: "Enter a phone",
+    validate: (v) => !v.includes("_") || "Enter the full number",
+  });
+  const maskRef = useMask(kzPhone);
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input
+        {...rest}
+        ref={(el) => {
+          ref(el);
+          maskRef(el);
+        }}
+      />
+      {formState.errors.phone && <p role="alert">{formState.errors.phone.message}</p>}
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+### react-hook-form: number, date and card components
+
+Pass the value, store what you need from `onValueChange`, and give `ref={field.ref}` so `setFocus` and
+focus-on-error reach the input. `onBlur={field.onBlur}` is what makes `mode: "onBlur"` validate.
+
+```tsx
+import { useForm, Controller } from "react-hook-form";
+import { NumberFormat } from "react-input-mask-format/number";
+import { DateFormat } from "react-input-mask-format/date";
+
+type FormValues = { amount: string; born: string };
+
+function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
+  const { control, handleSubmit } = useForm<FormValues>({
+    mode: "onBlur",
+    defaultValues: { amount: "", born: "" },
+  });
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="amount"
+        control={control}
+        render={({ field }) => (
+          <NumberFormat
+            name={field.name}
+            ref={field.ref}
+            value={field.value}
+            onValueChange={(v) => field.onChange(v.value)}
+            onBlur={field.onBlur}
+            thousandSeparator=","
+            decimalScale={2}
+          />
+        )}
+      />
+      <Controller
+        name="born"
+        control={control}
+        rules={{ required: "Enter a date" }}
+        render={({ field, fieldState }) => (
+          <>
+            <DateFormat
+              name={field.name}
+              ref={field.ref}
+              value={field.value}
+              onValueChange={(v) => field.onChange(v.value)}
+              onBlur={field.onBlur}
+            />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+Typing `1234.5` and `12052024` submits `{ amount: "1234.5", born: "2024-05-12" }`: the unformatted number and
+the ISO date. `born` stays `""` until the date is complete and exists, so `required` rejects a partial date,
+on blur and on submit. `CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` take the same props; wire
+them the same way (`CardNumberFormat` gives the digits without spaces in `v.value`, `CardExpiryFormat`
+gives `"05/30"`).
+
+### MUI `TextField`
+
+Wrap the `TextField` in `InputMask`. The mask finds the `<input>` inside it. MUI sees the value, so the
+floating label moves up and does not overlap the mask or the typed text.
+
+```tsx
+import { useState } from "react";
+import InputMask from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+import TextField from "@mui/material/TextField";
+
+function PhoneField() {
+  const [phone, setPhone] = useState("");
+  return (
+    <InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+      <TextField label="Phone" />
+    </InputMask>
+  );
+}
+```
+
+Checked with MUI 9. To reach the `<input>` props in MUI 9 use `slotProps.htmlInput`; MUI 5 and 6 use
+`inputProps`.
+
+### Ant Design `Input`
+
+antd's `Input` ref is an `InputRef`, not the element, so a plain `<Input>` as an `InputMask` child throws.
+Forward `.input` through a small wrapper:
+
+```tsx
+import React, { useState } from "react";
+import { Input } from "antd";
+import type { InputProps, InputRef } from "antd";
+import InputMask from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+const AntInput = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+  const inner = React.useRef<InputRef>(null);
+  React.useImperativeHandle(ref, () => inner.current!.input!, []);
+  return <Input {...props} ref={inner} />;
+});
+
+function PhoneField() {
+  const [phone, setPhone] = useState("");
+  return (
+    <InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+      <AntInput />
+    </InputMask>
+  );
+}
+```
+
+Checked with Ant Design 6. For an uncontrolled field, `useMask` also works on antd's `Input` through its
+`.input` element: `ref={(r) => maskRef(r?.input ?? null)}`. antd controls the input's value, so the mask
+template shows once the user types rather than on focus.
+
+### Other kits
+
+Any component that forwards its ref to the native `<input>` works as an `InputMask` child, or with
+`useMask` (see [`children`](#children)).
 
 ## Migration
 
@@ -639,3 +886,189 @@ Replace `NumericFormat` with `NumberFormat` from `react-input-mask-format/number
 [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) are the same. Differences:
 `decimalScale` truncates instead of rounding while typing, and there is no `PatternFormat` — use
 `<InputMask>` for pattern masks.
+
+### Migrating from react-imask
+
+Replace `IMaskInput` with `InputMask` and `useIMask` with `useMask`. Pattern masks translate token by token
+(`0` → `9`); `mask={Number}` and `mask={Date}` move to the [`/number`](#numbers--currency--react-input-mask-formatnumber)
+and [`/date`](#date--react-input-mask-formatdate) modules. `onChange` receives the masked value: there is no
+`onAccept` and no `unmask`.
+
+| react-imask | this package |
+| --- | --- |
+| `<IMaskInput mask="…" />` | `<InputMask mask="…" />` |
+| `useIMask(opts, { onAccept })` → `{ ref, value, unmaskedValue, … }` | `useMask(options)` → a ref only; read the value in the input's `onChange` |
+| `0` | `9` |
+| `a` (any letter) | `a` (A–Z, a–z); `Я` from `extendedFormatChars` for Cyrillic |
+| `*` (any character) | `*` (A–Z, a–z, 0–9) |
+| `\\0` (a fixed `0`) | `0` |
+| a fixed `9`, e.g. `+998` | `"+\\9\\98"` |
+| `{7}` (fixed part kept in the unmasked value) | `7`: the value always contains the fixed parts |
+| `[…]` (optional part) | not supported |
+| `lazy` (default): only typed characters | `maskPlaceholder={null}` |
+| `lazy={false}` | `alwaysShowMask` |
+| `placeholderChar="#"` | `maskPlaceholder="#"` |
+| `definitions={{ "#": /[1-6]/ }}` | `formatChars={{ ...defaultFormatChars, "#": /[1-6]/ }}` |
+| `prepareChar={(str) => str.toUpperCase()}` | `transform="uppercase"` or `transform={(char, position) => …}` |
+| `unmask` | no helper; `value.replace(/\D/g, "")` for digit masks |
+| `onAccept={(value) => …}` | `onChange={(e) => …}` with `e.target.value` |
+| `onComplete` | no event; check the value in `onChange` |
+| `inputRef` | `ref` |
+| `IMaskMixin(Component)` | [`children`](#children) |
+| `mask={Date}` | `DateFormat` from `react-input-mask-format/date` |
+| `mask={Number}` with `scale`, `radix`, `thousandsSeparator`, `padFractionalZeros`, `min` / `max` | `NumberFormat` with `decimalScale`, `decimalSeparator`, `thousandSeparator`, `fixedDecimalScale`, `isAllowed` |
+| an array of masks, `dispatch` | change the `mask` prop from your state; `CardNumberFormat` for card numbers |
+| `blocks`, `MaskedRange`, `MaskedEnum` | an array mask with a `RegExp` per position, `DateFormat`, `TimeFormat` |
+
+Phone with the mask always shown and the digits extracted:
+
+```jsx
+// react-imask
+<IMaskInput
+  mask="+{7} (000) 000-00-00"
+  lazy={false}
+  unmask
+  value={phone}
+  onAccept={(value) => setPhone(value)} // "77012345678"
+  onComplete={(value) => save(value)}
+/>
+
+// react-input-mask-format
+<InputMask
+  mask="+7 (999) 999-99-99" // or {...kzPhone}, {...ruPhone}
+  alwaysShowMask
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)} // "+7 (701) 234-56-78"
+/>
+const digits = phone.replace(/\D/g, ""); // "77012345678"
+const complete = digits.length === 11;
+```
+
+Keep the masked value in state and derive the digits from it.
+
+Custom definitions and uppercase input:
+
+```jsx
+// react-imask
+<IMaskInput mask="#00000" definitions={{ "#": /[1-6]/ }} />
+<IMaskInput mask="aa0000000" prepareChar={(str) => str.toUpperCase()} />
+
+// react-input-mask-format
+import InputMask, { defaultFormatChars } from "react-input-mask-format";
+
+<InputMask mask="#99999" formatChars={{ ...defaultFormatChars, "#": /[1-6]/ }} />
+<InputMask mask="aa9999999" transform="uppercase" /> // same as the uzPassport preset
+```
+
+Date:
+
+```jsx
+// react-imask
+<IMaskInput mask={Date} unmask="typed" onAccept={(date) => setDate(date)} /> // Date, null until complete
+
+// react-input-mask-format
+import { DateFormat } from "react-input-mask-format/date";
+
+<DateFormat value={date} onValueChange={(v) => setDate(v.value)} /> // "2024-05-12", "" until complete
+```
+
+Differences:
+
+- `InputMask` and `useMask` report only the masked value. The `/number`, `/date`, `/time` and `/card`
+  components report parsed values in `onValueChange`.
+- `formatChars` replaces the default tokens: spread `defaultFormatChars` to keep `9`, `a` and `*`.
+- No optional parts, `blocks`, `overwrite`, `eager`, `skipInvalid`, `displayChar`, `validate` or `commit`.
+- No pipe for pattern masks; a controlled `value` is formatted on render. The modules export `formatNumber`,
+  `formatDate`, `formatTime` and `formatCardNumber`.
+- `DateFormat` has no `min` / `max` and gives an ISO string, not a `Date`; build one from `day`, `month` and
+  `year` if you need it.
+
+### Migrating from @react-input/mask
+
+`InputMask` and `useMask` keep their names. Slots in the mask are the format characters `9`, `a`, `*` (or your
+`formatChars`) instead of `replacement` keys, and `maskPlaceholder` sets what unfilled slots show.
+
+| @react-input/mask | this package |
+| --- | --- |
+| `mask="+7 (___) ___-__-__" replacement={{ _: /\d/ }}` | `mask="+7 (999) 999-99-99"` |
+| `replacement={{ _: /[A-Z]/ }}` | `formatChars={{ "#": /[A-Z]/ }}` with `#` in the mask, or an array mask |
+| `replacement="_"` (any character) | `*` (A–Z, a–z, 0–9), or a `formatChars` token that does not match the placeholder: `/[^_]/` |
+| `showMask` | `alwaysShowMask` |
+| no `showMask`: `+7 (912` | `maskPlaceholder={null}`: `+7 (912) ` |
+| replacement keys as the placeholder: `dd.mm.yyyy` | `maskPlaceholder="dd.mm.yyyy"` |
+| `separate` | the default with a `maskPlaceholder`: a deleted character leaves its slot empty; with `maskPlaceholder={null}` the following characters shift left |
+| `track` | `transform` per character, `beforeMaskedStateChange` for the whole value and selection |
+| `modify` | change `mask` and the other props from your state |
+| `onMask` (v1), `unformat` | `onChange`; `value.replace(/\D/g, "")` for digit masks |
+| `format` for an initial value | not needed: a raw `value` or `defaultValue` is formatted on render |
+| `generatePattern`, `formatToParts` | not supported; checksums in [Validators](#validators) |
+| `component={CustomInput}` | `<InputMask><CustomInput /></InputMask>`, see [children](#children) |
+| `useMask({ mask, replacement })` | `useMask({ mask })` |
+
+Phone with the mask always shown and the digits extracted:
+
+```jsx
+// @react-input/mask
+import { InputMask, unformat } from "@react-input/mask";
+
+const options = { mask: "+7 (___) ___-__-__", replacement: { _: /\d/ } };
+<InputMask
+  {...options}
+  showMask
+  onChange={(e) => setDigits(unformat(e.target.value, options))} // "9123456789"
+/>
+
+// react-input-mask-format
+import InputMask from "react-input-mask-format";
+import { ruPhone } from "react-input-mask-format/presets";
+
+<InputMask
+  {...ruPhone}
+  alwaysShowMask
+  onChange={(e) => setDigits(e.target.value.replace(/\D/g, "").slice(1))} // "9123456789"
+/>
+```
+
+`.slice(1)` drops the `7` of `+7`, which `unformat` leaves out. `ruPhone` also reads a pasted `8 912 …` or
+`+7 912 …`, see [Masks with a fixed prefix](#masks-with-a-fixed-prefix).
+
+Date with letters as the placeholder:
+
+```jsx
+// @react-input/mask
+<InputMask mask="dd.mm.yyyy" replacement={{ d: /\d/, m: /\d/, y: /\d/ }} showMask separate />
+
+// react-input-mask-format
+<InputMask mask="99.99.9999" maskPlaceholder="dd.mm.yyyy" alwaysShowMask />
+
+// or, with day and month clamping and an ISO value:
+import { DateFormat } from "react-input-mask-format/date";
+
+<DateFormat value={date} onValueChange={(v) => setDate(v.value)} />
+```
+
+Custom token with uppercase input:
+
+```jsx
+// @react-input/mask
+<InputMask
+  mask="____ ____"
+  replacement={{ _: /[0-9A-F]/ }}
+  track={({ data }) => data && data.toUpperCase()}
+/>
+
+// react-input-mask-format
+<InputMask mask="#### ####" formatChars={{ "#": /[0-9A-F]/ }} transform="uppercase" />
+```
+
+Differences:
+
+- `onChange` receives the masked value with placeholders (`+7 (912) ___-__-__`). There is no `unformat`, and
+  `value.replace(/\D/g, "")` keeps the digits of fixed parts (the `7` of `+7`).
+- `9`, `a` and `*` are always slots unless escaped (`"+\\9\\98"`). `formatChars` replaces them: spread
+  `defaultFormatChars` to use them next to your own tokens.
+- Deleting in the middle keeps positions while a `maskPlaceholder` is set (`12/34/5678`, Backspace after the
+  `3` → `12/_4/5678`), like `separate`. With `maskPlaceholder={null}` the following characters shift left
+  (`12/45/678`); there is no option to shift while a placeholder is shown.
+- `beforeMaskedStateChange` receives the previous, current and next `{ value, selection }` instead of
+  `inputType` and `data`.
