@@ -28,7 +28,7 @@ export function useInputElement(
     }
 
     if (!input) {
-      throw new Error("react-input-mask: inputComponent doesn't contain input node");
+      throw new Error("react-input-mask-format: the element rendered by InputMask doesn't contain an <input>");
     }
 
     return input as HTMLInputElement;

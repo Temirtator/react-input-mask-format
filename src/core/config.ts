@@ -6,6 +6,7 @@ import {
   warnDeprecatedOnce
 } from "../v2-compat";
 import { resolveTransform } from "../utils/transform";
+import { validateEditablePositions, validateMaskPlaceholder } from "../validate-props";
 import type {
   BeforeMaskedStateChangeFn,
   BeforeMaskedValueChangeFn,
@@ -68,12 +69,17 @@ export function resolveMaskConfig(options: ResolveMaskOptions): MaskConfig {
     );
   }
 
+  validateMaskPlaceholder({ mask, maskPlaceholder });
+
   const maskUtils = new MaskUtils({
     mask: mask ?? null,
     maskPlaceholder,
     formatChars: normalizedFormatChars,
     transform: resolveTransform(transform)
   });
+  if (process.env.NODE_ENV !== "production") {
+    validateEditablePositions(mask, maskUtils.maskOptions.lastEditablePosition);
+  }
 
   let beforeMaskedStateChange = beforeMaskedStateChangeOption;
   if (!beforeMaskedStateChange && beforeMaskedValueChange) {

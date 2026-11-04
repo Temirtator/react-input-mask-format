@@ -5,6 +5,8 @@
 ### Changed
 - The test-DOM workaround is left out of production builds (`process.env.NODE_ENV === "production"`), which
   makes the bundles smaller: index −0.1 kB, number, time, date and card −50 to −70 B.
+- `useMask` throws when `maskPlaceholder` is neither one character nor as long as the mask, like `<InputMask>` always
+  did. Before, the hook showed broken text (`mask: "99-99"`, `maskPlaceholder: "ab"` gave `ab-`, then `1b-`).
 
 ### Fixed
 - Next.js App Router: rendering `<InputMask>`, `NumberFormat`, `DateFormat`, `TimeFormat` or a card field in a Server
@@ -35,6 +37,18 @@
 - Tests that run under happy-dom get correct values from `useMask`, `useNumberFormat` and the digit-field hooks.
   Before, typing `12052024` into `useMask({ mask: "99/99/9999" })` gave `12/_0/_5_2`, because a workaround for
   the test DOM recognised only jsdom.
+- Masked fields with `type="number"` or `type="email"` no longer throw on every key; `NumberFormat type="number"`
+  no longer unmounts the whole React tree. These types have no text selection, so the browser rejected the caret
+  update (`InvalidStateError`), and they still cannot be masked. In development a console error now says so once
+  per type and suggests `type="text"` or `type="tel"` with `inputMode="numeric"`.
+- `<InputMask value={123456} mask="999-999">` shows `123-456`. Before, a number `value` (allowed by the types)
+  threw `string.split is not a function`, and `0` was shown unmasked and passed to `beforeMaskedStateChange` as a
+  number; a `defaultValue` of `0` is no longer dropped.
+- In development, a custom child of `InputMask` that does not forward its ref gets an error that says so, instead
+  of `Cannot read properties of null (reading 'getRootNode')`. The error for a child without an `<input>` names this
+  package instead of the old `react-input-mask`.
+- In development, a mask without editable positions (`mask="+7"`, `mask={[]}`) logs a console error once.
+- `V2MaskOptions`, used by the `BeforeMaskedValueChangeFn` type, is exported.
 
 ### Internal
 - CI packs the package and checks it the way consumers use it: ESM and CJS imports of every entry, server rendering

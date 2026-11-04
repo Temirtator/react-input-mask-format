@@ -3,7 +3,7 @@ import { forwardRef } from "react";
 import { useIsomorphicLayoutEffect } from "./utils/layout-effect";
 
 import { useInputState, useInputElement, usePrevious } from "./hooks";
-import { validateMaxLength, validateChildren, validateMaskPlaceholder } from "./validate-props";
+import { validateMaxLength, validateChildren, validateInputElement } from "./validate-props";
 import { defer } from "./utils/defer";
 import { isInputFocused, getInputSelection } from "./utils/input";
 import { isFunction, toString } from "./utils/helpers";
@@ -44,15 +44,11 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   });
   const config: MaskConfig = { maskUtils, maskPlaceholder, alwaysShowMask, beforeMaskedStateChange };
 
-  validateMaskPlaceholder({ ...props, maskPlaceholder });
-
   const isMasked = !!mask;
   const isEditable = !restProps.disabled && !restProps.readOnly;
   const isControlled = props.value !== null && props.value !== undefined;
   const previousIsMasked = usePrevious(isMasked);
-  const initialValue = toString(
-    (isControlled ? props.value : props.defaultValue) || ""
-  );
+  const initialValue = toString((isControlled ? props.value : props.defaultValue) ?? "");
 
   const {
     inputRef,
@@ -140,10 +136,11 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   if (isMasked && isControlled) {
     const input = getInputElement();
     const isFocused = !!input && isInputFocused(input);
+    const valueText = toString(props.value);
     let newValue =
-      isFocused || alwaysShowMask || props.value
-        ? maskUtils.formatControlledValue(props.value as string, getLastInputState().value)
-        : (props.value as string);
+      isFocused || alwaysShowMask || valueText
+        ? maskUtils.formatControlledValue(valueText, getLastInputState().value)
+        : valueText;
 
     if (beforeMaskedStateChange) {
       newValue = beforeMaskedStateChange({
@@ -171,6 +168,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     }
 
     const input = getInputElement();
+    validateInputElement(input);
     const isFocused = isInputFocused(input as HTMLInputElement);
     const previousSelection = lastSelection;
     const currentState = getInputState();
@@ -257,6 +255,7 @@ export type {
   Selection,
   BeforeMaskedStateChangeFn,
   BeforeMaskedValueChangeFn,
+  V2MaskOptions,
   Mask,
   Transform,
   FormatChars,
