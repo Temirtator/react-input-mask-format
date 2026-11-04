@@ -1,4 +1,5 @@
 import { findLastIndex, repeat } from "../utils/helpers";
+import { toAsciiDigits } from "../utils/ascii-digits";
 import parseMask, { type ParsedMaskOptions } from "../utils/parse-mask";
 import {
   type PrefixHost,
@@ -178,6 +179,7 @@ export default class MaskUtils {
   };
 
   formatValue = (value: string): string => {
+    value = toAsciiDigits(value);
     const { maskPlaceholder, mask, prefix } = this.maskOptions;
     const unprefixed = normalizeUnprefixedValue(this.prefixHost, value);
     const start = unprefixed === null ? 0 : prefix!.length;
@@ -202,6 +204,7 @@ export default class MaskUtils {
   };
 
   formatControlledValue = (value: string, shownValue: string): string => {
+    value = toAsciiDigits(value);
     if (
       value &&
       shownValue &&
@@ -333,7 +336,8 @@ export default class MaskUtils {
 
   processChange = (currentState: InputState, previousState: InputState): InputState & { enteredString: string } => {
     const { mask, prefix, lastEditablePosition, maskPlaceholder } = this.maskOptions;
-    const { value, selection } = currentState;
+    const { selection } = currentState;
+    const value = toAsciiDigits(currentState.value);
     const previousValue = previousState.value;
     const previousSelection = previousState.selection;
     if (

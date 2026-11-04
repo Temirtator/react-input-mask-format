@@ -1,6 +1,7 @@
 import type { CardBrand } from "./types";
 import { cardBrandInfo, DEFAULT_GAPS } from "./brands";
 import { luhn } from "../validators/shared";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export interface CardNumberOptions {
   separator?: string;
@@ -15,7 +16,7 @@ export interface CardNumberValues {
 }
 
 function layout(input: string | number, options?: CardNumberOptions): CardNumberValues {
-  const all = String(input ?? "").replace(/\D/g, "");
+  const all = toAsciiDigits(String(input ?? "")).replace(/\D/g, "");
   const info = cardBrandInfo(all);
   const value = all.slice(0, info ? Math.max(...info.lengths) : 19);
   let start = 0;

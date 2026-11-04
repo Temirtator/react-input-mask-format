@@ -1,5 +1,6 @@
 import type { CardBrand } from "./types";
 import { CARD_BRANDS } from "./brands";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export interface CardCvcOptions {
   brand?: CardBrand;
@@ -13,7 +14,7 @@ export interface CardCvcValues {
 
 function layout(input: string | number, options?: CardCvcOptions): CardCvcValues {
   const length = CARD_BRANDS.find((info) => info.brand === options?.brand)?.cvc || 3;
-  const value = String(input ?? "").replace(/\D/g, "").slice(0, length);
+  const value = toAsciiDigits(String(input ?? "")).replace(/\D/g, "").slice(0, length);
   return { value, formattedValue: value, complete: value.length === length };
 }
 

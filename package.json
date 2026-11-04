@@ -215,15 +215,15 @@
     },
     {
       "path": "dist/number.js",
-      "limit": "3 KB"
+      "limit": "3.5 KB"
     },
     {
       "path": "dist/time.js",
-      "limit": "2.5 KB"
+      "limit": "3 KB"
     },
     {
       "path": "dist/date.js",
-      "limit": "3 KB"
+      "limit": "3.5 KB"
     },
     {
       "path": "dist/card.js",
@@ -251,7 +251,7 @@
       "name": "number { useNumberFormat }",
       "path": "dist/number.js",
       "import": "{ useNumberFormat }",
-      "limit": "2 KB"
+      "limit": "2.5 KB"
     },
     {
       "name": "time { formatTime }",
@@ -275,7 +275,7 @@
       "name": "card { CardNumberFormat }",
       "path": "dist/card.js",
       "import": "{ CardNumberFormat }",
-      "limit": "2.3 KB"
+      "limit": "2.5 KB"
     },
     {
       "name": "presets { kzPhone }",

@@ -1,4 +1,5 @@
 import type { CardBrand } from "./types";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export interface CardBrandInfo {
   brand: CardBrand;
@@ -58,5 +59,5 @@ export function cardBrandInfo(digits: string): CardBrandInfo | undefined {
 }
 
 export function detectCardBrand(value: string): CardBrand | undefined {
-  return cardBrandInfo(String(value ?? "").replace(/\D/g, ""))?.brand;
+  return cardBrandInfo(toAsciiDigits(String(value ?? "")).replace(/\D/g, ""))?.brand;
 }

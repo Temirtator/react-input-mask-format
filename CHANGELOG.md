@@ -20,6 +20,12 @@
   `TypeError` instead of silently changing every mask in the app, presets included. Spread them into a map of your
   own: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`.
 
+### Added
+- Arabic-Indic (`٠١٢…`), Persian (`۰۱۲…`) and full-width (`０１２…`) digits are read as `0-9` everywhere: typed,
+  pasted or passed as `value` to `InputMask` / `useMask`, the number, date, time and card fields, and in
+  `formatNumber`, `parseNumber`, `formatDate`, `formatTime`, `formatCardNumber`, `detectCardBrand` and friends.
+  Before, they were dropped (`formatNumber("١٢٣")` gave `""`).
+
 ### Fixed
 - Text typed through an input method (Android Gboard, Chinese, Japanese and Korean IMEs) is no longer corrupted.
   Before, every field masked the text while it was still being composed, so the browser restarted the composition
