@@ -27,6 +27,10 @@
   Before, they were dropped (`formatNumber("١٢٣")` gave `""`).
 
 ### Fixed
+- `InputMask` and `useMask` read the selection again right before each edit (`beforeinput`). Before, it was read once
+  per animation frame, so a key pressed in the same frame as a caret move (End, an arrow key, a script calling
+  `setSelectionRange`) could be applied at the old caret position: after End in a partly filled phone field the first
+  digit was sometimes lost.
 - Text typed through an input method (Android Gboard, Chinese, Japanese and Korean IMEs) is no longer corrupted.
   Before, every field masked the text while it was still being composed, so the browser restarted the composition
   and characters were duplicated: composing `123` into `99/99/9999` gave `11/21/2312`, and `kzbn` into an uppercase
