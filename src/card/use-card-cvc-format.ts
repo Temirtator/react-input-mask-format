@@ -1,4 +1,4 @@
-import type React from "react";
+import type * as React from "react";
 import type { CardCvcOptions, CardCvcValues } from "./card-cvc";
 import { formatCardCvc, parseCardCvc } from "./card-cvc";
 import { useDigitFormat } from "../utils/digit-format";

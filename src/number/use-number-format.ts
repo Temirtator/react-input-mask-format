@@ -1,5 +1,5 @@
 import { useRef, useCallback } from "react";
-import type React from "react";
+import type * as React from "react";
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
 import { formatNumber } from "./format-number";
 import { parseNumber, digitsBeforeCaret, resolveCaret, readTyped } from "./parse-number";

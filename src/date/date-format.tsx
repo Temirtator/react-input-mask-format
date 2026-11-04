@@ -1,4 +1,5 @@
-import React, { forwardRef } from "react";
+import * as React from "react";
+import { forwardRef } from "react";
 import type { DateFormatOptions, DateFormatValues } from "./types";
 import { dateKind } from "./use-date-format";
 import { useDigitInput } from "../utils/digit-format";

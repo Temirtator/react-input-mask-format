@@ -1,4 +1,4 @@
-import type React from "react";
+import type * as React from "react";
 import type { DateFormatOptions, DateFormatValues } from "./types";
 import { formatDate } from "./format-date";
 import { parseDateEdit } from "./parse-date";

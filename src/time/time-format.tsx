@@ -1,4 +1,5 @@
-import React, { forwardRef } from "react";
+import * as React from "react";
+import { forwardRef } from "react";
 import type { TimeFormatOptions, TimeFormatValues } from "./types";
 import { timeKind } from "./use-time-format";
 import { useDigitInput } from "../utils/digit-format";

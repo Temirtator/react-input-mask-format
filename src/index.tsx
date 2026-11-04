@@ -1,4 +1,6 @@
-import React, { useLayoutEffect, forwardRef } from "react";
+import * as React from "react";
+import { forwardRef } from "react";
+import { useIsomorphicLayoutEffect } from "./utils/layout-effect";
 
 import { useInputState, useInputElement, usePrevious } from "./hooks";
 import { validateMaxLength, validateChildren, validateMaskPlaceholder } from "./validate-props";
@@ -154,7 +156,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
 
   const lastSelection = getLastInputState().selection;
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (isMasked && isControlled) {
       setInputState({
         ...getLastInputState(),
@@ -163,7 +165,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     }
   });
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!isMasked) {
       return;
     }

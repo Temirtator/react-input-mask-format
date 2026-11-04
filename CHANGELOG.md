@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Next.js App Router: rendering `<InputMask>`, `NumberFormat`, `DateFormat`, `TimeFormat` or a card field in a Server
+  Component no longer fails the build (`TypeError: useRef is not a function`). The component entries now start with
+  `"use client"`; `/presets` and `/validators` stay plain modules.
+- TypeScript with `"moduleResolution": "node"`: `react-input-mask-format/presets`, `/validators`, `/number`, `/time`,
+  `/date` and `/card` now resolve their types (`typesVersions`). Before, every subpath import failed with `TS2307`.
+- TypeScript without `esModuleInterop`: the published types no longer default-import React, which gave `TS1259` or
+  props without their React types (`onChange={e => …}` reported an implicit `any`).
+- Server rendering on React 16–18 no longer logs "useLayoutEffect does nothing on the server" for every field.
+
+### Internal
+- CI packs the package and checks it the way consumers use it: ESM and CJS imports of every entry, server rendering
+  on React 17, 18 and 19 without console errors, types under `bundler`, `node16` and `node` resolution with and
+  without `esModuleInterop`, and a Next.js App Router build.
+- Hydration tests for every component, and the server-render tests fail on any console error.
+
 ## 2.13.0
 
 ### Added

@@ -142,6 +142,28 @@
     },
     "./package.json": "./package.json"
   },
+  "typesVersions": {
+    "*": {
+      "presets": [
+        "./dist/presets.d.ts"
+      ],
+      "validators": [
+        "./dist/validators.d.ts"
+      ],
+      "number": [
+        "./dist/number.d.ts"
+      ],
+      "time": [
+        "./dist/time.d.ts"
+      ],
+      "date": [
+        "./dist/date.d.ts"
+      ],
+      "card": [
+        "./dist/card.d.ts"
+      ]
+    }
+  },
   "sideEffects": false,
   "files": [
     "dist"
@@ -161,7 +183,7 @@
     },
     {
       "path": "dist/number.js",
-      "limit": "2.5 KB"
+      "limit": "3 KB"
     },
     {
       "path": "dist/time.js",

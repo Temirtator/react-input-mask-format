@@ -19,6 +19,11 @@ npm install react-input-mask-format
 
 Requires React 16.8 or later.
 
+Works with server rendering and the Next.js App Router. The component entries (`react-input-mask-format`, `/number`,
+`/time`, `/date`, `/card`) are marked `"use client"`, so a Server Component can render them; event handlers such as
+`onChange` still have to come from a Client Component. `/presets` and `/validators` contain no React code and can be
+used on the server as they are.
+
 ## Quick start
 
 ```jsx

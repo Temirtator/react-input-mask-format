@@ -1,4 +1,5 @@
-import React, { forwardRef } from "react";
+import * as React from "react";
+import { forwardRef } from "react";
 import { useDigitInput } from "../utils/digit-format";
 import type { DigitFormatKind, DigitValues } from "../utils/digit-format";
 

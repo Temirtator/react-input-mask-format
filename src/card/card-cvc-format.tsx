@@ -1,4 +1,4 @@
-import type React from "react";
+import type * as React from "react";
 import type { CardCvcOptions, CardCvcValues } from "./card-cvc";
 import { cardCvcKind } from "./use-card-cvc-format";
 import { cardInput } from "./card-input";

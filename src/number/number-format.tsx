@@ -1,9 +1,11 @@
-import React, { forwardRef, useLayoutEffect, useReducer, useRef } from "react";
+import * as React from "react";
+import { forwardRef, useReducer, useRef } from "react";
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
 import { formatNumber, formatCanonical } from "./format-number";
 import { parseNumber, digitsBeforeCaret, resolveCaret, readTyped } from "./parse-number";
 import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
+import { useIsomorphicLayoutEffect } from "../utils/layout-effect";
 
 export interface NumberFormatProps
   extends NumberFormatOptions,
@@ -131,7 +133,7 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
 
   // After a controlled re-render, restore the caret we computed in onChange
   // (React resets it to the end for controlled inputs).
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const el = innerRef.current;
     if (el && caretRef.current !== null && isInputFocused(el)) {
       setInputSelection(el, caretRef.current, caretRef.current);
