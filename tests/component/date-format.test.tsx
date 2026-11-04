@@ -79,6 +79,13 @@ function Controlled({ initial = "" }: { initial?: string }) {
 }
 
 describe("DateFormat", () => {
+  it("defaults to a numeric keypad and lets props override it", () => {
+    const { rerender } = render(<DateFormat data-testid="d" />);
+    expect(screen.getByTestId("d")).toHaveAttribute("inputmode", "numeric");
+    rerender(<DateFormat data-testid="d" inputMode="text" />);
+    expect(screen.getByTestId("d")).toHaveAttribute("inputmode", "text");
+  });
+
   it("formats and clamps a controlled input while typing", async () => {
     const user = userEvent.setup();
     render(<Controlled />);

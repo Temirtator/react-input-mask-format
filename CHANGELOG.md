@@ -16,6 +16,10 @@
   with a README recipe for a phone field with a country picker that switches when another country's number is
   pasted.
 
+### Changed
+- `DateFormat` and `TimeFormat` render `inputMode="numeric"` by default, like the card components, so phones show
+  a digit keypad. Pass `inputMode` to override it.
+
 ### Fixed
 - `DateFormat` and `TimeFormat` without a `value` prop are now uncontrolled. Before, they were controlled with
   `""`, so the field was emptied as soon as the date or time was complete (`12052024` typed into `<DateFormat />`
