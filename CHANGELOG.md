@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Changed
+- **Breaking:** React 17 or newer is required (`peerDependencies.react` is `>=17.0.0`). React 16 was listed as
+  supported but never tested, and two tests fail on 16.14; CI tests 17, 18 and 19.
 - **Breaking:** the published code targets ES2020 and keeps `??` and `?.`. Supported: Chrome 80, Firefox 72,
   Safari 13.1, Node 14 and newer. A toolchain that cannot parse ES2020, such as webpack 4 without Babel for
   `node_modules`, has to transpile the package. Bundles get smaller: index −77 B, number −100 B, time, date and card

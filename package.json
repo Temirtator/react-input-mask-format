@@ -47,7 +47,7 @@
     "iban"
   ],
   "peerDependencies": {
-    "react": ">=16.8.0"
+    "react": ">=17.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
