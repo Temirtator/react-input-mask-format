@@ -9,8 +9,6 @@ export interface SelectionTracker {
   set(selection: Selection): void;
 }
 
-const hasBeforeInput = typeof InputEvent !== "undefined" && "getTargetRanges" in InputEvent.prototype;
-
 export function createSelectionTracker(getInput: () => HTMLInputElement | null): SelectionTracker {
   let last: Selection = { start: null, end: null };
   let deferId: number | null = null;
@@ -36,9 +34,7 @@ export function createSelectionTracker(getInput: () => HTMLInputElement | null):
         input.addEventListener("beforeinput", read);
         listening = input;
       }
-      if (hasBeforeInput) {
-        read();
-      } else if (deferId === null) {
+      if (deferId === null) {
         loop();
       }
     },
