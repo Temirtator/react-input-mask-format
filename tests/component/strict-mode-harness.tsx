@@ -61,6 +61,7 @@ async function run(Field: Field, timing: Timing, options: Options, steps: Step[]
     const view = render(ui(current), { wrapper: strict ? React.StrictMode : undefined });
     const scope = within(view.container);
     const input = scope.getByTestId("field") as HTMLInputElement;
+    await timing.settle();
     const snapshot = (): Snapshot => ({
       value: input.value,
       start: input.selectionStart,
