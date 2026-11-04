@@ -6,7 +6,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist", "dist-demo", "lib", "node_modules", "test-results", "playwright-report",
-      "*.config.js", "eslint.config.mjs"
+      "*.config.js", "eslint.config.mjs", "smoke"
     ]
   },
   js.configs.recommended,
@@ -14,6 +14,9 @@ export default tseslint.config(
   {
     files: ["**/*.{ts,tsx}"],
     plugins: { "react-hooks": reactHooks },
-    rules: { ...reactHooks.configs.recommended.rules }
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      "react-hooks/exhaustive-deps": ["warn", { additionalHooks: "useIsomorphicLayoutEffect" }]
+    }
   }
 );

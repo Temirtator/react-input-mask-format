@@ -3,10 +3,40 @@
 ## Unreleased
 
 ### Changed
+- The test-DOM workaround is left out of production builds (`process.env.NODE_ENV === "production"`), which
+  makes the bundles smaller: index −0.1 kB, number, time, date and card −50 to −70 B.
 - `useMask` throws when `maskPlaceholder` is neither one character nor as long as the mask, like `<InputMask>` always
   did. Before, the hook showed broken text (`mask: "99-99"`, `maskPlaceholder: "ab"` gave `ab-`, then `1b-`).
 
 ### Fixed
+- Next.js App Router: rendering `<InputMask>`, `NumberFormat`, `DateFormat`, `TimeFormat` or a card field in a Server
+  Component no longer fails the build (`TypeError: useRef is not a function`). Under the `react-server` export
+  condition the component entries resolve to `dist/rsc/*.js`, which re-export them behind `"use client"`. Other
+  bundlers get the plain modules, so Vite shows no directive warning. `/presets` and `/validators` stay plain modules.
+- TypeScript with `"moduleResolution": "node"`: `react-input-mask-format/presets`, `/validators`, `/number`, `/time`,
+  `/date` and `/card` now resolve their types (`typesVersions`). Before, every subpath import failed with `TS2307`.
+- TypeScript without `esModuleInterop`: the published types no longer default-import React, which gave `TS1259` or
+  props without their React types (`onChange={e => …}` reported an implicit `any`).
+- Server rendering on React 16–18 no longer logs "useLayoutEffect does nothing on the server" for every field.
+- `NumberFormat` works without a `value` prop. Before, an uncontrolled field could not be typed into (`<NumberFormat
+  thousandSeparator="," />` stayed empty) and `defaultValue` was ignored with a React warning. Now it keeps what is
+  typed, shows `defaultValue` (a number or a string, read like `value`) without reporting it through `onValueChange`,
+  goes back to it on form reset, and re-formats when its options change. Once a `value` has been passed, `undefined`
+  clears the field like `""`, so `value={values.floatValue}` still empties it.
+- `NumberFormat`, `DateFormat`, `TimeFormat`, `CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` call an
+  `onChange` prop, with `event.target.value` already formatted (`1,234`, `12.05.2024`). Before, it was silently
+  replaced, so react-hook-form's `register` never saw a change: `watch`, `mode: "onChange"` validation and the
+  submitted value stayed empty. `onChange` is now part of their props types. With `register`, the fields also show
+  `useForm({ defaultValues })`. Values the form writes later (`reset(values)`, `setValue`) are not shown; use
+  `Controller` for those.
+- A form reset cancelled with `preventDefault()` no longer resets `DateFormat`, `TimeFormat`, the card fields and
+  `NumberFormat`.
+- `useNumberFormat` re-formats the text in the input when its options change (`prefix` `$` → `€` turns `$12.34` into
+  `€12.34`; `decimalScale` 2 → 0 gives `€12`), like `<NumberFormat>`, and keeps the caret after the same digits.
+  Before, the old text stayed until the next edit.
+- Tests that run under happy-dom get correct values from `useMask`, `useNumberFormat` and the digit-field hooks.
+  Before, typing `12052024` into `useMask({ mask: "99/99/9999" })` gave `12/_0/_5_2`, because a workaround for
+  the test DOM recognised only jsdom.
 - Masked fields with `type="number"` or `type="email"` no longer throw on every key; `NumberFormat type="number"`
   no longer unmounts the whole React tree. These types have no text selection, so the browser rejected the caret
   update (`InvalidStateError`), and they still cannot be masked. In development a console error now says so once
@@ -19,6 +49,15 @@
   package instead of the old `react-input-mask`.
 - In development, a mask without editable positions (`mask="+7"`, `mask={[]}`) logs a console error once.
 - `V2MaskOptions`, used by the `BeforeMaskedValueChangeFn` type, is exported.
+
+### Internal
+- CI packs the package and checks it the way consumers use it: ESM and CJS imports of every entry, server rendering
+  on React 17, 18 and 19 without console errors, types under `bundler`, `node16` and `node` resolution with and
+  without `esModuleInterop`, and a Next.js App Router build.
+- Hydration tests for every component, and the server-render tests fail on any console error.
+- CI: read-only token by default, PR runs cancel superseded ones, the React matrix no longer stops at the first
+  failure, the Playwright report and traces are uploaded when e2e fails, coverage is measured with thresholds (lines
+  99%, branches 96%), and an e2e run on WebKit (Safari's engine) reports without blocking yet.
 
 ## 2.13.0
 

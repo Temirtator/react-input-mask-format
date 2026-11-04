@@ -19,6 +19,13 @@ npm install react-input-mask-format
 
 Requires React 16.8 or later.
 
+Works with server rendering and the Next.js App Router. Under the `react-server` export condition, which React Server
+Components bundlers use, the component entries (`react-input-mask-format`, `/number`, `/time`, `/date`, `/card`)
+resolve to a `"use client"` boundary, so a Server Component can render them; event handlers such as `onChange` still
+have to come from a Client Component. Other bundlers get the plain modules without the directive, so Vite and Rollup
+print no "module level directives" warning. `/presets` and `/validators` contain no React code and work on the server
+as they are.
+
 ## Quick start
 
 ```jsx
@@ -69,7 +76,7 @@ core. `/number`, `/date` and `/card` are separate entry points of 1.7 kB, 2.0 kB
 - [Presets](#presets) · [Masks with a fixed prefix](#masks-with-a-fixed-prefix) · [Validators](#validators)
 - [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) · [Time](#time--react-input-mask-formattime)
   · [Date](#date--react-input-mask-formatdate) · [Cards](#cards--react-input-mask-formatcard)
-- [Known issues](#known-issues) · [Recipes](#recipes) · [Migration](#migration)
+- [TypeScript](#typescript) · [Known issues](#known-issues) · [Recipes](#recipes) · [Migration](#migration)
 
 ## Properties
 
@@ -692,6 +699,39 @@ const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir
   `4111 1111 1111 1111`) and is not reported through `onValueChange`.
 - Resetting a controlled `value` to `""` does not clear a partly typed field; change the `key` to remount it.
 
+## TypeScript
+
+Types ship with the package; every entry exports the types of its components, hooks and values.
+
+| Entry | Types |
+|---|---|
+| `react-input-mask-format` | `InputMaskProps`, `UseMaskOptions`, `Mask`, `FormatChars`, `Transform`, `InputState`, `Selection`, `BeforeMaskedStateChangeFn`, `BeforeMaskedValueChangeFn` |
+| `/presets` | `MaskPreset`, `PhoneCountry` |
+| `/number` | `NumberFormatProps`, `NumberFormatOptions`, `NumberFormatValues`, `UseNumberFormatOptions` |
+| `/time` | `TimeFormatProps`, `TimeFormatOptions`, `TimeFormatValues`, `UseTimeFormatOptions` |
+| `/date` | `DateFormatProps`, `DateFormatOptions`, `DateFormatValues`, `DateOrder`, `UseDateFormatOptions` |
+| `/card` | `CardBrand`, `CardNumberFormatProps`, `CardNumberOptions`, `CardNumberValues`, `CardExpiryFormatProps`, `CardExpiryOptions`, `CardExpiryValues`, `CardCvcFormatProps`, `CardCvcOptions`, `CardCvcValues`, `UseCardNumberFormatOptions`, `UseCardExpiryFormatOptions`, `UseCardCvcFormatOptions` |
+
+A wrapper that forwards everything to `InputMask`, and a typed preset of your own:
+
+```tsx
+import { forwardRef } from "react";
+import InputMask from "react-input-mask-format";
+import type { InputMaskProps } from "react-input-mask-format";
+import type { MaskPreset } from "react-input-mask-format/presets";
+import type { NumberFormatValues } from "react-input-mask-format/number";
+
+export const PhoneInput = forwardRef<HTMLInputElement, InputMaskProps>((props, ref) => (
+  <InputMask {...props} ref={ref} className="phone" />
+));
+
+export const orderNumber: MaskPreset = { mask: "AA-9999", formatChars: { A: /[A-Z]/ } };
+
+function onAmount({ floatValue }: NumberFormatValues) {
+  console.log(floatValue ?? 0);
+}
+```
+
 ## Known issues
 
 ### Autofill
@@ -813,8 +853,12 @@ function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
 
 ### react-hook-form: number, date and card components
 
-Pass the value, store what you need from `onValueChange`, and give `ref={field.ref}` so `setFocus` and
-focus-on-error reach the input. `onBlur={field.onBlur}` is what makes `mode: "onBlur"` validate.
+`{...register("amount")}` works for typing, `watch`, validation, submit and `defaultValues`; the form receives the
+formatted text (`1,234`). Values the form writes later with `reset(values)` or `setValue` are not shown, so use
+`Controller` when you need those or the unformatted value.
+
+With `Controller`, pass the value, store what you need from `onValueChange`, and give `ref={field.ref}` so
+`setFocus` and focus-on-error reach the input. `onBlur={field.onBlur}` is what makes `mode: "onBlur"` validate.
 
 ```tsx
 import { useForm, Controller } from "react-hook-form";

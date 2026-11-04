@@ -13,3 +13,8 @@ playwright/.cache
 docs/superpowers/
 CLAUDE.md
 AGENTS.md
+smoke/**/node_modules
+smoke/**/*.tgz
+smoke/next/.next
+smoke/next/next-env.d.ts
+coverage

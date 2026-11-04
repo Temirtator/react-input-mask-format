@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live demo and playground
+    url: https://temirtator.github.io/react-input-mask-format/
+    about: Try a mask or preset before reporting, and paste the playground's JSX into the issue.
+  - name: Documentation
+    url: https://github.com/Temirtator/react-input-mask-format#readme
+    about: Props, presets, validators, recipes and migration guides.
