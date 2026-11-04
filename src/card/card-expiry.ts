@@ -7,6 +7,7 @@ export interface CardExpiryOptions {
 export interface CardExpiryValues {
   value: string;
   formattedValue: string;
+  complete: boolean;
   month: number | undefined;
   year: number | undefined;
 }
@@ -36,6 +37,7 @@ function layout(
   return {
     value: valid && year.length === 2 ? `${month}/${year}` : "",
     formattedValue: month.length < 2 ? month : month + (options?.separator ?? "/") + year,
+    complete: month.length === 2 && year.length === 2,
     month: valid ? monthNumber : undefined,
     year: year.length === 2 ? 2000 + +year : undefined,
   };

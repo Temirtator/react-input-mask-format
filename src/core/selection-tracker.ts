@@ -12,6 +12,7 @@ export interface SelectionTracker {
 export function createSelectionTracker(getInput: () => HTMLInputElement | null): SelectionTracker {
   let last: Selection = { start: null, end: null };
   let deferId: number | null = null;
+  let listening: HTMLInputElement | null = null;
 
   function read(): void {
     const input = getInput();
@@ -27,12 +28,19 @@ export function createSelectionTracker(getInput: () => HTMLInputElement | null):
 
   return {
     start() {
-      if (deferId !== null) {
-        return;
+      const input = getInput();
+      if (input && listening !== input) {
+        listening?.removeEventListener("beforeinput", read);
+        input.addEventListener("beforeinput", read);
+        listening = input;
       }
-      loop();
+      if (deferId === null) {
+        loop();
+      }
     },
     stop() {
+      listening?.removeEventListener("beforeinput", read);
+      listening = null;
       cancelDefer(deferId);
       deferId = null;
     },

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Added
+- Arabic-Indic (`٠١٢…`), Persian (`۰۱۲…`) and full-width (`０１２…`) digits are read as `0-9` everywhere: typed,
+  pasted or passed as `value` to `InputMask` / `useMask`, the number, date, time and card fields, and in
+  `formatNumber`, `parseNumber`, `formatDate`, `formatTime`, `formatCardNumber`, `detectCardBrand` and friends.
+  Before, they were dropped (`formatNumber("١٢٣")` gave `""`).
+- `isMaskComplete(value, preset)` (or `{ mask, maskPlaceholder, formatChars }`) tells whether every slot of the mask
+  is filled; it accepts formatted or raw text. Use it instead of checking for `_`, which breaks with a custom
+  `maskPlaceholder` or `maskPlaceholder={null}`. For variable-length masks such as `iban`, use the validator.
+- `complete` in the values of `DateFormat`, `TimeFormat` and `CardExpiryFormat` (and their hooks and `parse*`
+  functions), as the card number and CVC already had: `true` once every digit is typed. For a date, `complete`
+  without a `value` means a day that does not exist (`31.02.2024`).
+
 ### Changed
 - **Breaking:** the published code targets ES2020 and keeps `??` and `?.`. Supported: Chrome 80, Firefox 72,
   Safari 13.1, Node 14 and newer. A toolchain that cannot parse ES2020, such as webpack 4 without Babel for
@@ -19,14 +31,15 @@
 - **Breaking:** `defaultFormatChars` and `extendedFormatChars` are frozen. Assigning a token to them now throws a
   `TypeError` instead of silently changing every mask in the app, presets included. Spread them into a map of your
   own: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`.
-
-### Added
-- Arabic-Indic (`٠١٢…`), Persian (`۰۱۲…`) and full-width (`０１２…`) digits are read as `0-9` everywhere: typed,
-  pasted or passed as `value` to `InputMask` / `useMask`, the number, date, time and card fields, and in
-  `formatNumber`, `parseNumber`, `formatDate`, `formatTime`, `formatCardNumber`, `detectCardBrand` and friends.
-  Before, they were dropped (`formatNumber("١٢٣")` gave `""`).
+- **Breaking:** `detectPhoneCountry` returns `undefined` instead of `null` when the text is not an international
+  number of a known country, like `detectCardBrand`. Code that compares with `=== null` must check for a falsy
+  value instead.
 
 ### Fixed
+- `InputMask` and `useMask` read the selection again right before each edit (`beforeinput`). Before, it was read once
+  per animation frame, so a key pressed in the same frame as a caret move (End, an arrow key, a script calling
+  `setSelectionRange`) could be applied at the old caret position: after End in a partly filled phone field the first
+  digit was sometimes lost.
 - Text typed through an input method (Android Gboard, Chinese, Japanese and Korean IMEs) is no longer corrupted.
   Before, every field masked the text while it was still being composed, so the browser restarted the composition
   and characters were duplicated: composing `123` into `99/99/9999` gave `11/21/2312`, and `kzbn` into an uppercase
