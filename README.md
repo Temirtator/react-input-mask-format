@@ -477,7 +477,7 @@ const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir
 | `visa` | 4 | 13, 16, 19 | 4-4-4-4-3 | 3 |
 | `mastercard` | 51–55, 2221–2720 | 16 | 4-4-4-4 | 3 |
 | `amex` | 34, 37 | 15 | 4-6-5 | 4 |
-| `diners` | 300–305, 36, 38–39 | 14–19 | 4-6-4 at 14, else 4-4-4-4-3 | 3 |
+| `diners` | 300–305, 36, 38–39 | 14–19 | 4-6-4 up to 14 digits, then 4-4-4-4-3 | 3 |
 | `discover` | 6011, 644–659 | 16–19 | 4-4-4-4-3 | 3 |
 | `unionpay` | 62, 81 | 16–19 | 4-4-4-4-3 | 3 |
 | `jcb` | 3528–3589 | 16–19 | 4-4-4-4-3 | 3 |
@@ -516,6 +516,25 @@ Browser autofill needs an empty input or a value that matches the start of the a
 `+1 (5` work with `+1 (555) 123-4567`, but `+1 (___) ___-____` does not. Options: set
 `maskPlaceholder={null}`, apply the mask only to a non-empty value, or use less formatting. Phones and
 postal codes are often autofilled; one-time codes are not.
+
+### Playwright
+
+`locator.fill()` on an unfocused field that already has text can insert at the caret instead of replacing the
+value in Chromium (`12/3_/____` filled with `87654321` gives `12/38/7654`): the field puts its caret on focus one
+frame later. Click the field and wait a frame first: `await input.click(); await page.waitForTimeout(50);`.
+
+### Testing Library
+
+The mask reads the caret once per animation frame. After moving it from a test with `setSelectionRange`, wait a
+frame before the next key, or the edit is read as a replacement of the whole value:
+
+```ts
+input.setSelectionRange(4, 4);
+await new Promise((resolve) => requestAnimationFrame(resolve));
+await user.keyboard("{Backspace}");
+```
+
+Typing with `user.click()` and `user.keyboard()` alone needs no waits.
 
 ### Cypress
 
