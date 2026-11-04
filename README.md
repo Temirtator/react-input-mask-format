@@ -394,6 +394,42 @@ Ukrainian long-distance `8` is skipped when pasted or passed as `value`, but not
 numbers such as `800 …` start with 8. Typed key by key into an
 empty field, the country code is read as the operator code, as with `uzPhone`; pasting works.
 
+### Phone with a country picker
+
+`phonePresets` maps ISO codes (`KZ`, `RU`, `UZ`, `KG`, `BY`, `TJ`, `AM`, `AZ`, `GE`, `MD`, `UA`, `TM`) to the
+phone presets. `detectPhoneCountry(text)` reads the country from an international number that starts with `+`
+or `00` (`+7 701…` → `KZ`, `+7 912…` → `RU`, `+998…` → `UZ`) and returns `null` for anything else, including
+domestic numbers. Together they switch the mask when a number of another country is pasted:
+
+```tsx
+import InputMask from "react-input-mask-format";
+import { phonePresets, detectPhoneCountry, type PhoneCountry } from "react-input-mask-format/presets";
+
+const [country, setCountry] = useState<PhoneCountry>("KZ");
+const [phone, setPhone] = useState("");
+
+<select value={country} onChange={(e) => { setCountry(e.target.value as PhoneCountry); setPhone(""); }}>
+  {Object.keys(phonePresets).map((code) => <option key={code}>{code}</option>)}
+</select>
+<InputMask
+  {...phonePresets[country]}
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)}
+  onPaste={(e) => {
+    const text = e.clipboardData.getData("text");
+    const detected = detectPhoneCountry(text);
+    if (detected && detected !== country) {
+      e.preventDefault();
+      setCountry(detected);
+      setPhone(text);
+    }
+  }}
+/>
+```
+
+Clear the number when the country is picked by hand: the digits of one country's number are not a number of
+another. Typed numbers do not switch the country, because the current mask accepts only its own code.
+
 ### Masks with a fixed prefix
 
 Masks that start with fixed text (`kzPhone`, `ruPhone`, `uzPhone`, `kgPhone`, `byPhone`, `tjPhone`, `amPhone`, `azPhone`, `kzIban`, `byIban`,

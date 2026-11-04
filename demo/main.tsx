@@ -11,7 +11,8 @@ import {
   byPhone, byPersonalId, byUnp, byIban, byPlate, byPostal, byPassport,
   tjPhone, tjInn, tjEin, tjAccount, tjBik, tjPlate, tjPlateCompany, tjPostal,
   amPhone, amPsn, amTin, amAccount, amPlate, amPostal, amPassport,
-  azPhone, azFin, azVoen, azIban, azPlate, azPostal, azPassport, MaskPreset
+  azPhone, azFin, azVoen, azIban, azPlate, azPostal, azPassport, MaskPreset,
+  phonePresets, detectPhoneCountry, PhoneCountry
 } from "react-input-mask-format/presets";
 import {
   isValidIin, isValidBin, isValidKzIban, luhn,
@@ -82,6 +83,42 @@ function PresetField(
 const FancyInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   (props, ref) => <input ref={ref} {...props} style={fieldStyle} />
 );
+
+function CountryPhoneField() {
+  const [country, setCountry] = useState<PhoneCountry>("KZ");
+  const [phone, setPhone] = useState("");
+  return (
+    <div style={{ display: "flex", gap: 8 }}>
+      <select
+        value={country}
+        onChange={e => {
+          setCountry(e.target.value as PhoneCountry);
+          setPhone("");
+        }}
+        data-testid="phone-country"
+        style={{ ...fieldStyle, width: 80 }}
+      >
+        {Object.keys(phonePresets).map(code => <option key={code}>{code}</option>)}
+      </select>
+      <InputMask
+        {...phonePresets[country]}
+        value={phone}
+        onChange={e => setPhone((e.target as HTMLInputElement).value)}
+        onPaste={e => {
+          const text = e.clipboardData.getData("text");
+          const detected = detectPhoneCountry(text);
+          if (detected && detected !== country) {
+            e.preventDefault();
+            setCountry(detected);
+            setPhone(text);
+          }
+        }}
+        data-testid="phone-any"
+        style={fieldStyle}
+      />
+    </div>
+  );
+}
 
 function UseMaskField() {
   const [readout, setReadout] = useState("");
@@ -325,6 +362,7 @@ function App() {
           <Row label="Карта" sub="card · Luhn"><PresetField preset={card} testid="card" validate={luhn} /></Row>
           <Row label="VIN" sub="vin · I→1, O/Q→0"><PresetField preset={vin} testid="vin" validate={isValidVin} /></Row>
           <Row label="IBAN" sub="iban · MOD-97"><PresetField preset={iban} testid="iban-any" validate={isValidIban} /></Row>
+          <Row label="Телефон + страна" sub="phonePresets · detectPhoneCountry"><CountryPhoneField /></Row>
         </section>
 
         <section style={{ display: "grid", gap: 9 }}>
