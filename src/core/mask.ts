@@ -7,6 +7,7 @@ import {
   readUnprefixedInput,
   sameFillingCharacters,
   shouldInsertAfterPrefix,
+  stripInternationalPrefix,
   trimOverflowingPrefix
 } from "./prefix";
 import type { FormatChars, InputState, Selection } from "../types";
@@ -358,6 +359,18 @@ export default class MaskUtils {
 
     if (selection.end! > previousSelection.start!) {
       const raw = newValue.slice(previousSelection.start!, selection.end!);
+      if (
+        stripInternationalPrefix(this.prefixHost, raw) &&
+        (previousSelection.start || previousSelection.end! < previousValue.length)
+      ) {
+        const whole = this.processChange(
+          { value: raw, selection: { start: raw.length, end: raw.length } },
+          { value: previousValue, selection: { start: 0, end: previousValue.length, length: previousValue.length } }
+        );
+        if (mask!.every((_, i) => !this.isPositionEditable(i) || this.isCharacterFillingPosition(whole.value[i], i))) {
+          return whole;
+        }
+      }
       const replacesAll =
         !cursorPosition ||
         (cursorPosition === prefix!.length && this.getFilledLength(previousValue) <= previousSelection.end!);
