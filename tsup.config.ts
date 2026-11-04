@@ -1,17 +1,16 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { defineConfig } from "tsup";
 
 const clientEntries = ["index", "number", "time", "date", "card"];
 
-async function markClientEntries(): Promise<void> {
+async function writeClientBoundaries(): Promise<void> {
+  await mkdir("dist/rsc", { recursive: true });
   for (const entry of clientEntries) {
-    for (const ext of ["js", "cjs"]) {
-      const file = `dist/${entry}.${ext}`;
-      await writeFile(file, `"use client";\n${await readFile(file, "utf8")}`);
-      const map = JSON.parse(await readFile(`${file}.map`, "utf8"));
-      map.mappings = `;${map.mappings}`;
-      await writeFile(`${file}.map`, JSON.stringify(map));
-    }
+    const url = `${pathToFileURL(resolve(`dist/${entry}.js`)).href}?t=${Date.now()}`;
+    const names = Object.keys(await import(url)).sort();
+    await writeFile(`dist/rsc/${entry}.js`, `"use client";\nexport { ${names.join(", ")} } from "../${entry}.js";\n`);
   }
 }
 
@@ -31,5 +30,5 @@ export default defineConfig({
   clean: true,
   target: "es2019",
   external: ["react"],
-  onSuccess: markClientEntries
+  onSuccess: writeClientBoundaries
 });
