@@ -19,6 +19,13 @@ npm install react-input-mask-format
 
 Requires React 16.8 or later.
 
+Works with server rendering and the Next.js App Router. Under the `react-server` export condition, which React Server
+Components bundlers use, the component entries (`react-input-mask-format`, `/number`, `/time`, `/date`, `/card`)
+resolve to a `"use client"` boundary, so a Server Component can render them; event handlers such as `onChange` still
+have to come from a Client Component. Other bundlers get the plain modules without the directive, so Vite and Rollup
+print no "module level directives" warning. `/presets` and `/validators` contain no React code and work on the server
+as they are.
+
 ## Quick start
 
 ```jsx

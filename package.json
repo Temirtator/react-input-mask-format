@@ -81,6 +81,10 @@
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
+      "react-server": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/rsc/index.js"
+      },
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -111,6 +115,10 @@
       }
     },
     "./number": {
+      "react-server": {
+        "types": "./dist/number.d.ts",
+        "default": "./dist/rsc/number.js"
+      },
       "import": {
         "types": "./dist/number.d.ts",
         "default": "./dist/number.js"
@@ -121,6 +129,10 @@
       }
     },
     "./time": {
+      "react-server": {
+        "types": "./dist/time.d.ts",
+        "default": "./dist/rsc/time.js"
+      },
       "import": {
         "types": "./dist/time.d.ts",
         "default": "./dist/time.js"
@@ -131,6 +143,10 @@
       }
     },
     "./date": {
+      "react-server": {
+        "types": "./dist/date.d.ts",
+        "default": "./dist/rsc/date.js"
+      },
       "import": {
         "types": "./dist/date.d.ts",
         "default": "./dist/date.js"
@@ -141,6 +157,10 @@
       }
     },
     "./card": {
+      "react-server": {
+        "types": "./dist/card.d.ts",
+        "default": "./dist/rsc/card.js"
+      },
       "import": {
         "types": "./dist/card.d.ts",
         "default": "./dist/card.js"
@@ -151,6 +171,28 @@
       }
     },
     "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "presets": [
+        "./dist/presets.d.ts"
+      ],
+      "validators": [
+        "./dist/validators.d.ts"
+      ],
+      "number": [
+        "./dist/number.d.ts"
+      ],
+      "time": [
+        "./dist/time.d.ts"
+      ],
+      "date": [
+        "./dist/date.d.ts"
+      ],
+      "card": [
+        "./dist/card.d.ts"
+      ]
+    }
   },
   "sideEffects": false,
   "files": [
@@ -171,7 +213,7 @@
     },
     {
       "path": "dist/number.js",
-      "limit": "2.5 KB"
+      "limit": "3 KB"
     },
     {
       "path": "dist/time.js",

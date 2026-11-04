@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from "react";
-import type React from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
+import type * as React from "react";
 import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "./input";
+import { useIsomorphicLayoutEffect } from "./layout-effect";
 
 export interface DigitValues {
   value: string;
@@ -132,7 +133,7 @@ export function useDigitFormat<O, V extends DigitValues>(
   const previousRef = useRef("");
   const appliedRef = useRef(options);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const applied = appliedRef.current;
     appliedRef.current = options;
     const el = inputRef.current;
@@ -267,7 +268,7 @@ export function useDigitInput<O, V extends DigitValues>(
     onValueChange?.(values);
   }
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!echo) lastValuesRef.current = null;
     const shown = shownRef.current;
     shownRef.current = { options, text: formatted };

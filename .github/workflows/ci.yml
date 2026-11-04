@@ -45,9 +45,47 @@ jobs:
       - run: npx playwright install --with-deps chromium firefox
       - run: npm run test:e2e
 
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        react: ["17", "18", "19"]
+    defaults:
+      run:
+        working-directory: smoke
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+        working-directory: .
+      - run: npm run build
+        working-directory: .
+      - run: npm pack --pack-destination smoke
+        working-directory: .
+      - run: >-
+          npm i --no-save --no-audit --no-fund ./react-input-mask-format-*.tgz
+          react@${{ matrix.react }} react-dom@${{ matrix.react }} @types/react@${{ matrix.react }} typescript@5
+      - run: node entries.mjs && node entries.cjs
+      - run: node ssr.cjs
+      - run: ./types.sh
+      - if: matrix.react == '19'
+        run: cp react-input-mask-format-*.tgz next/
+      - if: matrix.react == '19'
+        working-directory: smoke/next
+        run: >-
+          npm i --no-save --no-audit --no-fund ./react-input-mask-format-*.tgz
+          next@15 react@19 react-dom@19 @types/react@19 @types/react-dom@19 @types/node@22 typescript@5
+      - if: matrix.react == '19'
+        working-directory: smoke/next
+        run: npx next build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
   pages-build:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
-    needs: [checks, test, e2e]
+    needs: [checks, test, e2e, smoke]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

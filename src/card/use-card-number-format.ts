@@ -1,4 +1,4 @@
-import type React from "react";
+import type * as React from "react";
 import type { CardNumberOptions, CardNumberValues } from "./card-number";
 import { formatCardNumber, parseCardNumber } from "./card-number";
 import { useDigitFormat } from "../utils/digit-format";

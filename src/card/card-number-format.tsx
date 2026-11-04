@@ -1,4 +1,4 @@
-import type React from "react";
+import type * as React from "react";
 import type { CardNumberOptions, CardNumberValues } from "./card-number";
 import { cardNumberKind } from "./use-card-number-format";
 import { cardInput } from "./card-input";

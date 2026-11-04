@@ -1,4 +1,4 @@
-import type React from "react";
+import type * as React from "react";
 import type { CardExpiryOptions, CardExpiryValues } from "./card-expiry";
 import { cardExpiryKind } from "./use-card-expiry-format";
 import { cardInput } from "./card-input";
