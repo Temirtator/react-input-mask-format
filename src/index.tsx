@@ -3,11 +3,11 @@ import React, { useLayoutEffect, forwardRef } from "react";
 import { useInputState, useInputElement, usePrevious } from "./hooks";
 import { validateMaxLength, validateChildren, validateMaskPlaceholder } from "./validate-props";
 import { defer } from "./utils/defer";
-import { isInputFocused } from "./utils/input";
+import { isInputFocused, getInputSelection } from "./utils/input";
 import { isFunction, toString } from "./utils/helpers";
 import { resolveMaskConfig } from "./core/config";
 import type { MaskConfig } from "./core/config";
-import { decideChange, decideFocus, decideBlur, decideClickSelection } from "./core/decide";
+import { decideChange, decideFocus, decideBlur, decideClickSelection, formatDefaultValue } from "./core/decide";
 import { watchClick } from "./core/click-tracker";
 import type { InputMaskProps, InputState } from "./types";
 
@@ -84,6 +84,8 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
       defer(() => {
         setInputState(getLastInputState());
       });
+    } else if (isMasked && currentState.value !== getLastInputState().value) {
+      setInputState(currentState);
     }
 
     if (props.onFocus) {
@@ -117,7 +119,10 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     if (input && !isInputFocused(input) && !maskUtils.isValueFilled(value)) {
       watchClick(input, event, () => {
         const lastState = getLastInputState();
-        setInputState({ ...lastState, selection: decideClickSelection(config, lastState.value) });
+        setInputState({
+          ...lastState,
+          selection: decideClickSelection(config, lastState.value, getInputSelection(input))
+        });
       });
     }
 
@@ -222,7 +227,10 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
         (forwardedRef as React.MutableRefObject<unknown>).current = ref;
       }
     },
-    value: isMasked && isControlled ? renderValue : props.value
+    value: isMasked && isControlled ? renderValue : props.value,
+    ...(isMasked && !isControlled && (initialValue || alwaysShowMask)
+      ? { defaultValue: formatDefaultValue(config, initialValue) }
+      : {})
   };
 
   if (children) {

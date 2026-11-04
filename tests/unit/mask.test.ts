@@ -29,6 +29,7 @@ describe("MaskUtils value state checks", () => {
 
   it("getDefaultSelectionForValue points to first empty editable position", () => {
     expect(date().getDefaultSelectionForValue("12/__/____")).toEqual({ start: 3, end: 3 });
+    expect(date().getDefaultSelectionForValue("12/34/5678")).toEqual({ start: 10, end: 10 });
   });
 });
 
@@ -61,6 +62,51 @@ describe("MaskUtils.processChange", () => {
     );
     expect(result.value).toBe("1_/__/____");
     expect(result.selection).toEqual({ start: 1, end: 1 });
+  });
+
+  it("moves the caret past a slot cleared with Delete", () => {
+    const full = { value: "12/34/5678", selection: { start: 0, end: 0, length: 0 } };
+    const result = date().processChange({ value: "2/34/5678", selection: { start: 0, end: 0 } }, full);
+    expect(result.value).toBe("_2/34/5678");
+    expect(result.selection).toEqual({ start: 1, end: 1 });
+  });
+
+  it("clears the slot after a fixed character with Delete", () => {
+    const result = date().processChange(
+      { value: "__34/5678", selection: { start: 2, end: 2 } },
+      { value: "__/34/5678", selection: { start: 2, end: 2, length: 0 } }
+    );
+    expect(result.value).toBe("__/_4/5678");
+    expect(result.selection).toEqual({ start: 4, end: 4 });
+  });
+
+  it("does not move past an empty slot on Delete", () => {
+    const result = date().processChange(
+      { value: "12/3/____", selection: { start: 4, end: 4 } },
+      { value: "12/3_/____", selection: { start: 4, end: 4, length: 0 } }
+    );
+    expect(result.value).toBe("12/3_/____");
+    expect(result.selection).toEqual({ start: 4, end: 4 });
+  });
+
+  it("does nothing on Delete in front of a fixed tail", () => {
+    const kg = new MaskUtils({ mask: "99 kg", maskPlaceholder: "_" });
+    const result = kg.processChange(
+      { value: "12kg", selection: { start: 2, end: 2 } },
+      { value: "12 kg", selection: { start: 2, end: 2, length: 0 } }
+    );
+    expect(result.value).toBe("12 kg");
+    expect(result.selection).toEqual({ start: 2, end: 2 });
+  });
+
+  it("keeps the caret on Delete without a placeholder", () => {
+    const utils = new MaskUtils({ mask: "99/99/9999", maskPlaceholder: null });
+    const result = utils.processChange(
+      { value: "2/34/5678", selection: { start: 0, end: 0 } },
+      { value: "12/34/5678", selection: { start: 0, end: 0, length: 0 } }
+    );
+    expect(result.value).toBe("23/45/678");
+    expect(result.selection).toEqual({ start: 0, end: 0 });
   });
 
   it("handles paste of full string", () => {

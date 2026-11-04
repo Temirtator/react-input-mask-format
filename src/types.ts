@@ -52,7 +52,7 @@ export interface InputMaskProps
    * Mask format. Either a string (9 = 0-9, a = A-Za-z, * = A-Za-z0-9,
    * backslash escapes) or an array of constant characters and RegExps.
    */
-  mask?: Mask;
+  mask?: Mask | null;
   /** Character(s) to cover unfilled parts. Default "_", null — empty. */
   maskPlaceholder?: string | null;
   /** Show mask even when input is empty and unfocused. */

@@ -36,6 +36,31 @@ export function decideFocus(cfg: MaskConfig, currentState: InputState): InputSta
   return nextState;
 }
 
+export function formatDefaultValue(cfg: MaskConfig, value: string): string {
+  const formatted = cfg.maskUtils.formatValue(value);
+  return cfg.alwaysShowMask || !cfg.maskUtils.isValueEmpty(formatted) ? formatted : "";
+}
+
+export function decideUpdate(
+  cfg: MaskConfig,
+  currentState: InputState,
+  isFocused: boolean,
+  wasMasked = true
+): InputState {
+  const value = isFocused
+    ? cfg.maskUtils.formatValue(currentState.value)
+    : formatDefaultValue(cfg, currentState.value);
+  const nextState: InputState = {
+    value,
+    selection:
+      isFocused && !wasMasked ? cfg.maskUtils.getDefaultSelectionForValue(value) : currentState.selection
+  };
+  if (cfg.beforeMaskedStateChange) {
+    return cfg.beforeMaskedStateChange({ currentState, nextState });
+  }
+  return nextState;
+}
+
 export function decideBlur(
   cfg: MaskConfig,
   currentState: InputState,
@@ -51,6 +76,12 @@ export function decideBlur(
   return nextState;
 }
 
-export function decideClickSelection(cfg: MaskConfig, lastValue: string): Selection {
-  return cfg.maskUtils.getDefaultSelectionForValue(lastValue);
+export function decideClickSelection(
+  cfg: MaskConfig,
+  lastValue: string,
+  selection: Selection
+): Selection {
+  return selection.start === 0 && selection.end === lastValue.length && !cfg.maskUtils.isValueEmpty(lastValue)
+    ? selection
+    : cfg.maskUtils.getDefaultSelectionForValue(lastValue);
 }

@@ -9,6 +9,8 @@ export function useMask(options: UseMaskOptions): React.RefCallback<HTMLInputEle
   const config = resolveMaskConfig(options);
 
   const controllerRef = useRef<MaskController | null>(null);
+  const configRef = useRef(config);
+  configRef.current = config;
 
   useEffect(() => {
     controllerRef.current?.update(config);
@@ -16,13 +18,12 @@ export function useMask(options: UseMaskOptions): React.RefCallback<HTMLInputEle
 
   return useCallback((el: HTMLInputElement | null) => {
     if (el) {
-      const controller = createMaskController(config);
+      const controller = createMaskController(configRef.current);
       controller.bind(el);
       controllerRef.current = controller;
     } else {
       controllerRef.current?.unbind();
       controllerRef.current = null;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
