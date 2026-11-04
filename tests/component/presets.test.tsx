@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import InputMask, { useMask } from "../../src/index";
-import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone, byPhone, byPersonalId, byIban, byPlate, tjPhone, amPhone, azPhone, azPostal, azFin, vin } from "../../src/presets";
+import { kzIban, kzPlate, ruPhone, ruPlate, uzPhone, uzPlate, kgPhone, kzPhone, byPhone, byPersonalId, byIban, byPlate, tjPhone, amPhone, azPhone, azPostal, azFin, vin, gePhone, mdPhone, uaPhone, tmPhone } from "../../src/presets";
 import type { MaskPreset } from "../../src/presets";
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -727,5 +727,39 @@ describe("vin on InputMask", () => {
     await user.click(input);
     await user.paste("WVW ZZZ 1JZ 3W3 86752");
     expect(input.value).toBe("WVWZZZ1JZ3W386752");
+  });
+});
+
+describe.each([
+  ["gePhone", gePhone, "0555123456", "+995 555 12 34 56", "995555123456", "+995 (555) 12-34-56", "+995 (995) 55-51-23"],
+  ["mdPhone", mdPhone, "069123456", "+373 69 123 456", "37369123456", "+373 (69) 123-456", "+373 (37) 369-123"],
+  ["uaPhone", uaPhone, "0671234567", "+38 (067) 123-45-67", "380671234567", "+380 (67) 123-45-67", "+380 (38) 067-12-34"],
+  ["tmPhone", tmPhone, "865123456", "8 65 12 34 56", "99365123456", "+993 (65) 12-34-56", "+993 (36) 51-23-45"]
+] as const)("%s on InputMask", (_name, preset, typed, pasted, codeTyped, expected, codeTypedResult) => {
+  it("formats a typed domestic or national number", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...preset} data-testid="phone" />);
+    const input = screen.getByTestId("phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard(typed);
+    expect(input.value).toBe(expected);
+  });
+
+  it("reads a pasted international or domestic number", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...preset} data-testid="phone" />);
+    const input = screen.getByTestId("phone") as HTMLInputElement;
+    await user.click(input);
+    await user.paste(pasted);
+    expect(input.value).toBe(expected);
+  });
+
+  it("by design: typing the country code key by key fills the operator code", async () => {
+    const user = userEvent.setup();
+    render(<InputMask {...preset} data-testid="phone" />);
+    const input = screen.getByTestId("phone") as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard(codeTyped);
+    expect(input.value).toBe(codeTypedResult);
   });
 });

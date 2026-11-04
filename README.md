@@ -5,7 +5,8 @@
 [![CI](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml/badge.svg)](https://github.com/Temirtator/react-input-mask-format/actions/workflows/ci.yml)
 
 Input masking for React — dates, phones, cards, custom tokens, numbers, time, and ready-made
-country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, Armenia, Azerbaijan). A maintained
+country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, Armenia, Azerbaijan; phones and
+postal codes for Georgia, Moldova, Ukraine, Turkmenistan). A maintained
 fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
 **[Live demo](https://temirtator.github.io/react-input-mask-format/)** · **[Changelog](CHANGELOG.md)**
@@ -371,6 +372,27 @@ series was not verified. There is no ID-card preset. Typed key by key into an em
 the operator code; pasting works. A 9-digit `99 4…` number (Bakcell code 99, subscriber part starting with 4)
 passed as `value` or pasted without `0`/`+994` is read as the `+994` prefix (`994123456` →
 `+994 (12) 345-6_-__`); pass it with `0` or `+994`, as with `uzPhone`.
+
+### Georgia, Moldova, Ukraine, Turkmenistan
+
+Phones and postal codes. For IBANs use [`iban`](#generic) with `isValidIban(value, "GE")` (or `"MD"`, `"UA"`).
+
+| export | mask | example |
+| --- | --- | --- |
+| `gePhone` | `+995 (999) 99-99-99` (first digit 1–9) | `+995 (555) 12-34-56` |
+| `gePostal` | `9999` | `0105` |
+| `mdPhone` | `+373 (99) 999-999` (first digit 1–9) | `+373 (69) 123-456` |
+| `mdPostal` | `MD-9999` | `MD-2001` |
+| `uaPhone` | `+380 (99) 999-99-99` (first digit 1–9) | `+380 (67) 123-45-67` |
+| `uaPostal` | `99999` | `01001` |
+| `tmPhone` | `+993 (99) 99-99-99` (first digit 1–7) | `+993 (65) 12-34-56` |
+| `tmPostal` | `999999` | `744000` |
+
+A typed or pasted domestic `0` is skipped (`0671234567` → `+380 (67) 123-45-67`, `069 123 456` →
+`+373 (69) 123-456`), and so is Turkmenistan's domestic `8` (no Turkmen number starts with 8 or 9). The old
+Ukrainian long-distance `8` is skipped when pasted or passed as `value`, but not when typed, because Ukrainian
+numbers such as `800 …` start with 8. Typed key by key into an
+empty field, the country code is read as the operator code, as with `uzPhone`; pasting works.
 
 ### Masks with a fixed prefix
 

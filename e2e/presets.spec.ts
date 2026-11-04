@@ -170,3 +170,30 @@ test("iban groups any country's IBAN and validates it", async ({ page }) => {
   await expect(input).toHaveValue("GB82 WEST 1234 5698 7654 32");
   await expect(page.getByTestId("iban-any-state")).toContainText("✓");
 });
+
+for (const c of [
+  { tab: "ge", testid: "gePhone", typed: "0555123456", expected: "+995 (555) 12-34-56" },
+  { tab: "md", testid: "mdPhone", typed: "069123456", expected: "+373 (69) 123-456" },
+  { tab: "ua", testid: "uaPhone", typed: "0671234567", expected: "+380 (67) 123-45-67" },
+  { tab: "tm", testid: "tmPhone", typed: "65123456", expected: "+993 (65) 12-34-56" },
+  { tab: "md", testid: "mdPostal", typed: "2001", expected: "MD-2001" }
+]) {
+  test(`${c.testid} formats a typed number`, async ({ page }) => {
+    await page.goto("/");
+    await page.getByTestId(`country-${c.tab}`).click();
+    const input = page.getByTestId(c.testid);
+    await input.click();
+    await input.pressSequentially(c.typed);
+    await expect(input).toHaveValue(c.expected);
+  });
+}
+
+test("uaIban validates a Ukrainian IBAN", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-ua").click();
+  const input = page.getByTestId("uaIban");
+  await input.click();
+  await input.pressSequentially("UA213223130000026007233566001");
+  await expect(input).toHaveValue("UA21 3223 1300 0002 6007 2335 6600 1");
+  await expect(page.getByTestId("uaIban-state")).toContainText("✓");
+});

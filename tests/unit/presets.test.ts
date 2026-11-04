@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import MaskUtils from "../../src/core/mask";
 import { resolveTransform } from "../../src/utils/transform";
 import {
-  card, vin, iban, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
+  card, vin, iban, gePhone, gePostal, mdPhone, mdPostal, uaPhone, uaPostal, tmPhone, tmPostal, kzPhone, kzIin, kzBin, kzIban, kzPlate, kzPostal,
   ruPhone, ruInnPerson, ruInnCompany, ruSnils, ruOgrn, ruOgrnip, ruKpp,
   ruBik, ruAccount, ruIban, ruPlate, ruPostal, ruPassport,
   uzPhone, uzPinfl, uzInn, uzAccount, uzMfo, uzPlate, uzPlateCompany, uzPostal, uzPassport,
@@ -290,6 +290,28 @@ describe("Azerbaijan presets format their sample values", () => {
   });
   it("azPassport uppercases", () => {
     expect(format(azPassport, "c01234567")).toBe("C01234567");
+  });
+});
+
+describe("Georgia, Moldova, Ukraine and Turkmenistan presets", () => {
+  it.each([
+    [gePhone, ["+995555123456", "995555123456", "555123456", "+995 (555) 12-34-56"], "+995 (555) 12-34-56"],
+    [gePhone, ["0322123456", "322123456"], "+995 (322) 12-34-56"],
+    [mdPhone, ["+37369123456", "37369123456", "69123456", "069123456"], "+373 (69) 123-456"],
+    [uaPhone, ["+380671234567", "380671234567", "0671234567", "671234567", "80671234567"], "+380 (67) 123-45-67"],
+    [tmPhone, ["+99365123456", "99365123456", "65123456", "865123456"], "+993 (65) 12-34-56"]
+  ])("%o reads international, domestic and national forms", (preset, inputs, expected) => {
+    for (const raw of inputs) {
+      expect(format(preset, raw)).toBe(expected);
+    }
+  });
+
+  it("formats postal codes", () => {
+    expect(format(gePostal, "0105")).toBe("0105");
+    expect(format(mdPostal, "2001")).toBe("MD-2001");
+    expect(format(mdPostal, "md2001")).toBe("MD-2001");
+    expect(format(uaPostal, "01001")).toBe("01001");
+    expect(format(tmPostal, "744000")).toBe("744000");
   });
 });
 

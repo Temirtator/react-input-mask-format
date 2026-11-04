@@ -6,5 +6,9 @@ export enum Country {
   By = "by",
   Tj = "tj",
   Am = "am",
-  Az = "az"
+  Az = "az",
+  Ge = "ge",
+  Md = "md",
+  Ua = "ua",
+  Tm = "tm"
 }
