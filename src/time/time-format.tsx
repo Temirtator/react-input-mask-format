@@ -6,7 +6,7 @@ import { useDigitInput } from "../utils/digit-format";
 
 export interface TimeFormatProps
   extends TimeFormatOptions,
-    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "defaultValue"> {
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "defaultValue"> {
   value?: string;
   defaultValue?: string;
   onValueChange?: (values: TimeFormatValues) => void;
@@ -16,8 +16,8 @@ export const TimeFormat = forwardRef<HTMLInputElement, TimeFormatProps>(function
   props,
   forwardedRef
 ) {
-  const { value, defaultValue, onValueChange, separator, ...domProps } = props;
-  const input = useDigitInput(timeKind, value, { separator }, onValueChange, forwardedRef, defaultValue);
+  const { value, defaultValue, onValueChange, onChange, separator, ...domProps } = props;
+  const input = useDigitInput(timeKind, value, { separator }, onValueChange, forwardedRef, defaultValue, onChange);
   return <input inputMode="numeric" {...domProps} {...input} />;
 });
 

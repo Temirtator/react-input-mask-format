@@ -209,7 +209,8 @@ export function useDigitInput<O, V extends DigitValues>(
   options: O,
   onValueChange: ((values: V) => void) | undefined,
   forwardedRef: React.ForwardedRef<HTMLInputElement>,
-  defaultValue?: string
+  defaultValue?: string,
+  onInputChange?: React.ChangeEventHandler<HTMLInputElement>
 ): {
   ref: (el: HTMLInputElement | null) => void;
   value: string;
@@ -266,6 +267,10 @@ export function useDigitInput<O, V extends DigitValues>(
     lastOptionsRef.current = options;
     forceUpdate();
     onValueChange?.(values);
+    if (onInputChange) {
+      el.value = values.formattedValue;
+      onInputChange(event);
+    }
   }
 
   useIsomorphicLayoutEffect(() => {

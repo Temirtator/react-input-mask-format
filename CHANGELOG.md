@@ -11,6 +11,16 @@
 - TypeScript without `esModuleInterop`: the published types no longer default-import React, which gave `TS1259` or
   props without their React types (`onChange={e => …}` reported an implicit `any`).
 - Server rendering on React 16–18 no longer logs "useLayoutEffect does nothing on the server" for every field.
+- `NumberFormat` works without a `value` prop. Before, an uncontrolled field could not be typed into (`<NumberFormat
+  thousandSeparator="," />` stayed empty) and `defaultValue` was ignored with a React warning. Now it keeps what is
+  typed, shows `defaultValue` (a number or a string, read like `value`) without reporting it through `onValueChange`,
+  goes back to it on form reset, and re-formats when its options change.
+- `NumberFormat`, `DateFormat`, `TimeFormat`, `CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` call an
+  `onChange` prop, with `event.target.value` already formatted (`1,234`, `12.05.2024`). Before, it was silently
+  replaced, so react-hook-form's `register` never saw a change: `watch`, `mode: "onChange"` validation and the
+  submitted value stayed empty. `onChange` is now part of their props types.
+- `useNumberFormat` re-formats the text in the input when its options change (`prefix` `$` → `€` turns `$12.34` into
+  `€12.34`; `decimalScale` 2 → 0 gives `€12`), like `<NumberFormat>`. Before, the old text stayed until the next edit.
 
 ### Internal
 - CI packs the package and checks it the way consumers use it: ESM and CJS imports of every entry, server rendering
