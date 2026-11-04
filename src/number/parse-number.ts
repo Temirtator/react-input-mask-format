@@ -1,5 +1,5 @@
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
-import { tokenize, buildFormatted, resolveSeparators, type NumberParts } from "./format-number";
+import { tokenize, buildFormatted, resolveSeparators, decimalSeparators, type NumberParts } from "./format-number";
 
 function buildValue(parts: NumberParts): string {
   const sign = parts.negative ? "-" : "";
@@ -49,21 +49,41 @@ export function caretAfterReformat(nextFormatted: string, digitsBefore: number):
   return nextFormatted.length;
 }
 
+export function readTyped(
+  raw: string,
+  caret: number,
+  options: NumberFormatOptions,
+  inserted: boolean
+): { raw: string; caret: number; separator: boolean } {
+  const typed = inserted ? decimalSeparators(options).find(c => raw.slice(0, caret).endsWith(c)) : undefined;
+  if (typed && options.decimalScale === 0) {
+    const at = caret - typed.length;
+    return { raw: raw.slice(0, at) + raw.slice(caret), caret: at, separator: false };
+  }
+  return { raw, caret, separator: !!typed };
+}
+
 export function resolveCaret(
   values: NumberFormatValues,
   digitsBefore: number,
-  options: NumberFormatOptions
+  options: NumberFormatOptions,
+  typedSeparator = false
 ): number {
-  const caret = caretAfterReformat(values.formattedValue, digitsBefore);
+  const formatted = values.formattedValue;
+  const caret = caretAfterReformat(formatted, digitsBefore);
+  const { decimal } = resolveSeparators(options);
+  if (!decimal) return caret;
+  if (typedSeparator) {
+    const at = formatted.indexOf(decimal, (options.prefix ?? "").length);
+    if (at !== -1 && at < formatted.length - (options.suffix ?? "").length) return at + decimal.length;
+    return caret;
+  }
   // caretAfterReformat is digit-anchored and can't see a just-typed trailing
   // decimal separator with no fraction digit yet (e.g. "1,234." right after
   // the "." is typed) — it lands the caret BEFORE that separator. Step past it
   // so the next keystroke goes into the fraction rather than ahead of the ".".
-  if (values.value.endsWith(".")) {
-    const { decimal } = resolveSeparators(options);
-    if (decimal && values.formattedValue.slice(caret, caret + decimal.length) === decimal) {
-      return caret + decimal.length;
-    }
+  if (values.value.endsWith(".") && formatted.slice(caret, caret + decimal.length) === decimal) {
+    return caret + decimal.length;
   }
   return caret;
 }

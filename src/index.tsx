@@ -3,7 +3,7 @@ import React, { useLayoutEffect, forwardRef } from "react";
 import { useInputState, useInputElement, usePrevious } from "./hooks";
 import { validateMaxLength, validateChildren, validateMaskPlaceholder } from "./validate-props";
 import { defer } from "./utils/defer";
-import { isInputFocused } from "./utils/input";
+import { isInputFocused, getInputSelection } from "./utils/input";
 import { isFunction, toString } from "./utils/helpers";
 import { resolveMaskConfig } from "./core/config";
 import type { MaskConfig } from "./core/config";
@@ -119,7 +119,10 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
     if (input && !isInputFocused(input) && !maskUtils.isValueFilled(value)) {
       watchClick(input, event, () => {
         const lastState = getLastInputState();
-        setInputState({ ...lastState, selection: decideClickSelection(config, lastState.value) });
+        setInputState({
+          ...lastState,
+          selection: decideClickSelection(config, lastState.value, getInputSelection(input))
+        });
       });
     }
 

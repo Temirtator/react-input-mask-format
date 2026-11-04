@@ -46,12 +46,12 @@ export function createMaskController(config: MaskConfig): MaskController {
     // resync, so the gate is correct, not a workaround-hiding hack.
     if (IS_JSDOM) {
       const resyncValue = value;
-      const resyncSelection = selection;
       queueMicrotask(() => {
         if (!input || input.value !== resyncValue) return;
+        const { start, end } = getInputSelection(input);
         input.value = resyncValue;
-        if (isInputFocused(input) && resyncSelection.start !== null && resyncSelection.end !== null) {
-          setInputSelection(input, resyncSelection.start, resyncSelection.end);
+        if (isInputFocused(input) && start !== null && end !== null) {
+          setInputSelection(input, start, end);
         }
       });
     }
@@ -106,7 +106,7 @@ export function createMaskController(config: MaskConfig): MaskController {
     const { value } = getInputState();
     if (!isInputFocused(input) && !config.maskUtils.isValueFilled(value)) {
       watchClick(input, event, () => {
-        tracker.set(decideClickSelection(config, lastValue));
+        tracker.set(decideClickSelection(config, lastValue, getInputSelection(input!)));
       });
     }
   }
