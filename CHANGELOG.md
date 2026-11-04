@@ -14,6 +14,9 @@
   `formatNumber` 2.0 → 0.9 kB, `extendedFormatChars` 5.5 → 0.3 kB. A Vite app that imports only `formatDate` is
   3.8 kB (minified) smaller. `displayName`s are unchanged.
 
+- Internal property names are shortened in the published code (esbuild `mangleProps` with an explicit list of
+  names that are never part of the API): index 6.24 → 5.95 kB, `useMask` alone 4.78 → 4.50 kB.
+
 ### Internal
 - size-limit also checks what importing one name costs (`useMask`, `formatNumber`, `formatDate`, `detectCardBrand`,
   `CardNumberFormat`, …), so tree-shaking cannot regress unnoticed.
