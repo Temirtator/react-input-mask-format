@@ -63,6 +63,30 @@ describe("a number as the value", () => {
     render(<InputMask mask="999-999" value={123456 as unknown as string} onChange={() => {}} data-testid="field" />);
     expect(screen.getByTestId("field")).toHaveValue("123-456");
   });
+
+  it("formats 0 like \"0\" and passes a string to beforeMaskedStateChange", () => {
+    const seen: unknown[] = [];
+    render(
+      <>
+        <InputMask mask="+7 (999) 999" value={0 as unknown as string} onChange={() => {}} data-testid="field" />
+        <InputMask
+          mask="9999"
+          value={0 as unknown as string}
+          onChange={() => {}}
+          beforeMaskedStateChange={({ nextState }) => {
+            seen.push(nextState.value);
+            return nextState;
+          }}
+          data-testid="other"
+        />
+        <InputMask mask="9999" defaultValue={0 as unknown as string} data-testid="uncontrolled" />
+      </>
+    );
+    expect(screen.getByTestId("field")).toHaveValue("+7 (0__) ___");
+    expect(screen.getByTestId("other")).toHaveValue("0___");
+    expect(seen.every(value => typeof value === "string")).toBe(true);
+    expect(screen.getByTestId("uncontrolled")).toHaveValue("0___");
+  });
 });
 
 describe("maskPlaceholder of the wrong length", () => {

@@ -46,9 +46,7 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   const isEditable = !restProps.disabled && !restProps.readOnly;
   const isControlled = props.value !== null && props.value !== undefined;
   const previousIsMasked = usePrevious(isMasked);
-  const initialValue = toString(
-    (isControlled ? props.value : props.defaultValue) || ""
-  );
+  const initialValue = toString((isControlled ? props.value : props.defaultValue) ?? "");
 
   const {
     inputRef,
@@ -136,10 +134,11 @@ const InputMask = forwardRef<HTMLInputElement, InputMaskProps>(function InputMas
   if (isMasked && isControlled) {
     const input = getInputElement();
     const isFocused = !!input && isInputFocused(input);
+    const valueText = toString(props.value);
     let newValue =
-      isFocused || alwaysShowMask || props.value
-        ? maskUtils.formatControlledValue(toString(props.value), getLastInputState().value)
-        : (props.value as string);
+      isFocused || alwaysShowMask || valueText
+        ? maskUtils.formatControlledValue(valueText, getLastInputState().value)
+        : valueText;
 
     if (beforeMaskedStateChange) {
       newValue = beforeMaskedStateChange({

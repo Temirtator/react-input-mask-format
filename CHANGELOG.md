@@ -9,10 +9,11 @@
 ### Fixed
 - Masked fields with `type="number"` or `type="email"` no longer throw on every key; `NumberFormat type="number"`
   no longer unmounts the whole React tree. These types have no text selection, so the browser rejected the caret
-  update (`InvalidStateError`). The field is left alone instead, and in development a console error explains it
-  once per type and suggests `type="text"` or `type="tel"` with `inputMode="numeric"`.
+  update (`InvalidStateError`), and they still cannot be masked. In development a console error now says so once
+  per type and suggests `type="text"` or `type="tel"` with `inputMode="numeric"`.
 - `<InputMask value={123456} mask="999-999">` shows `123-456`. Before, a number `value` (allowed by the types)
-  threw `string.split is not a function`.
+  threw `string.split is not a function`, and `0` was shown unmasked and passed to `beforeMaskedStateChange` as a
+  number; a `defaultValue` of `0` is no longer dropped.
 - In development, a custom child of `InputMask` that does not forward its ref gets an error that says so, instead
   of `Cannot read properties of null (reading 'getRootNode')`. The error for a child without an `<input>` names this
   package instead of the old `react-input-mask`.
