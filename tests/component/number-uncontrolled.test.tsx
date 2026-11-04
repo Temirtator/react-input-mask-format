@@ -142,3 +142,76 @@ describe("useNumberFormat option change", () => {
     expect(field()).toHaveValue("1,234");
   });
 });
+
+describe("review cases", () => {
+  it("clears when a controlled value goes back to undefined", async () => {
+    function Clearable() {
+      const [value, setValue] = useState<number | undefined>();
+      return (
+        <>
+          <NumberFormat thousandSeparator="," value={value} onValueChange={v => setValue(v.floatValue)} data-testid="field" />
+          <button type="button" onClick={() => setValue(undefined)}>clear</button>
+          <button type="button" onClick={() => setValue(42)}>set</button>
+        </>
+      );
+    }
+    render(<Clearable />);
+    await userEvent.type(field(), "1234");
+    expect(field()).toHaveValue("1,234");
+    fireEvent.click(screen.getByText("clear"));
+    expect(field()).toHaveValue("");
+    fireEvent.click(screen.getByText("set"));
+    expect(field()).toHaveValue("42");
+    fireEvent.click(screen.getByText("clear"));
+    expect(field()).toHaveValue("");
+  });
+
+  it("useNumberFormat keeps the caret's digit position when options change while focused", async () => {
+    function Hook(options: UseNumberFormatOptions) {
+      const ref = useNumberFormat(options);
+      return <input ref={ref} data-testid="field" />;
+    }
+    const { rerender } = render(<Hook decimalScale={2} fixedDecimalScale />);
+    await userEvent.type(field(), "12");
+    expect(field()).toHaveValue("12.00");
+    expect(field().selectionStart).toBe(2);
+    rerender(<Hook decimalScale={3} fixedDecimalScale />);
+    expect(field()).toHaveValue("12.000");
+    expect(field().selectionStart).toBe(2);
+    await userEvent.keyboard("3");
+    expect(field()).toHaveValue("123.000");
+  });
+
+  it("shows values react-hook-form writes on mount from defaultValues", () => {
+    function Form() {
+      const { register } = useForm({ defaultValues: { amount: "1234", birthday: "12052024", card: "4111111111111111" } });
+      return (
+        <form>
+          <NumberFormat {...register("amount")} thousandSeparator="," data-testid="field" />
+          <DateFormat {...register("birthday")} data-testid="date" />
+          <CardNumberFormat {...register("card")} data-testid="card" />
+        </form>
+      );
+    }
+    render(<Form />);
+    expect(field()).toHaveValue("1,234");
+    expect(screen.getByTestId("date")).toHaveValue("12.05.2024");
+    expect(screen.getByTestId("card")).toHaveValue("4111 1111 1111 1111");
+  });
+
+  it("a cancelled form reset leaves the fields alone", async () => {
+    render(
+      <form data-testid="form" onReset={event => event.preventDefault()}>
+        <NumberFormat defaultValue="1234" thousandSeparator="," data-testid="field" />
+        <DateFormat defaultValue="2024-05-12" data-testid="date" />
+      </form>
+    );
+    await userEvent.type(field(), "5");
+    await userEvent.type(screen.getByTestId("date"), "{Backspace}");
+    act(() => {
+      (screen.getByTestId("form") as HTMLFormElement).reset();
+    });
+    expect(field()).toHaveValue("12,345");
+    expect(screen.getByTestId("date")).toHaveValue("12.05.202");
+  });
+});

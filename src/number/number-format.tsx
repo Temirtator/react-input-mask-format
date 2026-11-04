@@ -72,21 +72,23 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
   // node's committed value is updated and nothing gets restored away.
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
 
-  const uncontrolled = valueProp === undefined;
-  const uncontrolledRef = useRef(uncontrolled);
-  uncontrolledRef.current = uncontrolled;
-  const value = uncontrolled ? (defaultValue ?? "") : valueProp;
+  const controlledRef = useRef(false);
+  if (valueProp !== undefined) controlledRef.current = true;
+  const uncontrolled = !controlledRef.current;
+  const value = uncontrolled ? (defaultValue ?? "") : (valueProp ?? "");
 
   useEffect(() => {
     const form = innerRef.current && innerRef.current.form;
-    const reset = (): void => {
-      if (uncontrolledRef.current) {
+    if (!form) return;
+    const root = form.getRootNode();
+    const reset = (event: Event): void => {
+      if (event.target === form && !event.defaultPrevented && !controlledRef.current) {
         lastValuesRef.current = null;
         forceUpdate();
       }
     };
-    form?.addEventListener("reset", reset);
-    return () => form?.removeEventListener("reset", reset);
+    root.addEventListener("reset", reset);
+    return () => root.removeEventListener("reset", reset);
   });
 
   // Controlled display: normally derive the shown string from the `value` prop.
@@ -162,6 +164,10 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
     if (el && caretRef.current !== null && isInputFocused(el)) {
       setInputSelection(el, caretRef.current, caretRef.current);
       caretRef.current = null;
+    }
+    if (el && uncontrolled && caretRef.current === null && el.value !== lastFormattedRef.current) {
+      lastValuesRef.current = parseNumber(el.value, options);
+      forceUpdate();
     }
   });
 

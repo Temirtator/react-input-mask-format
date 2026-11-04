@@ -820,8 +820,12 @@ function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
 
 ### react-hook-form: number, date and card components
 
-Pass the value, store what you need from `onValueChange`, and give `ref={field.ref}` so `setFocus` and
-focus-on-error reach the input. `onBlur={field.onBlur}` is what makes `mode: "onBlur"` validate.
+`{...register("amount")}` works for typing, `watch`, validation, submit and `defaultValues`; the form receives the
+formatted text (`1,234`). Values the form writes later with `reset(values)` or `setValue` are not shown, so use
+`Controller` when you need those or the unformatted value.
+
+With `Controller`, pass the value, store what you need from `onValueChange`, and give `ref={field.ref}` so
+`setFocus` and focus-on-error reach the input. `onBlur={field.onBlur}` is what makes `mode: "onBlur"` validate.
 
 ```tsx
 import { useForm, Controller } from "react-hook-form";

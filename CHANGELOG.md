@@ -15,13 +15,19 @@
 - `NumberFormat` works without a `value` prop. Before, an uncontrolled field could not be typed into (`<NumberFormat
   thousandSeparator="," />` stayed empty) and `defaultValue` was ignored with a React warning. Now it keeps what is
   typed, shows `defaultValue` (a number or a string, read like `value`) without reporting it through `onValueChange`,
-  goes back to it on form reset, and re-formats when its options change.
+  goes back to it on form reset, and re-formats when its options change. Once a `value` has been passed, `undefined`
+  clears the field like `""`, so `value={values.floatValue}` still empties it.
 - `NumberFormat`, `DateFormat`, `TimeFormat`, `CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` call an
   `onChange` prop, with `event.target.value` already formatted (`1,234`, `12.05.2024`). Before, it was silently
   replaced, so react-hook-form's `register` never saw a change: `watch`, `mode: "onChange"` validation and the
-  submitted value stayed empty. `onChange` is now part of their props types.
+  submitted value stayed empty. `onChange` is now part of their props types. With `register`, the fields also show
+  `useForm({ defaultValues })`. Values the form writes later (`reset(values)`, `setValue`) are not shown; use
+  `Controller` for those.
+- A form reset cancelled with `preventDefault()` no longer resets `DateFormat`, `TimeFormat`, the card fields and
+  `NumberFormat`.
 - `useNumberFormat` re-formats the text in the input when its options change (`prefix` `$` → `€` turns `$12.34` into
-  `€12.34`; `decimalScale` 2 → 0 gives `€12`), like `<NumberFormat>`. Before, the old text stayed until the next edit.
+  `€12.34`; `decimalScale` 2 → 0 gives `€12`), like `<NumberFormat>`, and keeps the caret after the same digits.
+  Before, the old text stayed until the next edit.
 
 ### Internal
 - CI packs the package and checks it the way consumers use it: ESM and CJS imports of every entry, server rendering
