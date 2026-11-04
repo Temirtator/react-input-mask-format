@@ -79,6 +79,11 @@
   deleted; now `12.` shows `12`, a pasted `1,234.56` becomes `1,234`, and a `.` typed in the middle of
   `1,234` changes nothing.
 
+### Internal
+- React StrictMode tests for `useMask`, `./number`, `./time`, `./date` and `./card` components and hooks, and more
+  cases for `InputMask`: each scenario runs with and without `<StrictMode>` and must show the same value, caret and
+  emitted values.
+
 ## 2.13.0
 
 ### Added
