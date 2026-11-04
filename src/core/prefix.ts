@@ -65,12 +65,13 @@ export function shouldInsertAfterPrefix(
   if (!string || !hasSignificantPrefix(prefix) || position >= prefix.length) {
     return false;
   }
-  if (!wasTrimmed) {
-    const remaining = prefixSignificantCharacters(prefix.slice(position));
-    const typed = prefixSignificantCharacters(string).slice(0, remaining.length);
-    if (typed && remaining.toUpperCase().startsWith(typed.toUpperCase())) {
-      return false;
-    }
+  if (wasTrimmed) {
+    return true;
+  }
+  const remaining = prefixSignificantCharacters(prefix.slice(position));
+  const typed = prefixSignificantCharacters(string).slice(0, remaining.length);
+  if (typed && remaining.toUpperCase().startsWith(typed.toUpperCase())) {
+    return false;
   }
   return host.fillingLengthAt(string, prefix.length) > 0;
 }
