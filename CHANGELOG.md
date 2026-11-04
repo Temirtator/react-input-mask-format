@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added
+- `vin` preset in `react-input-mask-format/presets` (17 characters, uppercase, Cyrillic look-alikes become
+  Latin, `I` becomes `1`, `O`/`Q` become `0`) and `isValidVin` validator (format only, no check digit).
+- `iban` preset (any country, up to 34 characters grouped by 4, uppercase, Cyrillic look-alikes become Latin)
+  and `isValidIban(value, country?)` validator (ISO 13616 structure and MOD-97 for any country; `country`
+  restricts the code). Georgia, Moldova, Ukraine and other IBAN countries without a pack can use them.
+- Phone and postal presets for Georgia (`gePhone`, `gePostal`), Moldova (`mdPhone`, `mdPostal`), Ukraine
+  (`uaPhone`, `uaPostal`) and Turkmenistan (`tmPhone`, `tmPostal`). Phones read international, domestic (`0…`,
+  Turkmen `8…`, pasted Ukrainian `8…`) and national forms; demo tabs GE, MD, UA, TM.
+- `phonePresets` (ISO code → phone preset for the 12 countries) and `detectPhoneCountry(text)` (country of an
+  international `+…` or `00…` number, `+7` split into Kazakhstan and Russia) in `react-input-mask-format/presets`,
+  with a README recipe for a phone field with a country picker that switches when another country's number is
+  pasted.
+
 ### Fixed
 - `DateFormat` and `TimeFormat` without a `value` prop are now uncontrolled. Before, they were controlled with
   `""`, so the field was emptied as soon as the date or time was complete (`12052024` typed into `<DateFormat />`
@@ -12,12 +26,35 @@
   `<DateFormat defaultValue="2024-05-12" />` shows `12.05.2024` and is not reported through `onValueChange`.
   `defaultValue` is now typed `string`; a number or array `defaultValue` no longer compiles (it never worked at
   runtime).
+- A form reset brings an uncontrolled `DateFormat`, `TimeFormat` or card field back to its `defaultValue` (or
+  empty), like a plain input. A controlled field keeps showing its `value`.
 - `InputMask` and `useMask` no longer drop what you type after moving the caret past the last slot of a focused
   field (a click at its right edge or End). Before, every character was lost (`+7 (701) ___-__-__` stayed as
   is); now typing and pasting go to the slot after the last filled one, where focus puts the caret (`2345678`
   gives `+7 (701) 234-56-78`), and a key no slot accepts moves the caret there. A field whose last slot is
   filled still ignores typing at the end. A placeholder character typed into the last slot is replaced by the
   next typed character.
+
+## 2.13.0
+
+### Added
+- Belarus pack in `react-input-mask-format/presets`: `byPhone`, `byPersonalId`, `byUnp`, `byIban`, `byPlate`,
+  `byPostal`, `byPassport`. `byPhone` skips the domestic `8 0…` prefix (`"80291234567"` becomes
+  `+375 (29) 123-45-67`); `byPersonalId`, `byUnp`, `byPlate` and `byPassport` turn typed Cyrillic look-alikes
+  into Latin. Validators `isValidByPersonalId` (7-3-1), `isValidByUnp` (MNS mod-11) and `isValidByIban`
+  (MOD-97).
+- Tajikistan pack: `tjPhone`, `tjInn`, `tjEin`, `tjAccount`, `tjBik`, `tjPlate`, `tjPlateCompany`
+  (Cyrillic look-alikes typed on a Russian layout become Latin), `tjPostal`, and `isValidTjInn` (9 digits; the check digit is not published, so format only).
+- Armenia pack: `amPhone` (skips the domestic leading `0`), `amPsn`, `amTin`, `amAccount`, `amPlate`,
+  `amPostal`, `amPassport`, and the structure validators `isValidAmPsn`, `isValidAmTin` and
+  `isValidAmAccount`.
+- Azerbaijan pack: `azPhone` (skips the domestic `0` and `00994`), `azFin` (a typed `O` becomes `0`),
+  `azVoen`, `azIban`, `azPlate`, `azPostal` (`1000` and `AZ 1000` become `AZ1000`), `azPassport`, and
+  validators `isValidAzVoen` (VÖEN mod-11), `isValidAzIban` (MOD-97) and `isValidAzFin` (structure).
+- The demo has BY, TJ, AM and AZ tabs.
+
+### Notes
+- Additive: no existing preset, validator or component changes behavior.
 
 ## 2.12.0
 
