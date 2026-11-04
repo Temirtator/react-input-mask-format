@@ -3,6 +3,7 @@ import type * as React from "react";
 import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "./input";
 import { useIsomorphicLayoutEffect } from "./layout-effect";
+import { isTestDom } from "./test-dom";
 
 export interface DigitValues {
   value: string;
@@ -118,9 +119,6 @@ function placeCaret(
   }
 }
 
-const IS_JSDOM =
-  typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom");
-
 export function useDigitFormat<O, V extends DigitValues>(
   kind: DigitFormatKind<O, V>,
   options: O & { onValueChange?: (values: V) => void }
@@ -177,7 +175,7 @@ export function useDigitFormat<O, V extends DigitValues>(
         // listeners, so this write would fight React; real browsers read the live
         // DOM and need no resync. onValueChange (below) is called directly, not via
         // React's tracker, so it is unaffected in either environment.
-        if (IS_JSDOM) {
+        if (process.env.NODE_ENV !== "production" && isTestDom()) {
           queueMicrotask(() => {
             if (el.value !== values.formattedValue) return;
             el.value = values.formattedValue;

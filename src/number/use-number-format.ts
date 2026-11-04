@@ -7,13 +7,11 @@ import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
 import { useIsomorphicLayoutEffect } from "../utils/layout-effect";
+import { isTestDom } from "../utils/test-dom";
 
 export interface UseNumberFormatOptions extends NumberFormatOptions {
   onValueChange?: (values: NumberFormatValues) => void;
 }
-
-const IS_JSDOM =
-  typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom");
 
 export function useNumberFormat(
   options: UseNumberFormatOptions
@@ -74,7 +72,7 @@ export function useNumberFormat(
         // listeners, so this write would fight React; real browsers read the live
         // DOM and need no resync. onValueChange (below) is called directly, not via
         // React's tracker, so it is unaffected in either environment.
-        if (IS_JSDOM) {
+        if (process.env.NODE_ENV !== "production" && isTestDom()) {
           queueMicrotask(() => {
             if (el.value !== values.formattedValue) return;
             el.value = values.formattedValue;

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+- The test-DOM workaround is left out of production builds (`process.env.NODE_ENV === "production"`), which
+  makes the bundles smaller: index −0.1 kB, number, time, date and card −50 to −70 B.
+
 ### Fixed
 - Next.js App Router: rendering `<InputMask>`, `NumberFormat`, `DateFormat`, `TimeFormat` or a card field in a Server
   Component no longer fails the build (`TypeError: useRef is not a function`). Under the `react-server` export
@@ -28,6 +32,9 @@
 - `useNumberFormat` re-formats the text in the input when its options change (`prefix` `$` → `€` turns `$12.34` into
   `€12.34`; `decimalScale` 2 → 0 gives `€12`), like `<NumberFormat>`, and keeps the caret after the same digits.
   Before, the old text stayed until the next edit.
+- Tests that run under happy-dom get correct values from `useMask`, `useNumberFormat` and the digit-field hooks.
+  Before, typing `12052024` into `useMask({ mask: "99/99/9999" })` gave `12/_0/_5_2`, because a workaround for
+  the test DOM recognised only jsdom.
 
 ### Internal
 - CI packs the package and checks it the way consumers use it: ESM and CJS imports of every entry, server rendering
