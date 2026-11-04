@@ -288,10 +288,13 @@ export function useDigitInput<O, V extends DigitValues>(
       setInputSelection(el, caretRef.current);
       caretRef.current = null;
     }
-    if (el && value === undefined && caretRef.current === null && el.value !== formatted) {
-      lastValuesRef.current = kind.parse(el.value, options, "", 0);
-      lastOptionsRef.current = options;
-      forceUpdate();
+    if (el && value === undefined && caretRef.current === null && el.value !== formatted && el.selectionStart !== null) {
+      const adopted = kind.parse(el.value, options, "", 0);
+      if (adopted.formattedValue !== formatted) {
+        lastValuesRef.current = adopted;
+        lastOptionsRef.current = options;
+        forceUpdate();
+      }
     }
   });
 
