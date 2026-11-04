@@ -68,7 +68,7 @@ core. `/number`, `/date` and `/card` are separate entry points of 1.7 kB, 2.0 kB
 - [Presets](#presets) · [Masks with a fixed prefix](#masks-with-a-fixed-prefix) · [Validators](#validators)
 - [Numbers & currency](#numbers--currency--react-input-mask-formatnumber) · [Time](#time--react-input-mask-formattime)
   · [Date](#date--react-input-mask-formatdate) · [Cards](#cards--react-input-mask-formatcard)
-- [Known issues](#known-issues) · [Migration](#migration)
+- [Known issues](#known-issues) · [Recipes](#recipes) · [Migration](#migration)
 
 ## Properties
 
@@ -521,6 +521,216 @@ postal codes are often autofilled; one-time codes are not.
 
 `cy.get("input").focus().type("12345")` can produce `23/45/____`, because `focus()` is not an action
 command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `.wait(50)` after `.focus()`.
+
+## Recipes
+
+### react-hook-form: `InputMask` with `Controller`
+
+`InputMask` is controlled, so use `Controller` and spread `field` onto it. `field.ref` reaches the input,
+so focus-on-error and `setFocus` work. A mask with a placeholder keeps `_` in an incomplete value, which
+makes a one-line `validate` enough (add `required` for the empty value); for documents add the checksum validator.
+
+```tsx
+import { useForm, Controller } from "react-hook-form";
+import InputMask from "react-input-mask-format";
+import { kzPhone, kzIin } from "react-input-mask-format/presets";
+import { isValidIin } from "react-input-mask-format/validators";
+
+type FormValues = { phone: string; iin: string };
+
+function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
+  const { control, handleSubmit } = useForm<FormValues>({ defaultValues: { phone: "", iin: "" } });
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="phone"
+        control={control}
+        rules={{
+          required: "Enter a phone",
+          validate: (v) => !v.includes("_") || "Enter the full number",
+        }}
+        render={({ field, fieldState }) => (
+          <>
+            <InputMask {...kzPhone} {...field} />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <Controller
+        name="iin"
+        control={control}
+        rules={{ validate: (v) => isValidIin(v) || "Invalid IIN" }}
+        render={({ field, fieldState }) => (
+          <>
+            <InputMask {...kzIin} {...field} />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+The form value is the masked text (`"+7 (701) 234-56-78"`). Strip it in `onSubmit` if the API wants digits.
+
+### react-hook-form: `useMask` with `register`
+
+For an uncontrolled input, merge the ref from `register` with the one from `useMask`. Both are called on
+every ref change, so the mask survives re-renders from `formState`.
+
+```tsx
+import { useForm } from "react-hook-form";
+import { useMask } from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
+  const { register, handleSubmit, formState } = useForm<{ phone: string }>();
+  const { ref, ...rest } = register("phone", {
+    required: "Enter a phone",
+    validate: (v) => !v.includes("_") || "Enter the full number",
+  });
+  const maskRef = useMask(kzPhone);
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input
+        {...rest}
+        ref={(el) => {
+          ref(el);
+          maskRef(el);
+        }}
+      />
+      {formState.errors.phone && <p role="alert">{formState.errors.phone.message}</p>}
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+### react-hook-form: number, date and card components
+
+Pass the value, store what you need from `onValueChange`, and give `ref={field.ref}` so `setFocus` and
+focus-on-error reach the input. `onBlur={field.onBlur}` is what makes `mode: "onBlur"` validate.
+
+```tsx
+import { useForm, Controller } from "react-hook-form";
+import { NumberFormat } from "react-input-mask-format/number";
+import { DateFormat } from "react-input-mask-format/date";
+
+type FormValues = { amount: string; born: string };
+
+function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
+  const { control, handleSubmit } = useForm<FormValues>({
+    mode: "onBlur",
+    defaultValues: { amount: "", born: "" },
+  });
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="amount"
+        control={control}
+        render={({ field }) => (
+          <NumberFormat
+            name={field.name}
+            ref={field.ref}
+            value={field.value}
+            onValueChange={(v) => field.onChange(v.value)}
+            onBlur={field.onBlur}
+            thousandSeparator=","
+            decimalScale={2}
+          />
+        )}
+      />
+      <Controller
+        name="born"
+        control={control}
+        rules={{ required: "Enter a date" }}
+        render={({ field, fieldState }) => (
+          <>
+            <DateFormat
+              name={field.name}
+              ref={field.ref}
+              value={field.value}
+              onValueChange={(v) => field.onChange(v.value)}
+              onBlur={field.onBlur}
+            />
+            {fieldState.error && <p role="alert">{fieldState.error.message}</p>}
+          </>
+        )}
+      />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+Typing `1234.5` and `12052024` submits `{ amount: "1234.5", born: "2024-05-12" }`: the unformatted number and
+the ISO date. `born` stays `""` until the date is complete and exists, so `required` rejects a partial date,
+on blur and on submit. `CardNumberFormat`, `CardExpiryFormat` and `CardCvcFormat` take the same props; wire
+them the same way (`CardNumberFormat` gives the digits without spaces in `v.value`, `CardExpiryFormat`
+gives `"05/30"`).
+
+### MUI `TextField`
+
+Wrap the `TextField` in `InputMask`. The mask finds the `<input>` inside it. MUI sees the value, so the
+floating label moves up and does not overlap the mask or the typed text.
+
+```tsx
+import { useState } from "react";
+import InputMask from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+import TextField from "@mui/material/TextField";
+
+function PhoneField() {
+  const [phone, setPhone] = useState("");
+  return (
+    <InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+      <TextField label="Phone" />
+    </InputMask>
+  );
+}
+```
+
+Checked with MUI 9. To reach the `<input>` props in MUI 9 use `slotProps.htmlInput`; MUI 5 and 6 use
+`inputProps`.
+
+### Ant Design `Input`
+
+antd's `Input` ref is an `InputRef`, not the element, so a plain `<Input>` as an `InputMask` child throws.
+Forward `.input` through a small wrapper:
+
+```tsx
+import React, { useState } from "react";
+import { Input } from "antd";
+import type { InputProps, InputRef } from "antd";
+import InputMask from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+const AntInput = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+  const inner = React.useRef<InputRef>(null);
+  React.useImperativeHandle(ref, () => inner.current!.input!, []);
+  return <Input {...props} ref={inner} />;
+});
+
+function PhoneField() {
+  const [phone, setPhone] = useState("");
+  return (
+    <InputMask {...kzPhone} value={phone} onChange={(e) => setPhone(e.target.value)}>
+      <AntInput />
+    </InputMask>
+  );
+}
+```
+
+Checked with Ant Design 6. For an uncontrolled field, `useMask` also works on antd's `Input` through its
+`.input` element: `ref={(r) => maskRef(r?.input ?? null)}`. antd controls the input's value, so the mask
+template shows once the user types rather than on focus.
+
+### Other kits
+
+Any component that forwards its ref to the native `<input>` works as an `InputMask` child, or with
+`useMask` (see [`children`](#children)).
 
 ## Migration
 
