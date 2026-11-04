@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Presets set keyboard and autofill hints, so phones show the right keypad. Phone presets add `inputMode="tel"` and
+  `autoComplete="tel"`. Presets that take only digits (IINs, INNs, accounts, postal codes, `card`, …) add
+  `inputMode="numeric"`, postal codes also add `autoComplete="postal-code"`, and `card` adds
+  `autoComplete="cc-number"`. Presets with letters (IBANs, plates, passports, `vin`) are unchanged. Spread onto
+  `<InputMask>`, the hints reach the `<input>`; a prop passed explicitly wins. `MaskPreset` has the new optional
+  `inputMode` and `autoComplete` fields.
+
 ## 2.13.0
 
 ### Added

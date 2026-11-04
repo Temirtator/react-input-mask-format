@@ -4,6 +4,8 @@ import { RU_PLATE_LETTERS, toRuPlateChar } from "../utils/ru-plate";
 const DIGIT = /[0-9]/;
 
 export const ruPhone: MaskPreset = {
+  inputMode: "tel",
+  autoComplete: "tel",
   // national number starts with 3/4/8/9; 6/7 belong to Kazakhstan
   mask: [
     "+", "7", " ", "(", /[3489]/, DIGIT, DIGIT, ")", " ",
@@ -13,26 +15,31 @@ export const ruPhone: MaskPreset = {
 };
 
 export const ruInnPerson: MaskPreset = {
+  inputMode: "numeric",
   mask: "999999999999",
   maskPlaceholder: "_"
 };
 
 export const ruInnCompany: MaskPreset = {
+  inputMode: "numeric",
   mask: "9999999999",
   maskPlaceholder: "_"
 };
 
 export const ruSnils: MaskPreset = {
+  inputMode: "numeric",
   mask: "999-999-999 99",
   maskPlaceholder: "_"
 };
 
 export const ruOgrn: MaskPreset = {
+  inputMode: "numeric",
   mask: "9999999999999",
   maskPlaceholder: "_"
 };
 
 export const ruOgrnip: MaskPreset = {
+  inputMode: "numeric",
   mask: "999999999999999",
   maskPlaceholder: "_"
 };
@@ -45,11 +52,13 @@ export const ruKpp: MaskPreset = {
 };
 
 export const ruBik: MaskPreset = {
+  inputMode: "numeric",
   mask: "999999999",
   maskPlaceholder: "_"
 };
 
 export const ruAccount: MaskPreset = {
+  inputMode: "numeric",
   // balance account · currency · check key · branch · account
   mask: "99999 999 9 9999 9999999",
   maskPlaceholder: "_"
@@ -75,11 +84,14 @@ export const ruPlate: MaskPreset = {
 };
 
 export const ruPostal: MaskPreset = {
+  inputMode: "numeric",
+  autoComplete: "postal-code",
   mask: "999999",
   maskPlaceholder: "_"
 };
 
 export const ruPassport: MaskPreset = {
+  inputMode: "numeric",
   // series (4) + number (6), as entered on Gosuslugi
   mask: "9999 999999",
   maskPlaceholder: "_"

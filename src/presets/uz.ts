@@ -1,28 +1,34 @@
 import type { MaskPreset } from "./types";
 
 export const uzPhone: MaskPreset = {
+  inputMode: "tel",
+  autoComplete: "tel",
   // "9" is a digit token, so the country code's 9s are escaped
   mask: "+\\9\\98 (99) 999-99-99",
   maskPlaceholder: "_"
 };
 
 export const uzPinfl: MaskPreset = {
+  inputMode: "numeric",
   mask: "99999999999999",
   maskPlaceholder: "_"
 };
 
 export const uzInn: MaskPreset = {
+  inputMode: "numeric",
   mask: "999999999",
   maskPlaceholder: "_"
 };
 
 export const uzAccount: MaskPreset = {
+  inputMode: "numeric",
   // balance account · currency · key · client code · serial
   mask: "99999 999 9 99999999 999",
   maskPlaceholder: "_"
 };
 
 export const uzMfo: MaskPreset = {
+  inputMode: "numeric",
   mask: "99999",
   maskPlaceholder: "_"
 };
@@ -42,6 +48,8 @@ export const uzPlateCompany: MaskPreset = {
 };
 
 export const uzPostal: MaskPreset = {
+  inputMode: "numeric",
+  autoComplete: "postal-code",
   mask: "999999",
   maskPlaceholder: "_"
 };

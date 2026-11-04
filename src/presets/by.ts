@@ -5,6 +5,8 @@ const DIGIT = /[0-9]/;
 const PLATE_LETTER = /[ABEIKMHOPCTX]/;
 
 export const byPhone: MaskPreset = {
+  inputMode: "tel",
+  autoComplete: "tel",
   mask: [
     "+", "3", "7", "5", " ", "(", /[1-57]/, DIGIT, ")", " ",
     DIGIT, DIGIT, DIGIT, "-", DIGIT, DIGIT, "-", DIGIT, DIGIT
@@ -43,6 +45,8 @@ export const byPlate: MaskPreset = {
 };
 
 export const byPostal: MaskPreset = {
+  inputMode: "numeric",
+  autoComplete: "postal-code",
   mask: "999999",
   maskPlaceholder: "_"
 };

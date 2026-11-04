@@ -212,6 +212,10 @@ import { kzPhone, kzIban } from "react-input-mask-format/presets";
 
 Masks are shown as users see them. PRs adding other countries are welcome; see [CONTRIBUTING](CONTRIBUTING.md).
 
+Presets also carry keyboard and autofill hints: phones set `inputMode="tel"` and `autoComplete="tel"`, presets that
+take only digits set `inputMode="numeric"`, postal codes add `autoComplete="postal-code"` and `card` adds
+`autoComplete="cc-number"`. A prop you pass yourself wins. `useMask` ignores them, so set them on your `<input>`.
+
 ### Generic
 
 | export | mask | example |
