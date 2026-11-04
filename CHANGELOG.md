@@ -1,18 +1,18 @@
 # Changelog
 
-## Unreleased
+## 2.14.0
 
 ### Changed
-- The test-DOM workaround is left out of production builds (`process.env.NODE_ENV === "production"`), which
-  makes the bundles smaller: index −0.1 kB, number, time, date and card −50 to −70 B.
-- `useMask` throws when `maskPlaceholder` is neither one character nor as long as the mask, like `<InputMask>` always
-  did. Before, the hook showed broken text (`mask: "99-99"`, `maskPlaceholder: "ab"` gave `ab-`, then `1b-`).
 - Presets set keyboard and autofill hints, so phones show the right keypad. Phone presets add `inputMode="tel"` and
   `autoComplete="tel"`. Presets that take only digits (IINs, INNs, accounts, postal codes, `card`, …) add
   `inputMode="numeric"`, postal codes also add `autoComplete="postal-code"`, and `card` adds
   `autoComplete="cc-number"`. Presets with letters (IBANs, plates, passports, `vin`) are unchanged. Spread onto
   `<InputMask>`, the hints reach the `<input>`; a prop passed explicitly wins. `MaskPreset` has the new optional
   `inputMode` and `autoComplete` fields.
+- `useMask` throws when `maskPlaceholder` is neither one character nor as long as the mask, like `<InputMask>` always
+  did. Before, the hook showed broken text (`mask: "99-99"`, `maskPlaceholder: "ab"` gave `ab-`, then `1b-`).
+- The test-DOM workaround is left out of production builds (`process.env.NODE_ENV === "production"`), which
+  makes the bundles smaller: index −0.1 kB, number, time, date and card −50 to −70 B.
 
 ### Fixed
 - Next.js App Router: rendering `<InputMask>`, `NumberFormat`, `DateFormat`, `TimeFormat` or a card field in a Server
@@ -64,6 +64,9 @@
 - CI: read-only token by default, PR runs cancel superseded ones, the React matrix no longer stops at the first
   failure, the Playwright report and traces are uploaded when e2e fails, coverage is measured with thresholds (lines
   99%, branches 96%), and an e2e run on WebKit (Safari's engine) reports without blocking yet.
+- Releases: the workflow checks that the tag matches `package.json`, runs lint, typecheck, tests, build, publint and
+  size-limit before publishing, pins npm 11, and takes the GitHub Release notes from this changelog. Dependabot
+  keeps dev dependencies and actions up to date; `SECURITY.md` describes private vulnerability reports.
 
 ## 2.13.0
 
