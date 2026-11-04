@@ -1032,7 +1032,7 @@ Most apps need no code change. Check these:
 |---|---|
 | The published code is ES2020 (`??`, `?.`): Chrome 80, Firefox 72, Safari 13.1, Node 14 or newer | Nothing for current bundlers. A toolchain that cannot parse ES2020 (webpack 4 without Babel for `node_modules`) has to transpile the package. |
 | React 17 or newer is required | Upgrade React 16 apps first. |
-| `defaultFormatChars` and `extendedFormatChars` are frozen | Assigning a token to them throws. Spread them into your own map: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`. |
+| `defaultFormatChars` and `extendedFormatChars` are frozen | Assigning a token to them throws in strict code (ES modules) and is ignored in sloppy-mode scripts. Spread them into your own map: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`. |
 | `detectPhoneCountry` returns `undefined` instead of `null` | Replace `=== null` checks with a falsy check. |
 | Text from an input method (Android Gboard, CJK IMEs) is masked once, when it is committed | Components call `onChange` once per commit. With the hooks, your own `onChange` sees the raw text while composing, then the masked text. |
 

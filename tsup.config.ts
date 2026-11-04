@@ -14,7 +14,7 @@ const internalProps = [
   "lastEditablePosition", "slots", "fillingIndices", "fillingLengthAt", "maskUtils", "skipped", "getLast",
   "hasLegacyString", "getInputState", "setInputState", "getLastInputState", "getLastSelection",
   "getLastValue", "inputRef", "unbind", "hasSeparator", "thousand", "negative", "frac", "int", "caret", "raw",
-  "ranges", "lengths", "gaps"
+  "ranges", "lengths", "gaps", "asciiDigits"
 ];
 
 async function writeClientBoundaries(): Promise<void> {

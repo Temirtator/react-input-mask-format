@@ -8,7 +8,7 @@ import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
 import { useIsomorphicLayoutEffect } from "../utils/layout-effect";
 import { isTestDom } from "../utils/test-dom";
-import { toAsciiDigits } from "../utils/ascii-digits";
+import { toAsciiNumber } from "../utils/ascii-digits";
 
 export interface UseNumberFormatOptions extends NumberFormatOptions {
   onValueChange?: (values: NumberFormatValues) => void;
@@ -82,7 +82,7 @@ export function useNumberFormat(
       };
       const run = (inserted: boolean): void => {
         const opts = optionsRef.current;
-        const typed = readTyped(toAsciiDigits(el.value), el.selectionStart ?? el.value.length, opts, inserted);
+        const typed = readTyped(toAsciiNumber(el.value), el.selectionStart ?? el.value.length, opts, inserted);
         const digits = digitsBeforeCaret(typed.raw, typed.caret);
         const values = parseNumber(typed.raw, opts);
         setNativeValue(el, values.formattedValue);

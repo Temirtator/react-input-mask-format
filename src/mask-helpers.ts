@@ -1,17 +1,20 @@
 import MaskUtils from "./core/mask";
-import type { FormatChars, Mask } from "./types";
+import { resolveTransform } from "./utils/transform";
+import type { FormatChars, Mask, Transform } from "./types";
 
 export interface MaskHelperOptions {
   mask: Mask;
   maskPlaceholder?: string | null;
   formatChars?: FormatChars;
+  transform?: Transform;
 }
 
 function maskOf(options: MaskHelperOptions): MaskUtils {
   return new MaskUtils({
     mask: options.mask,
     maskPlaceholder: options.maskPlaceholder === undefined ? "_" : options.maskPlaceholder,
-    formatChars: options.formatChars
+    formatChars: options.formatChars,
+    transform: resolveTransform(options.transform)
   });
 }
 

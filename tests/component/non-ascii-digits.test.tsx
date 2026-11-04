@@ -27,7 +27,7 @@ describe("toAsciiDigits", () => {
 
 describe("formatters read Arabic-Indic, Persian and full-width digits", () => {
   it("number", () => {
-    expect(formatNumber("١٢٣٤٫", { thousandSeparator: "," })).toBe("1,234");
+    expect(formatNumber("١٢٣٤٫", { thousandSeparator: "," })).toBe("1,234.");
     expect(formatNumber("۱۲۳۴.۵", { thousandSeparator: "," })).toBe("1,234.5");
     expect(parseNumber("１２３４", {}).floatValue).toBe(1234);
   });
