@@ -218,6 +218,20 @@ const ref = useMask({ mask: "+7 (999) 999-99-99", maskPlaceholder: "_" });
 For a controlled input use `<InputMask>`. When the options change (e.g. the mask follows a country picker), the
 text already in the input is re-formatted right away, as with `<InputMask>`; `onChange` is not called for it.
 
+### Formatting and checking outside a field
+
+`formatMask(value, preset)` returns the text the field would show (`""` when nothing fills a slot), and
+`isMaskComplete(value, preset)` tells whether every slot is filled. Both take a preset or
+`{ mask, maskPlaceholder, formatChars }` and accept raw or formatted text:
+
+```ts
+import { formatMask, isMaskComplete } from "react-input-mask-format";
+import { kzPhone } from "react-input-mask-format/presets";
+
+formatMask("7011234567", kzPhone);          // "+7 (701) 123-45-67"
+isMaskComplete("+7 (701) 123-45-6_", kzPhone); // false
+```
+
 ## Presets
 
 Ready-made configs in a separate, tree-shakable entry point. Spread them into `<InputMask>`:
@@ -749,6 +763,19 @@ function onAmount({ floatValue }: NumberFormatValues) {
 ```
 
 ## Known issues
+
+### Values written by form libraries
+
+react-hook-form's `setValue` and `reset(values)` write `input.value` directly, without an event, so a field bound
+with `register` (`useMask`, the number, date, time and card fields) shows that text as it is until the next edit.
+Pass the formatted text yourself (`setValue("phone", formatMask(raw, kzPhone))`), or use `Controller`, which
+renders the value through the component. `useForm({ defaultValues })` is formatted on mount.
+
+### `required` with a visible template
+
+While the template is shown (`alwaysShowMask`, or a focused empty field with a prefix such as `+7 (`), the input's
+value is not empty, so the native `required` attribute does not reject it. Validate with
+`isMaskComplete(value, preset)` instead.
 
 ### Autofill
 
