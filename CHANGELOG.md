@@ -52,6 +52,9 @@
   moved the caret to the first empty slot. Only a selection of the whole value is kept: an empty field still
   gets the caret on its first slot, and a quick click, also one that moves the mouse a little and selects a few
   characters, still moves the caret there.
+- `NumberFormat`, `useNumberFormat` and `formatNumber` with `decimalScale: 0` ignore the decimal separator.
+  Before, a typed or pasted `.` stayed at the end (`12.`) and the next digits went nowhere until it was
+  deleted; now `12.` shows `12` and `1,234.56` becomes `1,234`.
 
 ## 2.13.0
 
