@@ -15,14 +15,35 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # npm >= 11.5.1 required for OIDC trusted publishing (node 22 ships npm 10)
-      - run: npm install -g npm@latest
+      - name: Check that the tag matches package.json
+        run: |
+          version="v$(node -p 'require("./package.json").version')"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json $version"
+            exit 1
+          fi
+      - name: Extract the release notes from CHANGELOG.md
+        run: |
+          awk -v heading="## ${GITHUB_REF_NAME#v}" '
+            $0 == heading { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "::error::CHANGELOG.md has no section for ${GITHUB_REF_NAME#v}"
+            exit 1
+          fi
+      # npm >= 11.5.1 is required for OIDC trusted publishing (node 22 ships npm 10)
+      - run: npm install -g npm@11
       - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
       - run: npm run test
+      - run: npm run build
+      - run: npx publint
+      - run: npm run size
       - run: npm publish --provenance --access public
-      # Create the matching GitHub Release from the pushed tag (gh is preinstalled
-      # on the runner). --generate-notes builds notes from PRs since the last tag.
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --latest --verify-tag
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md --latest --verify-tag
