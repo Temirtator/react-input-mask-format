@@ -43,6 +43,10 @@
   (`+1 (999) 999-9999`) now replaces the whole value, wherever the caret or selection is. Before, the country code was read as national digits at the caret
   (`+7 (701) ___-__-__` + paste `+7 701 234 56 78` → `+7 (701) 770-12-34`); now it gives `+7 (701) 234-56-78`.
   A number with digits missing is still inserted at the caret, and typing is unchanged.
+- Masked inputs inside a shadow root (web components) work. Focus was checked against
+  `document.activeElement`, which is the shadow host there, so `<InputMask>` and `useMask` dropped typed
+  characters and moved the caret to the end; `./date`, `./time`, `./card` and `./number` lost their caret
+  placement. Focus is now checked against the input's own root.
 
 ## 2.13.0
 
