@@ -165,15 +165,15 @@
     },
     {
       "path": "dist/time.js",
-      "limit": "2 KB"
-    },
-    {
-      "path": "dist/date.js",
       "limit": "2.5 KB"
     },
     {
-      "path": "dist/card.js",
+      "path": "dist/date.js",
       "limit": "3 KB"
+    },
+    {
+      "path": "dist/card.js",
+      "limit": "3.5 KB"
     }
   ],
   "scripts": {
