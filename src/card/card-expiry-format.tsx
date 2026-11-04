@@ -11,10 +11,10 @@ export interface CardExpiryFormatProps
   onValueChange?: (values: CardExpiryValues) => void;
 }
 
-export const CardExpiryFormat = cardInput<CardExpiryOptions, CardExpiryValues, CardExpiryFormatProps>(
+export const CardExpiryFormat = /* @__PURE__ */ cardInput<CardExpiryOptions, CardExpiryValues, CardExpiryFormatProps>(
+  "CardExpiryFormat",
   cardExpiryKind,
   "separator",
   "cc-exp"
 );
 
-CardExpiryFormat.displayName = "CardExpiryFormat";

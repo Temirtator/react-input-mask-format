@@ -1,8 +1,8 @@
 import * as React from "react";
-import { forwardRef } from "react";
 import type { DateFormatOptions, DateFormatValues } from "./types";
 import { dateKind } from "./use-date-format";
 import { useDigitInput } from "../utils/digit-format";
+import { component } from "../utils/component";
 
 export interface DateFormatProps
   extends DateFormatOptions,
@@ -12,7 +12,7 @@ export interface DateFormatProps
   onValueChange?: (values: DateFormatValues) => void;
 }
 
-export const DateFormat = forwardRef<HTMLInputElement, DateFormatProps>(function DateFormat(
+export const DateFormat = /* @__PURE__ */ component<HTMLInputElement, DateFormatProps>("DateFormat", function DateFormat(
   props,
   forwardedRef
 ) {
@@ -29,4 +29,3 @@ export const DateFormat = forwardRef<HTMLInputElement, DateFormatProps>(function
   return <input inputMode="numeric" {...domProps} {...input} />;
 });
 
-DateFormat.displayName = "DateFormat";
