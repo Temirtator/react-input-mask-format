@@ -105,6 +105,10 @@
   already empty leaves the caret there, and once everything is deleted the caret goes back to the first slot.
 - Delete in front of fixed characters at the end of the mask (`12| kg` with `99 kg`) does nothing. Before, it
   cleared the first slot (`_2 kg`).
+- Browser autofill into a masked field that the user had visited and left empty (so it was cleared on blur) gives
+  the right value. Before, the caret position from the earlier visit was used for the new text:
+  `+77012345678` became `+7 (723) 456-78-__` or `+7 (7__) ___-__-__`, and a date `12/05/2024` became
+  `20/24/____`. A caret that starts beyond the end of the previous value is now treated as unknown.
 
 ### Internal
 - React StrictMode tests for `useMask`, `./number`, `./time`, `./date` and `./card` components and hooks, and more

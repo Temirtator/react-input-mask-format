@@ -40,3 +40,14 @@ describe("resolveStaleSelection widens a stale selection to the whole value", ()
     });
   });
 });
+
+describe("resolveStaleSelection with a caret outside the previous value", () => {
+  it("reads a value autofilled into a field emptied on blur as a whole replacement", () => {
+    const resolved = resolveStaleSelection(
+      { value: "", selection: { start: 5, end: 5, length: 0 } },
+      { value: "+77012345678", selection: { start: 12, end: 12, length: 0 } }
+    );
+    expect(resolved.previous.selection).toEqual({ start: 0, end: 0, length: 0 });
+    expect(resolved.current.selection).toEqual({ start: 12, end: 12, length: 0 });
+  });
+});
