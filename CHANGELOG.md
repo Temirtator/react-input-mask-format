@@ -15,6 +15,8 @@
   international `+…` or `00…` number, `+7` split into Kazakhstan and Russia) in `react-input-mask-format/presets`,
   with a README recipe for a phone field with a country picker that switches when another country's number is
   pasted.
+- `valueIsNumericString` on `NumberFormat`: a string `value` is read as a canonical number (`"1234.5"`) whatever
+  `thousandSeparator` and `decimalSeparator` are, as in react-number-format.
 
 ### Changed
 - `DateFormat` and `TimeFormat` render `inputMode="numeric"` by default, like the card components, so phones show
@@ -52,9 +54,21 @@
   moved the caret to the first empty slot. Only a selection of the whole value is kept: an empty field still
   gets the caret on its first slot, and a quick click, also one that moves the mouse a little and selects a few
   characters, still moves the caret there.
+- `NumberFormat` and `useNumberFormat`: a typed decimal separator puts the caret right after the separator in the
+  result, so with `fixedDecimalScale` `1234.5` gives `1,234.50` (before: `12,345.00`, the caret stayed in front
+  of `.00`), `.5` in an empty field gives `0.5` (before: `50.`), and a separator typed into the integer part or
+  in front of an existing one moves the caret into the fraction. Deleting never steps over the separator, so
+  holding Backspace from the end of `1,234.00` walks into the integer part.
+- `NumberFormat` with a `decimalSeparator` other than `.`: passing the `value` from `onValueChange` back as the
+  `value` prop no longer re-reads its `.` as a thousands mark (`12,5` stayed, but with `fixedDecimalScale` typing
+  `12` showed `1 200,00`).
+- `NumberFormat` re-formats when its options change. Before, a controlled field kept showing the text formatted
+  with the old options (a `prefix` switched from `$ ` to `€ ` still showed `$ 12`). The text being edited is
+  kept, also when an option changes in the same render as the edit (a suffix that depends on the value).
 - `NumberFormat`, `useNumberFormat` and `formatNumber` with `decimalScale: 0` ignore the decimal separator.
   Before, a typed or pasted `.` stayed at the end (`12.`) and the next digits went nowhere until it was
-  deleted; now `12.` shows `12` and `1,234.56` becomes `1,234`.
+  deleted; now `12.` shows `12`, a pasted `1,234.56` becomes `1,234`, and a `.` typed in the middle of
+  `1,234` changes nothing.
 
 ## 2.13.0
 
