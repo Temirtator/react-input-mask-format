@@ -6,9 +6,7 @@ import type { InputState } from "./types";
 import { getInputSelection, setInputSelection, isInputFocused } from "./utils/input";
 import { setNativeValue } from "./set-native-value";
 import { defer } from "./utils/defer";
-
-const IS_JSDOM =
-  typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom");
+import { isTestDom } from "./utils/test-dom";
 
 export interface MaskController {
   bind(input: HTMLInputElement): void;
@@ -44,7 +42,7 @@ export function createMaskController(config: MaskConfig): MaskController {
     // delegated onChange listener runs, permanently suppressing onChange (verified
     // by the real-Chrome e2e). Real browsers read the live DOM value and need no
     // resync, so the gate is correct, not a workaround-hiding hack.
-    if (IS_JSDOM) {
+    if (process.env.NODE_ENV !== "production" && isTestDom()) {
       const resyncValue = value;
       queueMicrotask(() => {
         if (!input || input.value !== resyncValue) return;
