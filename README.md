@@ -9,7 +9,10 @@ country packs (Kazakhstan, Russia, Uzbekistan, Kyrgyzstan, Belarus, Tajikistan, 
 postal codes for Georgia, Moldova, Ukraine, Turkmenistan). A maintained
 fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 
-**[Live demo](https://temirtator.github.io/react-input-mask-format/)** (with a playground to try any mask) · **[Changelog](CHANGELOG.md)**
+**[Live demo](https://temirtator.github.io/react-input-mask-format/)** (with a playground to try any mask) ·
+**[Open in StackBlitz](https://stackblitz.com/github/Temirtator/react-input-mask-format/tree/master/examples/basic)**
+(a ready Vite + React project with presets, react-hook-form and the number, date and card fields) ·
+**[Changelog](CHANGELOG.md)**
 
 ## Installation
 

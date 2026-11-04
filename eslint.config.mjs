@@ -6,7 +6,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist", "dist-demo", "lib", "node_modules", "test-results", "playwright-report",
-      "*.config.js", "eslint.config.mjs", "smoke"
+      "*.config.js", "eslint.config.mjs", "smoke", "examples"
     ]
   },
   js.configs.recommended,
