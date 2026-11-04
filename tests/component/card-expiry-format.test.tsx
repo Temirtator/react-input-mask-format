@@ -38,6 +38,7 @@ describe("CardExpiryFormat", () => {
     expect(onValueChange.mock.calls.at(-1)?.[0]).toEqual({
       value: "12/26",
       formattedValue: "12/26",
+      complete: true,
       month: 12,
       year: 2026,
     });

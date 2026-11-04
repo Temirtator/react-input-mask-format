@@ -418,7 +418,7 @@ empty field, the country code is read as the operator code, as with `uzPhone`; p
 
 `phonePresets` maps ISO codes (`KZ`, `RU`, `UZ`, `KG`, `BY`, `TJ`, `AM`, `AZ`, `GE`, `MD`, `UA`, `TM`) to the
 phone presets. `detectPhoneCountry(text)` reads the country from an international number that starts with `+`
-or `00` (`+7 701…` → `KZ`, `+7 912…` → `RU`, `+998…` → `UZ`) and returns `null` for anything else, including
+or `00` (`+7 701…` → `KZ`, `+7 912…` → `RU`, `+998…` → `UZ`) and returns `undefined` for anything else, including
 domestic numbers. Together they switch the mask when a number of another country is pasted:
 
 ```tsx
@@ -570,11 +570,11 @@ import { TimeFormat, useTimeFormat, formatTime, parseTime } from "react-input-ma
 const ref = useTimeFormat({ onValueChange: (v) => setTime(v.value) }); // <input ref={ref} />
 
 formatTime("2999");  // "23:59"
-parseTime("14:30");  // { value: "14:30", formattedValue: "14:30", hours: 14, minutes: 30 }
+parseTime("14:30");  // { value: "14:30", formattedValue: "14:30", complete: true, hours: 14, minutes: 30 }
 ```
 
-- `onValueChange` receives `{ value, formattedValue, hours, minutes }`. `value` is `""` until the time is
-  complete and always uses `:`, whatever the `separator` option (default `:`).
+- `onValueChange` receives `{ value, formattedValue, complete, hours, minutes }`. `value` is `""` until the time
+  is complete and always uses `:`, whatever the `separator` option (default `:`).
 - Complete hours are clamped to ≤ 23, complete minutes to ≤ 59; a single digit is never clamped.
 - Backspace right after the separator in a full time deletes the hour digit before it (`12:|30` → `13:0`);
   Delete right before it deletes the minute digit after it.
@@ -597,13 +597,14 @@ const ref = useDateFormat({ order: "ymd", separator: "-" }); // <input ref={ref}
 
 formatDate("12052024");    // "12.05.2024"
 formatDate("2024-05-12");  // "12.05.2024"
-parseDate("12.05.2024");   // { value: "2024-05-12", formattedValue: "12.05.2024", day: 12, month: 5, year: 2024 }
+parseDate("12.05.2024");   // { value: "2024-05-12", formattedValue: "12.05.2024", complete: true, day: 12, month: 5, year: 2024 }
 ```
 
 - `order` is `"dmy"` (default), `"mdy"` or `"ymd"`; `separator` defaults to `.`.
-- `onValueChange` receives `{ value, formattedValue, day, month, year }`. `value` is the ISO `YYYY-MM-DD`
-  date, whatever `order` and `separator` are, and is `""` until the date is complete and exists:
-  `31.04.2024` and `29.02.2023` keep their parts but have no `value`.
+- `onValueChange` receives `{ value, formattedValue, complete, day, month, year }`. `value` is the ISO
+  `YYYY-MM-DD` date, whatever `order` and `separator` are, and is `""` until the date is complete and exists:
+  `31.04.2024` and `29.02.2023` keep their parts but have no `value`. `complete` is `true` once every digit is
+  typed, so `complete && !value` means "a date that does not exist".
 - A day is clamped to 01–31 and a month to 01–12 when a key completes it, or when the whole value is set,
   pasted or autofilled; a single digit is never clamped and the year is not clamped. Typing a later field
   never changes an earlier one.
@@ -661,7 +662,7 @@ parseCardNumber("4111 1111 1111 1111"); // { value: "4111111111111111", formatte
                                         //   brand: "visa", complete: true, valid: true }
 detectCardBrand("2200");                // "mir"
 formatCardExpiry("12/2026");            // "12/26"
-parseCardExpiry("12/26");               // { value: "12/26", formattedValue: "12/26", month: 12, year: 2026 }
+parseCardExpiry("12/26");               // { value: "12/26", formattedValue: "12/26", complete: true, month: 12, year: 2026 }
 isCardExpired(10, 2026, new Date(2026, 9, 31)); // false: valid through the last day of the month
 formatCardCvc("12345", { brand: "amex" });      // "1234"
 ```
@@ -698,7 +699,7 @@ const icons: Partial<Record<CardBrand, string>> = { visa: "/icons/visa.svg", mir
 - Typing or pasting past the brand's longest length drops the extra digits. Backspace right after a group
   separator deletes the digit before it and regroups (`4111 |1111` → `4111 111`).
 - Expiry: `value` is `MM/YY` with `/` whatever the `separator` option (default `/`), and `""` until month and
-  year are complete. The month is clamped to 01–12 when a key completes it; the year is not clamped, and
+  year are complete; `complete` says the same. The month is clamped to 01–12 when a key completes it; the year is not clamped, and
   `year` is `2000 + YY`. A pasted or autofilled `12/2026` or `1/26` lands in the right fields.
   `isCardExpired(month, year, now = new Date())` uses local time.
 - CVC: 4 digits for `amex`, otherwise 3 (also when `brand` is undefined). When `brand` changes from `amex`
@@ -782,12 +783,12 @@ command. Call `.type()` directly, use `.click()` instead of `.focus()`, or add `
 ### react-hook-form: `InputMask` with `Controller`
 
 `InputMask` is controlled, so use `Controller` and spread `field` onto it. `field.ref` reaches the input,
-so focus-on-error and `setFocus` work. A mask with a placeholder keeps `_` in an incomplete value, which
+so focus-on-error and `setFocus` work. `isMaskComplete(value, preset)` tells whether every slot is filled, which
 makes a one-line `validate` enough (add `required` for the empty value); for documents add the checksum validator.
 
 ```tsx
 import { useForm, Controller } from "react-hook-form";
-import InputMask from "react-input-mask-format";
+import InputMask, { isMaskComplete } from "react-input-mask-format";
 import { kzPhone, kzIin } from "react-input-mask-format/presets";
 import { isValidIin } from "react-input-mask-format/validators";
 
@@ -802,7 +803,7 @@ function Form({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
         control={control}
         rules={{
           required: "Enter a phone",
-          validate: (v) => !v.includes("_") || "Enter the full number",
+          validate: (v) => isMaskComplete(v, kzPhone) || "Enter the full number",
         }}
         render={({ field, fieldState }) => (
           <>
@@ -837,14 +838,14 @@ every ref change, so the mask survives re-renders from `formState`.
 
 ```tsx
 import { useForm } from "react-hook-form";
-import { useMask } from "react-input-mask-format";
+import { useMask, isMaskComplete } from "react-input-mask-format";
 import { kzPhone } from "react-input-mask-format/presets";
 
 function Form({ onSubmit }: { onSubmit: (data: { phone: string }) => void }) {
   const { register, handleSubmit, formState } = useForm<{ phone: string }>();
   const { ref, ...rest } = register("phone", {
     required: "Enter a phone",
-    validate: (v) => !v.includes("_") || "Enter the full number",
+    validate: (v) => isMaskComplete(v, kzPhone) || "Enter the full number",
   });
   const maskRef = useMask(kzPhone);
   return (

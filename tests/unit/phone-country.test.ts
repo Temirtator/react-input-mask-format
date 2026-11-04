@@ -39,11 +39,11 @@ describe("detectPhoneCountry", () => {
     "",
     "phone: +77012345678"
   ])("does not guess from %s", value => {
-    expect(detectPhoneCountry(value)).toBeNull();
+    expect(detectPhoneCountry(value)).toBeUndefined();
   });
 
   it.each([null, undefined])("handles %s", value => {
-    expect(detectPhoneCountry(value as unknown as string)).toBeNull();
+    expect(detectPhoneCountry(value as unknown as string)).toBeUndefined();
   });
 });
 
