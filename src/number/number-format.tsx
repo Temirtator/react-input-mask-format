@@ -1,5 +1,5 @@
 import * as React from "react";
-import { forwardRef, useReducer, useRef } from "react";
+import { forwardRef, useEffect, useReducer, useRef } from "react";
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
 import { formatNumber, formatCanonical } from "./format-number";
 import { parseNumber, digitsBeforeCaret, resolveCaret, readTyped } from "./parse-number";
@@ -9,8 +9,9 @@ import { useIsomorphicLayoutEffect } from "../utils/layout-effect";
 
 export interface NumberFormatProps
   extends NumberFormatOptions,
-    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "prefix"> {
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "defaultValue" | "prefix"> {
   value?: string | number;
+  defaultValue?: string | number;
   valueIsNumericString?: boolean;
   onValueChange?: (values: NumberFormatValues) => void;
   isAllowed?: (values: NumberFormatValues) => boolean;
@@ -21,9 +22,11 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
   forwardedRef
 ) {
   const {
-    value = "",
+    value: valueProp,
+    defaultValue,
     valueIsNumericString,
     onValueChange,
+    onChange,
     isAllowed,
     thousandSeparator,
     decimalSeparator,
@@ -69,6 +72,25 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
   // node's committed value is updated and nothing gets restored away.
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
 
+  const controlledRef = useRef(false);
+  if (valueProp !== undefined) controlledRef.current = true;
+  const uncontrolled = !controlledRef.current;
+  const value = uncontrolled ? (defaultValue ?? "") : (valueProp ?? "");
+
+  useEffect(() => {
+    const form = innerRef.current && innerRef.current.form;
+    if (!form) return;
+    const root = form.getRootNode();
+    const reset = (event: Event): void => {
+      if (event.target === form && !event.defaultPrevented && !controlledRef.current) {
+        lastValuesRef.current = null;
+        forceUpdate();
+      }
+    };
+    root.addEventListener("reset", reset);
+    return () => root.removeEventListener("reset", reset);
+  });
+
   // Controlled display: normally derive the shown string from the `value` prop.
   // BUT when the prop is numerically equal to the values we last emitted via
   // onValueChange (the consumer echoing back e.g. floatValue), keep the exact
@@ -92,7 +114,7 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
   }
   const last = lastValuesRef.current;
   const formatted =
-    last !== null && (propFloatValue === last.floatValue || value === last.value)
+    last !== null && (uncontrolled || propFloatValue === last.floatValue || value === last.value)
       ? last.formattedValue
       : typeof value === "string" && numeric
         ? formatCanonical(value, options)
@@ -129,6 +151,10 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
     lastValuesRef.current = values;
     forceUpdate();
     onValueChange?.(values);
+    if (onChange) {
+      el.value = values.formattedValue;
+      onChange(event);
+    }
   }
 
   // After a controlled re-render, restore the caret we computed in onChange
@@ -138,6 +164,13 @@ export const NumberFormat = forwardRef<HTMLInputElement, NumberFormatProps>(func
     if (el && caretRef.current !== null && isInputFocused(el)) {
       setInputSelection(el, caretRef.current, caretRef.current);
       caretRef.current = null;
+    }
+    if (el && uncontrolled && caretRef.current === null && el.value !== lastFormattedRef.current && el.selectionStart !== null) {
+      const adopted = parseNumber(el.value, options);
+      if (adopted.formattedValue !== lastFormattedRef.current) {
+        lastValuesRef.current = adopted;
+        forceUpdate();
+      }
     }
   });
 

@@ -209,7 +209,8 @@ export function useDigitInput<O, V extends DigitValues>(
   options: O,
   onValueChange: ((values: V) => void) | undefined,
   forwardedRef: React.ForwardedRef<HTMLInputElement>,
-  defaultValue?: string
+  defaultValue?: string,
+  onInputChange?: React.ChangeEventHandler<HTMLInputElement>
 ): {
   ref: (el: HTMLInputElement | null) => void;
   value: string;
@@ -226,14 +227,16 @@ export function useDigitInput<O, V extends DigitValues>(
 
   useEffect(() => {
     const form = innerRef.current && innerRef.current.form;
-    const reset = (): void => {
-      if (uncontrolledRef.current) {
+    if (!form) return;
+    const root = form.getRootNode();
+    const reset = (event: Event): void => {
+      if (event.target === form && !event.defaultPrevented && uncontrolledRef.current) {
         lastValuesRef.current = null;
         forceUpdate();
       }
     };
-    form?.addEventListener("reset", reset);
-    return () => form?.removeEventListener("reset", reset);
+    root.addEventListener("reset", reset);
+    return () => root.removeEventListener("reset", reset);
   });
 
   const last = lastValuesRef.current;
@@ -266,6 +269,10 @@ export function useDigitInput<O, V extends DigitValues>(
     lastOptionsRef.current = options;
     forceUpdate();
     onValueChange?.(values);
+    if (onInputChange) {
+      el.value = values.formattedValue;
+      onInputChange(event);
+    }
   }
 
   useIsomorphicLayoutEffect(() => {
@@ -282,6 +289,14 @@ export function useDigitInput<O, V extends DigitValues>(
     if (el && caretRef.current !== null && isInputFocused(el)) {
       setInputSelection(el, caretRef.current);
       caretRef.current = null;
+    }
+    if (el && value === undefined && caretRef.current === null && el.value !== formatted && el.selectionStart !== null) {
+      const adopted = kind.parse(el.value, options, "", 0);
+      if (adopted.formattedValue !== formatted) {
+        lastValuesRef.current = adopted;
+        lastOptionsRef.current = options;
+        forceUpdate();
+      }
     }
   });
 

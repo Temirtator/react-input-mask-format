@@ -6,7 +6,7 @@ import { useDigitInput } from "../utils/digit-format";
 
 export interface DateFormatProps
   extends DateFormatOptions,
-    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "defaultValue"> {
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "defaultValue"> {
   value?: string;
   defaultValue?: string;
   onValueChange?: (values: DateFormatValues) => void;
@@ -16,8 +16,16 @@ export const DateFormat = forwardRef<HTMLInputElement, DateFormatProps>(function
   props,
   forwardedRef
 ) {
-  const { value, defaultValue, onValueChange, order, separator, ...domProps } = props;
-  const input = useDigitInput(dateKind, value, { order, separator }, onValueChange, forwardedRef, defaultValue);
+  const { value, defaultValue, onValueChange, onChange, order, separator, ...domProps } = props;
+  const input = useDigitInput(
+    dateKind,
+    value,
+    { order, separator },
+    onValueChange,
+    forwardedRef,
+    defaultValue,
+    onChange
+  );
   return <input inputMode="numeric" {...domProps} {...input} />;
 });
 
