@@ -15,7 +15,8 @@ const cases = [
 ];
 
 for (const c of cases) {
-  test(`${c.id}: a selection made on focus survives the click on a partly filled value`, async ({ page }) => {
+  test(`${c.id}: a selection made on focus survives the click on a partly filled value`, async ({ page, browserName }) => {
+    test.fixme(browserName === "webkit", "WebKit collapses a select() made on focus at the following mouseup (issue #78)");
     await page.goto("/");
     const input = page.getByTestId(c.id);
     await input.click();
