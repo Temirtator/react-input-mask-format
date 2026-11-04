@@ -130,12 +130,13 @@ export function useDigitFormat<O, V extends DigitValues>(
   const handlerRef = useRef<((event: Event) => void) | null>(null);
   const previousRef = useRef("");
   const appliedRef = useRef(options);
+  const composingRef = useRef(false);
 
   useIsomorphicLayoutEffect(() => {
     const applied = appliedRef.current;
     appliedRef.current = options;
     const el = inputRef.current;
-    if (!el || sameOptions(options, applied)) return;
+    if (!el || composingRef.current || sameOptions(options, applied)) return;
     const source = kind.parse(el.value, applied, "", 0).value || el.value;
     const values = kind.parse(source, options, "", 0);
     if (values.formattedValue === el.value) return;
@@ -151,7 +152,37 @@ export function useDigitFormat<O, V extends DigitValues>(
   return useCallback((el: HTMLInputElement | null) => {
     if (el) {
       previousRef.current = el.value;
+      let dispatching = false;
+      let composed = false;
       const handler = (event: Event): void => {
+        if (event.type === "compositionstart") {
+          composingRef.current = true;
+          return;
+        }
+        if (event.type === "compositionend" || event.type === "blur") {
+          if (event.type === "blur" && !composingRef.current) return;
+          composingRef.current = false;
+          if (el.value === previousRef.current) return;
+          run(false);
+          composed = true;
+          dispatching = true;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          dispatching = false;
+          return;
+        }
+        if (dispatching) return;
+        if ((event as InputEvent).isComposing) {
+          composingRef.current = true;
+          return;
+        }
+        composingRef.current = false;
+        if (composed) {
+          composed = false;
+          if (el.value === previousRef.current) return;
+        }
+        run((event as InputEvent).inputType === "deleteContentForward");
+      };
+      const run = (forward: boolean): void => {
         const opts = optionsRef.current;
         const separator = kind.separator(opts);
         const previous = previousRef.current;
@@ -159,7 +190,7 @@ export function useDigitFormat<O, V extends DigitValues>(
           collapseTrailingSeparator(el.value, previous, separator),
           previous,
           el.selectionStart ?? el.value.length,
-          (event as InputEvent).inputType === "deleteContentForward"
+          forward
         );
         const digits = digitsBeforeCaret(raw, caret);
         const values = kind.parse(raw, opts, previous, digits);
@@ -185,6 +216,9 @@ export function useDigitFormat<O, V extends DigitValues>(
         opts.onValueChange?.(values);
       };
       el.addEventListener("input", handler);
+      el.addEventListener("compositionstart", handler);
+      el.addEventListener("compositionend", handler);
+      el.addEventListener("blur", handler);
       handlerRef.current = handler;
       inputRef.current = el;
       if (el.value) {
@@ -194,6 +228,9 @@ export function useDigitFormat<O, V extends DigitValues>(
     } else {
       if (inputRef.current && handlerRef.current) {
         inputRef.current.removeEventListener("input", handlerRef.current);
+        inputRef.current.removeEventListener("compositionstart", handlerRef.current);
+        inputRef.current.removeEventListener("compositionend", handlerRef.current);
+        inputRef.current.removeEventListener("blur", handlerRef.current);
       }
       inputRef.current = null;
       handlerRef.current = null;
@@ -208,11 +245,15 @@ export function useDigitInput<O, V extends DigitValues>(
   onValueChange: ((values: V) => void) | undefined,
   forwardedRef: React.ForwardedRef<HTMLInputElement>,
   defaultValue?: string,
-  onInputChange?: React.ChangeEventHandler<HTMLInputElement>
+  onInputChange?: React.ChangeEventHandler<HTMLInputElement>,
+  events?: Pick<React.InputHTMLAttributes<HTMLInputElement>, "onCompositionStart" | "onCompositionEnd" | "onBlur">
 ): {
   ref: (el: HTMLInputElement | null) => void;
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onCompositionStart: (event: React.CompositionEvent<HTMLInputElement>) => void;
+  onCompositionEnd: (event: React.CompositionEvent<HTMLInputElement>) => void;
+  onBlur: (event: React.FocusEvent<HTMLInputElement>) => void;
 } {
   const innerRef = useRef<HTMLInputElement | null>(null);
   const caretRef = useRef<number | null>(null);
@@ -222,6 +263,9 @@ export function useDigitInput<O, V extends DigitValues>(
   uncontrolledRef.current = value === undefined;
 
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
+  const composingRef = useRef(false);
+  const composingTextRef = useRef<string | null>(null);
+  const composedRef = useRef(false);
 
   useEffect(() => {
     const form = innerRef.current && innerRef.current.form;
@@ -250,12 +294,54 @@ export function useDigitInput<O, V extends DigitValues>(
 
   function onChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const el = event.target;
+    if ((event.nativeEvent as InputEvent).isComposing) {
+      composingRef.current = true;
+      composingTextRef.current = el.value;
+      forceUpdate();
+      return;
+    }
+    composingRef.current = false;
+    composingTextRef.current = null;
+    if (composedRef.current) {
+      composedRef.current = false;
+      if (el.value === formatted) return;
+    }
+    apply(event, (event.nativeEvent as InputEvent).inputType === "deleteContentForward");
+  }
+
+  function onCompositionStart(event: React.CompositionEvent<HTMLInputElement>): void {
+    composingRef.current = true;
+    events?.onCompositionStart?.(event);
+  }
+
+  function endComposition(event: React.SyntheticEvent<HTMLInputElement>): void {
+    composingRef.current = false;
+    composingTextRef.current = null;
+    if (event.currentTarget.value !== formatted) {
+      composedRef.current = true;
+      apply(event, false);
+    }
+    forceUpdate();
+  }
+
+  function onCompositionEnd(event: React.CompositionEvent<HTMLInputElement>): void {
+    endComposition(event);
+    events?.onCompositionEnd?.(event);
+  }
+
+  function onBlur(event: React.FocusEvent<HTMLInputElement>): void {
+    if (composingRef.current) endComposition(event);
+    events?.onBlur?.(event);
+  }
+
+  function apply(event: React.SyntheticEvent<HTMLInputElement>, forward: boolean): void {
+    const el = event.currentTarget;
     const separator = kind.separator(options);
     const { raw, caret } = deleteAcrossSeparator(
       collapseTrailingSeparator(el.value, formatted, separator),
       formatted,
       el.selectionStart ?? el.value.length,
-      (event.nativeEvent as InputEvent).inputType === "deleteContentForward"
+      forward
     );
     const digits = digitsBeforeCaret(raw, caret);
     const values = kind.parse(raw, options, formatted, digits);
@@ -269,7 +355,7 @@ export function useDigitInput<O, V extends DigitValues>(
     onValueChange?.(values);
     if (onInputChange) {
       el.value = values.formattedValue;
-      onInputChange(event);
+      onInputChange(event as React.ChangeEvent<HTMLInputElement>);
     }
   }
 
@@ -288,7 +374,14 @@ export function useDigitInput<O, V extends DigitValues>(
       setInputSelection(el, caretRef.current);
       caretRef.current = null;
     }
-    if (el && value === undefined && caretRef.current === null && el.value !== formatted && el.selectionStart !== null) {
+    if (
+      el &&
+      value === undefined &&
+      !composingRef.current &&
+      caretRef.current === null &&
+      el.value !== formatted &&
+      el.selectionStart !== null
+    ) {
       const adopted = kind.parse(el.value, options, "", 0);
       if (adopted.formattedValue !== formatted) {
         lastValuesRef.current = adopted;
@@ -305,5 +398,5 @@ export function useDigitInput<O, V extends DigitValues>(
       (forwardedRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
   }
 
-  return { ref, value: formatted, onChange };
+  return { ref, value: composingTextRef.current ?? formatted, onChange, onCompositionStart, onCompositionEnd, onBlur };
 }

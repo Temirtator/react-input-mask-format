@@ -24,7 +24,8 @@ export const DateFormat = /* @__PURE__ */ component<HTMLInputElement, DateFormat
     onValueChange,
     forwardedRef,
     defaultValue,
-    onChange
+    onChange,
+    domProps
   );
   return <input inputMode="numeric" {...domProps} {...input} />;
 });
