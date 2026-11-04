@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from "react";
-import type React from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
+import type * as React from "react";
 import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "./input";
+import { useIsomorphicLayoutEffect } from "./layout-effect";
+import { isTestDom } from "./test-dom";
 
 export interface DigitValues {
   value: string;
@@ -117,9 +119,6 @@ function placeCaret(
   }
 }
 
-const IS_JSDOM =
-  typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom");
-
 export function useDigitFormat<O, V extends DigitValues>(
   kind: DigitFormatKind<O, V>,
   options: O & { onValueChange?: (values: V) => void }
@@ -132,7 +131,7 @@ export function useDigitFormat<O, V extends DigitValues>(
   const previousRef = useRef("");
   const appliedRef = useRef(options);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const applied = appliedRef.current;
     appliedRef.current = options;
     const el = inputRef.current;
@@ -176,7 +175,7 @@ export function useDigitFormat<O, V extends DigitValues>(
         // listeners, so this write would fight React; real browsers read the live
         // DOM and need no resync. onValueChange (below) is called directly, not via
         // React's tracker, so it is unaffected in either environment.
-        if (IS_JSDOM) {
+        if (process.env.NODE_ENV !== "production" && isTestDom()) {
           queueMicrotask(() => {
             if (el.value !== values.formattedValue) return;
             el.value = values.formattedValue;
@@ -208,7 +207,8 @@ export function useDigitInput<O, V extends DigitValues>(
   options: O,
   onValueChange: ((values: V) => void) | undefined,
   forwardedRef: React.ForwardedRef<HTMLInputElement>,
-  defaultValue?: string
+  defaultValue?: string,
+  onInputChange?: React.ChangeEventHandler<HTMLInputElement>
 ): {
   ref: (el: HTMLInputElement | null) => void;
   value: string;
@@ -225,14 +225,16 @@ export function useDigitInput<O, V extends DigitValues>(
 
   useEffect(() => {
     const form = innerRef.current && innerRef.current.form;
-    const reset = (): void => {
-      if (uncontrolledRef.current) {
+    if (!form) return;
+    const root = form.getRootNode();
+    const reset = (event: Event): void => {
+      if (event.target === form && !event.defaultPrevented && uncontrolledRef.current) {
         lastValuesRef.current = null;
         forceUpdate();
       }
     };
-    form?.addEventListener("reset", reset);
-    return () => form?.removeEventListener("reset", reset);
+    root.addEventListener("reset", reset);
+    return () => root.removeEventListener("reset", reset);
   });
 
   const last = lastValuesRef.current;
@@ -265,9 +267,13 @@ export function useDigitInput<O, V extends DigitValues>(
     lastOptionsRef.current = options;
     forceUpdate();
     onValueChange?.(values);
+    if (onInputChange) {
+      el.value = values.formattedValue;
+      onInputChange(event);
+    }
   }
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!echo) lastValuesRef.current = null;
     const shown = shownRef.current;
     shownRef.current = { options, text: formatted };
@@ -281,6 +287,14 @@ export function useDigitInput<O, V extends DigitValues>(
     if (el && caretRef.current !== null && isInputFocused(el)) {
       setInputSelection(el, caretRef.current);
       caretRef.current = null;
+    }
+    if (el && value === undefined && caretRef.current === null && el.value !== formatted && el.selectionStart !== null) {
+      const adopted = kind.parse(el.value, options, "", 0);
+      if (adopted.formattedValue !== formatted) {
+        lastValuesRef.current = adopted;
+        lastOptionsRef.current = options;
+        forceUpdate();
+      }
     }
   });
 

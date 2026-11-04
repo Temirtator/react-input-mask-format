@@ -1,4 +1,5 @@
-import React, { forwardRef } from "react";
+import * as React from "react";
+import { forwardRef } from "react";
 import { useDigitInput } from "../utils/digit-format";
 import type { DigitFormatKind, DigitValues } from "../utils/digit-format";
 
@@ -12,16 +13,23 @@ export function cardInput<O, V extends DigitValues, P>(
       value,
       defaultValue,
       onValueChange,
+      onChange,
       [option]: setting,
       ...domProps
-    } = props as P & { value?: string; defaultValue?: string; onValueChange?: (values: V) => void };
+    } = props as P & {
+      value?: string;
+      defaultValue?: string;
+      onValueChange?: (values: V) => void;
+      onChange?: React.ChangeEventHandler<HTMLInputElement>;
+    };
     const input = useDigitInput(
       kind,
       value,
       { [option]: setting } as O,
       onValueChange,
       forwardedRef,
-      defaultValue
+      defaultValue,
+      onChange
     );
     return <input inputMode="numeric" autoComplete={autoComplete} {...domProps} {...input} />;
   });

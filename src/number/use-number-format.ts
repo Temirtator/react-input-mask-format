@@ -1,18 +1,17 @@
 import { useRef, useCallback } from "react";
-import type React from "react";
+import type * as React from "react";
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
-import { formatNumber } from "./format-number";
+import { formatCanonical, formatNumber } from "./format-number";
 import { parseNumber, digitsBeforeCaret, resolveCaret, readTyped } from "./parse-number";
 import { setNativeValue } from "../set-native-value";
 import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
+import { useIsomorphicLayoutEffect } from "../utils/layout-effect";
+import { isTestDom } from "../utils/test-dom";
 
 export interface UseNumberFormatOptions extends NumberFormatOptions {
   onValueChange?: (values: NumberFormatValues) => void;
 }
-
-const IS_JSDOM =
-  typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom");
 
 export function useNumberFormat(
   options: UseNumberFormatOptions
@@ -24,10 +23,30 @@ export function useNumberFormat(
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handlerRef = useRef<((event: Event) => void) | null>(null);
+  const shownRef = useRef("");
+  const shownOptionsRef = useRef(options);
+
+  useIsomorphicLayoutEffect(() => {
+    const previous = shownOptionsRef.current;
+    shownOptionsRef.current = options;
+    const el = inputRef.current;
+    if (!el || !el.value || JSON.stringify(previous) === JSON.stringify(options)) return;
+    const text = formatCanonical(parseNumber(el.value, previous).value, options);
+    if (text !== el.value) {
+      const focused = isInputFocused(el);
+      const digits = digitsBeforeCaret(el.value, el.selectionStart ?? el.value.length);
+      el.value = text;
+      shownRef.current = text;
+      if (focused) {
+        const caret = resolveCaret(parseNumber(text, options), digits, options);
+        setInputSelection(el, caret, caret);
+      }
+    }
+  });
 
   return useCallback((el: HTMLInputElement | null) => {
     if (el) {
-      let shown = el.value;
+      shownRef.current = el.value;
       const handler = (event: Event): void => {
         const opts = optionsRef.current;
         const inputType = (event as InputEvent).inputType;
@@ -35,12 +54,12 @@ export function useNumberFormat(
           el.value,
           el.selectionStart ?? el.value.length,
           opts,
-          inputType ? inputType.startsWith("insert") : el.value.length > shown.length
+          inputType ? inputType.startsWith("insert") : el.value.length > shownRef.current.length
         );
         const digits = digitsBeforeCaret(typed.raw, typed.caret);
         const values = parseNumber(typed.raw, opts);
         setNativeValue(el, values.formattedValue);
-        shown = values.formattedValue;
+        shownRef.current = values.formattedValue;
         if (isInputFocused(el)) {
           const next = resolveCaret(values, digits, opts, typed.separator);
           setInputSelection(el, next, next);
@@ -53,7 +72,7 @@ export function useNumberFormat(
         // listeners, so this write would fight React; real browsers read the live
         // DOM and need no resync. onValueChange (below) is called directly, not via
         // React's tracker, so it is unaffected in either environment.
-        if (IS_JSDOM) {
+        if (process.env.NODE_ENV !== "production" && isTestDom()) {
           queueMicrotask(() => {
             if (el.value !== values.formattedValue) return;
             el.value = values.formattedValue;
@@ -71,7 +90,7 @@ export function useNumberFormat(
       // format any initial (defaultValue) content
       if (el.value) {
         setNativeValue(el, formatNumber(el.value, optionsRef.current));
-        shown = el.value;
+        shownRef.current = el.value;
       }
     } else {
       if (inputRef.current && handlerRef.current) {

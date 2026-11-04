@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect } from "react";
-import type React from "react";
+import type * as React from "react";
 import { resolveMaskConfig } from "./core/config";
 import { createMaskController } from "./bind-mask";
 import type { MaskController } from "./bind-mask";

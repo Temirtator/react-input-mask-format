@@ -1,13 +1,31 @@
 // @vitest-environment node
 import React from "react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import ReactDOMServer from "react-dom/server";
-import InputMask from "../../src/index";
+import InputMask, { useMask } from "../../src/index";
+import { NumberFormat } from "../../src/number/number-format";
 import { TimeFormat } from "../../src/time/time-format";
 import { DateFormat } from "../../src/date/date-format";
 import { CardNumberFormat } from "../../src/card/card-number-format";
 import { CardExpiryFormat } from "../../src/card/card-expiry-format";
 import { CardCvcFormat } from "../../src/card/card-cvc-format";
+
+let consoleError: ReturnType<typeof vi.spyOn>;
+
+beforeEach(() => {
+  consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+});
+
+afterEach(() => {
+  const calls = consoleError.mock.calls;
+  consoleError.mockRestore();
+  expect(calls).toEqual([]);
+});
+
+function MaskHook() {
+  const ref = useMask({ mask: "99/99/9999" });
+  return <input ref={ref} defaultValue="12345678" />;
+}
 
 describe("server render", () => {
   it("renders to string with formatted value", () => {
@@ -59,5 +77,17 @@ describe("server render — card", () => {
       <CardCvcFormat value="1234" brand="visa" onValueChange={() => {}} />
     );
     expect(html).toContain('value="123"');
+  });
+});
+
+describe("server render — number and hook", () => {
+  it("renders NumberFormat with the formatted value", () => {
+    const html = ReactDOMServer.renderToString(<NumberFormat value="1234.5" thousandSeparator="," />);
+    expect(html).toContain("1,234.5");
+  });
+
+  it("renders an input bound with useMask", () => {
+    const html = ReactDOMServer.renderToString(<MaskHook />);
+    expect(html).toContain("12345678");
   });
 });

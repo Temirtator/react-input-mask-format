@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
+import type * as React from "react";
+import { useIsomorphicLayoutEffect } from "./utils/layout-effect";
 
 import { getInputSelection, isInputFocused } from "./utils/input";
 import { createSelectionTracker } from "./core/selection-tracker";
@@ -27,7 +28,7 @@ export function useInputElement(
     }
 
     if (!input) {
-      throw new Error("react-input-mask: inputComponent doesn't contain input node");
+      throw new Error("react-input-mask-format: the element rendered by InputMask doesn't contain an <input>");
     }
 
     return input as HTMLInputElement;
@@ -54,7 +55,7 @@ function useSelection(
 
   const setSelection = useCallback((selection: Selection) => tracker.set(selection), [tracker]);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!isMasked) {
       return;
     }

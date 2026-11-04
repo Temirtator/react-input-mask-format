@@ -1,4 +1,4 @@
-import type React from "react";
+import type * as React from "react";
 import type { TimeFormatOptions, TimeFormatValues } from "./types";
 import { formatTime } from "./format-time";
 import { parseTime } from "./parse-time";

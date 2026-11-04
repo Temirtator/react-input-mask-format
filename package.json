@@ -1,6 +1,6 @@
 {
   "name": "react-input-mask-format",
-  "description": "Masked input component for React",
+  "description": "Input masks for React: phones, dates, cards, numbers, time and country presets. A maintained fork of react-input-mask.",
   "version": "2.13.0",
   "type": "module",
   "homepage": "https://github.com/Temirtator/react-input-mask-format",
@@ -33,7 +33,18 @@
     "voen",
     "date",
     "card",
-    "credit-card"
+    "credit-card",
+    "react-input-mask",
+    "input-mask",
+    "mask-input",
+    "phone",
+    "phone-mask",
+    "number-format",
+    "currency",
+    "time",
+    "hook",
+    "typescript",
+    "iban"
   ],
   "peerDependencies": {
     "react": ">=16.8.0"
@@ -50,11 +61,12 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.0",
+    "@vitest/coverage-v8": "^3.2.7",
     "eslint": "^9.0.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "fast-check": "4.10.2",
+    "happy-dom": "^21.0.4",
     "jsdom": "^25.0.0",
-    "prettier": "^3.0.0",
     "publint": "^0.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -71,6 +83,10 @@
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
+      "react-server": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/rsc/index.js"
+      },
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -101,6 +117,10 @@
       }
     },
     "./number": {
+      "react-server": {
+        "types": "./dist/number.d.ts",
+        "default": "./dist/rsc/number.js"
+      },
       "import": {
         "types": "./dist/number.d.ts",
         "default": "./dist/number.js"
@@ -111,6 +131,10 @@
       }
     },
     "./time": {
+      "react-server": {
+        "types": "./dist/time.d.ts",
+        "default": "./dist/rsc/time.js"
+      },
       "import": {
         "types": "./dist/time.d.ts",
         "default": "./dist/time.js"
@@ -121,6 +145,10 @@
       }
     },
     "./date": {
+      "react-server": {
+        "types": "./dist/date.d.ts",
+        "default": "./dist/rsc/date.js"
+      },
       "import": {
         "types": "./dist/date.d.ts",
         "default": "./dist/date.js"
@@ -131,6 +159,10 @@
       }
     },
     "./card": {
+      "react-server": {
+        "types": "./dist/card.d.ts",
+        "default": "./dist/rsc/card.js"
+      },
       "import": {
         "types": "./dist/card.d.ts",
         "default": "./dist/card.js"
@@ -141,6 +173,28 @@
       }
     },
     "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "presets": [
+        "./dist/presets.d.ts"
+      ],
+      "validators": [
+        "./dist/validators.d.ts"
+      ],
+      "number": [
+        "./dist/number.d.ts"
+      ],
+      "time": [
+        "./dist/time.d.ts"
+      ],
+      "date": [
+        "./dist/date.d.ts"
+      ],
+      "card": [
+        "./dist/card.d.ts"
+      ]
+    }
   },
   "sideEffects": false,
   "files": [
@@ -161,7 +215,7 @@
     },
     {
       "path": "dist/number.js",
-      "limit": "2.5 KB"
+      "limit": "3 KB"
     },
     {
       "path": "dist/time.js",
@@ -184,6 +238,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "size": "size-limit",
     "prepublishOnly": "npm run build"
