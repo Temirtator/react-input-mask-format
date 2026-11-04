@@ -993,6 +993,22 @@ Any component that forwards its ref to the native `<input>` works as an `InputMa
 
 ## Migration
 
+### Upgrading from 2.x to 3.0
+
+Most apps need no code change. Check these:
+
+| Change | What to do |
+|---|---|
+| The published code is ES2020 (`??`, `?.`): Chrome 80, Firefox 72, Safari 13.1, Node 14 or newer | Nothing for current bundlers. A toolchain that cannot parse ES2020 (webpack 4 without Babel for `node_modules`) has to transpile the package. |
+| React 17 or newer is required | Upgrade React 16 apps first. |
+| `defaultFormatChars` and `extendedFormatChars` are frozen | Assigning a token to them throws. Spread them into your own map: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`. |
+| `detectPhoneCountry` returns `undefined` instead of `null` | Replace `=== null` checks with a falsy check. |
+| Text from an input method (Android Gboard, CJK IMEs) is masked once, when it is committed | Components call `onChange` once per commit. With the hooks, your own `onChange` sees the raw text while composing, then the masked text. |
+
+New in 3.0, no action needed: components that bundlers drop when you import only a function or a hook (much
+smaller bundles for `formatDate`, `useMask`, …), `isMaskComplete`, `complete` in the date, time and expiry values,
+and Arabic-Indic, Persian and full-width digits read as `0-9`.
+
 ### Migrating from react-input-mask
 
 **From v3-alpha** — the API is identical; change the import.
