@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import MaskUtils from "../../src/core/mask";
 import { resolveTransform } from "../../src/utils/transform";
-import type { Mask, Transform } from "../../src/types";
+import type { InputState, Mask, Transform } from "../../src/types";
+import { kgPhone, kzPhone, ruPhone, uzPhone } from "../../src/presets";
 import {
   type PrefixHost,
   hasSignificantPrefix,
@@ -330,5 +331,53 @@ describe("a leading plus formats the same through paste and value, idempotently"
     expect(pasted.value).toBe(expected);
     expect(utils.formatValue(input)).toBe(expected);
     expect(utils.formatValue(expected)).toBe(expected);
+  });
+});
+
+describe("pasting a complete international number replaces the whole value", () => {
+  const preset = (setup: { mask: Mask; maskPlaceholder?: string | null }) => () => new MaskUtils(setup);
+  const pasteAt = (s: Subject, previous: string, start: number, end: number, text: string) => {
+    const caret = start + text.length;
+    return s.processChange(
+      { value: previous.slice(0, start) + text + previous.slice(end), selection: { start: caret, end: caret } },
+      { value: previous, selection: { start, end, length: end - start } }
+    );
+  };
+  const typeAt = (s: Subject, previous: string, caret: number, text: string) =>
+    text.split("").reduce<InputState>(
+      (state, key) => pasteAt(s, state.value, state.selection.start!, state.selection.start!, key),
+      { value: previous, selection: { start: caret, end: caret } }
+    );
+
+  it.each<[string, () => Subject, string, number, number, string, string, number]>([
+    ["kzPhone at the first empty slot", preset(kzPhone), "+7 (701) ___-__-__", 9, 9, "+7 701 234 56 78", "+7 (701) 234-56-78", 18],
+    ["kzPhone at the end", preset(kzPhone), "+7 (701) ___-__-__", 18, 18, "+7 701 234 56 78", "+7 (701) 234-56-78", 18],
+    ["kzPhone inside the filled part", preset(kzPhone), "+7 (701) ___-__-__", 6, 6, "+7 701 234 56 78", "+7 (701) 234-56-78", 18],
+    ["kzPhone over a selection", preset(kzPhone), "+7 (701) 999-__-__", 9, 12, "+7 707 234 56 78", "+7 (707) 234-56-78", 18],
+    ["kzPhone at the end of a filled value", preset(kzPhone), "+7 (701) 111-11-11", 18, 18, "+7 707 234 56 78", "+7 (707) 234-56-78", 18],
+    ["kzPhone without spaces", preset(kzPhone), "+7 (701) ___-__-__", 9, 9, "+7(701)2345678", "+7 (701) 234-56-78", 18],
+    ["kzPhone with an extension", preset(kzPhone), "+7 (701) ___-__-__", 9, 9, "+7 701 234 56 78 доб. 12", "+7 (701) 234-56-78", 18],
+    ["uzPhone", preset(uzPhone), "+998 (90) ___-__-__", 10, 10, "+998 90 123 45 67", "+998 (90) 123-45-67", 19],
+    ["uzPhone without a placeholder", uzNoPlaceholder, "+998 (90) ", 10, 10, "+998 90 123 45 67", "+998 (90) 123-45-67", 19],
+    ["kgPhone", preset(kgPhone), "+996 (555) __-__-__", 11, 11, "+996 555 12 34 56", "+996 (555) 12-34-56", 19],
+    ["ruPhone", preset(ruPhone), "+7 (912) ___-__-__", 9, 9, "+7 912 345 67 89", "+7 (912) 345-67-89", 18],
+    ["US +1", usIntl, "+1 (555) ___-____", 9, 9, "+1 555 123 4567", "+1 (555) 123-4567", 17]
+  ])("%s", (_name, make, previous, start, end, text, expected, caret) => {
+    const next = pasteAt(make(), previous, start, end, text);
+    expect(next.value).toBe(expected);
+    expect(next.selection).toEqual({ start: caret, end: caret });
+  });
+
+  it.each<[string, () => Subject, string, number, string, string]>([
+    ["kzPhone, incomplete number", preset(kzPhone), "+7 (701) ___-__-__", 9, "+7 701 234", "+7 (701) 770-12-34"],
+    ["kzPhone, Russian number", preset(kzPhone), "+7 (701) ___-__-__", 9, "+7 912 345 67 89", "+7 (701) 791-23-45"],
+    ["kzPhone, number with a placeholder gap", preset(kzPhone), "+7 (701) ___-__-__", 9, "+7 701 2_4 56 78", "+7 (701) 770-12-_4"],
+    ["US phone, no significant prefix", us, "(555) ___-____", 6, "+1 555 123 4567", "(555) 155-5123"]
+  ])("keeps today's result for %s", (_name, make, previous, caret, text, expected) => {
+    expect(pasteAt(make(), previous, caret, caret, text).value).toBe(expected);
+  });
+
+  it("leaves typing key by key unchanged", () => {
+    expect(typeAt(preset(kzPhone)(), "+7 (701) ___-__-__", 9, "+7 701 234 56 78").value).toBe("+7 (701) 770-12-34");
   });
 });

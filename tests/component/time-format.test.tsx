@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useTimeFormat } from "../../src/time/use-time-format";
@@ -71,6 +71,13 @@ function Controlled() {
 }
 
 describe("TimeFormat", () => {
+  it("defaults to a numeric keypad and lets props override it", () => {
+    const { rerender } = render(<TimeFormat data-testid="t" />);
+    expect(screen.getByTestId("t")).toHaveAttribute("inputmode", "numeric");
+    rerender(<TimeFormat data-testid="t" inputMode="text" />);
+    expect(screen.getByTestId("t")).toHaveAttribute("inputmode", "text");
+  });
+
   it("formats and clamps a controlled input while typing", async () => {
     const user = userEvent.setup();
     render(<Controlled />);
@@ -277,5 +284,44 @@ describe("option changes report the reformatted time", () => {
     expect(input).toHaveValue("12.30");
     expect(onValueChange).toHaveBeenCalledTimes(calls + 1);
     expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ value: "12:30" });
+  });
+});
+
+describe("TimeFormat uncontrolled and defaultValue", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("shows defaultValue formatted without reporting it and stays editable", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<TimeFormat defaultValue="1430" onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    expect(input).toHaveValue("14:30");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(input);
+    await user.keyboard("{Backspace}0");
+    expect(input).toHaveValue("14:30");
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ formattedValue: "14:30" });
+    expect(error).not.toHaveBeenCalled();
+  });
+
+  it("lets value win over defaultValue without a warning", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<TimeFormat value="0915" defaultValue="1430" onValueChange={() => {}} data-testid="u" />);
+    expect(screen.getByTestId("u")).toHaveValue("09:15");
+    expect(error).not.toHaveBeenCalled();
+  });
+});
+
+describe("TimeFormat without value", () => {
+  it("keeps a complete time and reports its value", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimeFormat onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    await user.click(input);
+    await user.keyboard("1430");
+    expect(input).toHaveValue("14:30");
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ value: "14:30" });
   });
 });
