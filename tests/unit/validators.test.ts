@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { luhn, isValidIin, isValidBin, isValidKzIban, isValidRuInn, isValidRuSnils, isValidRuOgrn, isValidRuOgrnip, isValidRuKpp, isValidRuBik, isValidRuAccount, isValidRuIban, isValidRuPlate } from "../../src/validators";
 import { digitsOnly, remainder, isIbanChecksumValid, isRealDate } from "../../src/validators/shared";
-import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik } from "../../src/validators";
+import { isValidUzPinfl, isValidUzInn, isValidKgInn, isValidKgAccount, isValidKgBik, isValidByPersonalId, isValidByUnp, isValidByIban, isValidTjInn, isValidAmPsn, isValidAmTin, isValidAmAccount, isValidAzVoen, isValidAzIban, isValidAzFin, isValidVin, isValidIban } from "../../src/validators";
 
 describe("luhn", () => {
   it("accepts valid card numbers (raw and formatted)", () => {
@@ -334,5 +334,274 @@ describe("isValidKgBik (format)", () => {
     expect(isValidKgBik("10300")).toBe(false);
     expect(isValidKgBik("")).toBe(false);
     expect(isValidKgBik(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe("isValidByPersonalId", () => {
+  it("accepts checksum-valid ids, Cyrillic look-alikes and lowercase", () => {
+    for (const v of ["7000000A000PB1", "7123456A789PB6", "3010190A001PB9", "4150295H012PB2", "7000000А000РВ1", "7000000a000pb1"]) {
+      expect(isValidByPersonalId(v)).toBe(true);
+    }
+  });
+  it("rejects wrong checksum, wrong length, placeholders and empty values", () => {
+    for (const v of ["7000000A000PB2", "7123456A001PB3", "7000000A000PB", "7000000A000PB_", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidByPersonalId(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidByUnp", () => {
+  it("accepts checksum-valid numeric and lettered УНП", () => {
+    for (const v of ["200988541", "MA1953684", "ма1953684", "M01953684", "100325912", "100220190", "101528843", "600122610", "800013732"]) {
+      expect(isValidByUnp(v)).toBe(true);
+    }
+  });
+  it("rejects wrong checksum, bad structure and empty values", () => {
+    for (const v of ["200988542", "MA1953685", "100325913", "20098854_", "020098854", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidByUnp(v)).toBe(false);
+    }
+  });
+  it("rejects every last digit when the weighted remainder is 10", () => {
+    const weights = [29, 23, 19, 17, 13, 7, 5, 3];
+    let prefix = "";
+    for (let n = 100000000; n < 200000000; n++) {
+      const s = String(n);
+      const sum = weights.reduce((acc, w, i) => acc + w * Number(s[i]), 0);
+      if (sum % 11 === 10) {
+        prefix = s.slice(0, 8);
+        break;
+      }
+    }
+    expect(prefix).not.toBe("");
+    for (let d = 0; d <= 9; d++) {
+      expect(isValidByUnp(prefix + d)).toBe(false);
+    }
+  });
+});
+
+describe("isValidByIban", () => {
+  it("accepts valid IBANs raw, grouped and lowercase", () => {
+    for (const v of ["BY13NBRB3600900000002Z00AB00", "BY13 NBRB 3600 9000 0000 2Z00 AB00", "by17akbb36424140006733100000", "BY44AKBB30120000170870000000"]) {
+      expect(isValidByIban(v)).toBe(true);
+    }
+  });
+  it("rejects bad checksum, length, placeholders, country and empty values", () => {
+    for (const v of ["BY13NBRB3600900000002Z00AB01", "BY13NBRB3600900000002Z00AB0", "BY13 NBRB 3600 ____ ____ ____ ____", "KZ13NBRB3600900000002Z00AB00", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidByIban(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidTjInn", () => {
+  it("accepts 9-digit values raw and grouped", () => {
+    for (const v of ["030026536", "020026745", "510004229", "030 026 536"]) {
+      expect(isValidTjInn(v)).toBe(true);
+    }
+  });
+  it("an active company that fails the unofficial checksum stays valid", () => {
+    expect(isValidTjInn("010025590")).toBe(true);
+  });
+  it("rejects wrong length, placeholders and empty values", () => {
+    for (const v of ["02002674", "0200267451", "02002674_", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidTjInn(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAmPsn", () => {
+  it("accepts every month-code group and both day-code ranges", () => {
+    for (const v of ["3014750025", "5121050017", "1101000011", "8134991234", "1106000010", "1126000010"]) {
+      expect(isValidAmPsn(v)).toBe(true);
+    }
+  });
+  it("rejects day code 45", () => {
+    expect(isValidAmPsn("4512901234")).toBe(false);
+  });
+  it("rejects day code 10", () => {
+    expect(isValidAmPsn("1001000010")).toBe(false);
+  });
+  it("rejects month code 13", () => {
+    expect(isValidAmPsn("2513901234")).toBe(false);
+  });
+  it("rejects month code 33", () => {
+    expect(isValidAmPsn("1133000010")).toBe(false);
+  });
+  it("rejects month code 15", () => {
+    expect(isValidAmPsn("1115000010")).toBe(false);
+  });
+  it("rejects serial 000", () => {
+    expect(isValidAmPsn("2512900004")).toBe(false);
+  });
+  it("rejects wrong length, placeholders and empty values", () => {
+    for (const v of ["301475002", "301475002_", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidAmPsn(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAmTin", () => {
+  it("accepts 8-digit values", () => {
+    for (const v of ["02502212", "02500518", "00024873"]) {
+      expect(isValidAmTin(v)).toBe(true);
+    }
+  });
+  it("a 2025-series TIN that breaks the unofficial checksum stays valid", () => {
+    expect(isValidAmTin("20000388")).toBe(true);
+  });
+  it("rejects wrong length, letters, placeholders and empty values", () => {
+    for (const v of ["0250221", "0250221A", "025022121", "0250221_", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidAmTin(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAmAccount", () => {
+  it("accepts 11 to 16 digits, with trailing placeholders and spaces", () => {
+    for (const v of ["1150013314754778", "115000814802004", "11500814802", "11500814802_____", "11500 814802"]) {
+      expect(isValidAmAccount(v)).toBe(true);
+    }
+  });
+  it("rejects wrong length, letters-only and empty values", () => {
+    for (const v of ["1150081480", "11500133147547781", "11500ABC", "", null as unknown as string, undefined as unknown as string]) {
+      expect(isValidAmAccount(v)).toBe(false);
+    }
+  });
+});
+
+const EMPTY_VALUES = ["", null as unknown as string, undefined as unknown as string];
+
+describe("isValidAzVoen", () => {
+  it("accepts real VOENs, including d10 other than 1 or 2", () => {
+    for (const v of ["9900003871", "9900003611", "1400057421", "9900001881", "1401555071", "0200001911", "0200001918"]) {
+      expect(isValidAzVoen(v)).toBe(true);
+    }
+  });
+  it("rejects wrong check digits and the illustrative OECD samples", () => {
+    for (const v of ["9900003621", "1401555081", "1525855852", "1325678851"]) {
+      expect(isValidAzVoen(v)).toBe(false);
+    }
+  });
+  it("rejects every ninth digit when the remainder is 10", () => {
+    const weights = [4, 1, 8, 6, 2, 7, 5, 3];
+    let prefix = "";
+    for (let n = 0; n < 100000 && !prefix; n++) {
+      const candidate = String(n).padStart(8, "0");
+      const sum = candidate.split("").reduce((acc, ch, i) => acc + Number(ch) * weights[i], 0);
+      if (sum % 11 === 10) {
+        prefix = candidate;
+      }
+    }
+    expect(prefix).not.toBe("");
+    for (let d9 = 0; d9 <= 9; d9++) {
+      expect(isValidAzVoen(`${prefix}${d9}1`)).toBe(false);
+    }
+  });
+  it("rejects wrong length, placeholders and empty values", () => {
+    for (const v of ["990000387", "990000387_", ...EMPTY_VALUES]) {
+      expect(isValidAzVoen(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAzIban", () => {
+  it("accepts valid IBANs, raw, spaced and lowercase", () => {
+    for (const v of ["AZ21NABZ00000000137010001944", "AZ84 NABZ 0000 0000 1370 1000 2944", "az37nabz01350100000000001944", "AZ25AIIB410100F9446440502141"]) {
+      expect(isValidAzIban(v)).toBe(true);
+    }
+  });
+  it("rejects a bad checksum, structure or length and empty values", () => {
+    for (const v of ["AZ85NABZ00000000137010002944", "AZ21NABZ00000000137010001945", "AZ211ABZ00000000137010001944", "AZ21NABZ0000000013701000194", ...EMPTY_VALUES]) {
+      expect(isValidAzIban(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidAzFin", () => {
+  it("accepts 7 characters without the letter O", () => {
+    for (const v of ["5VBK5VR", "5vbk5vr", "0000000", "5VBK 5VR"]) {
+      expect(isValidAzFin(v)).toBe(true);
+    }
+  });
+  it("rejects the letter O, wrong length, placeholders and empty values", () => {
+    for (const v of ["5VBK5V", "5VBKOVR", "5VBK5V_", "5VBK5VRR", ...EMPTY_VALUES]) {
+      expect(isValidAzFin(v)).toBe(false);
+    }
+  });
+});
+
+describe("isValidVin", () => {
+  it("accepts European, North American and Russian-market structures", () => {
+    expect(isValidVin("WVWZZZ1JZ3W386752")).toBe(true);
+    expect(isValidVin("1HGCM82633A004352")).toBe(true);
+    expect(isValidVin("XTA210930Y0000001")).toBe(true);
+  });
+  it("accepts lowercase and spaced input", () => {
+    expect(isValidVin("wvwzzz1jz3w386752")).toBe(true);
+    expect(isValidVin("WVW ZZZ 1JZ 3W3 86752")).toBe(true);
+  });
+  it("accepts Cyrillic look-alikes", () => {
+    expect(isValidVin("ХТА210930У0000001")).toBe(true);
+  });
+  it("rejects I, O and Q", () => {
+    expect(isValidVin("WVWZZZ1JZ3W38675I")).toBe(false);
+    expect(isValidVin("1HGCM8263OA004352")).toBe(false);
+    expect(isValidVin("XTA210930Q0000001")).toBe(false);
+  });
+  it("rejects wrong length and empty values", () => {
+    expect(isValidVin("WVWZZZ1JZ3W38675")).toBe(false);
+    expect(isValidVin("WVWZZZ1JZ3W3867521")).toBe(false);
+    expect(isValidVin("")).toBe(false);
+    expect(isValidVin(null as unknown as string)).toBe(false);
+    expect(isValidVin(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe("isValidIban (ISO 13616, MOD-97)", () => {
+  it.each([
+    "GB82 WEST 1234 5698 7654 32",
+    "DE89370400440532013000",
+    "FR1420041010050500013M02606",
+    "NO9386011117947",
+    "CH9300762011623852957",
+    "UA213223130000026007233566001",
+    "GE29NB0000000101904917",
+    "MD24AG000225100013104168",
+    "MT84MALT011000012345MTLCAST001S",
+    "LC55HEMM000100010012001200023015",
+    "KZ86125KZT5004100100",
+    "RU0304452522540817810538091310419",
+    "gb82west12345698765432"
+  ])("accepts %s", value => {
+    expect(isValidIban(value)).toBe(true);
+  });
+
+  it("accepts Cyrillic look-alikes", () => {
+    expect(isValidIban("КZ86125КZТ5004100100")).toBe(true);
+  });
+
+  it("rejects a wrong check, structure or length", () => {
+    expect(isValidIban("GB83WEST12345698765432")).toBe(false);
+    expect(isValidIban("GB82WEST12345698765423")).toBe(false);
+    expect(isValidIban("1282WEST12345698765432")).toBe(false);
+    expect(isValidIban("GBX2WEST12345698765432")).toBe(false);
+    expect(isValidIban("NO938601111794")).toBe(false);
+    expect(isValidIban("GB82-WEST-1234-5698-7654-32")).toBe(false);
+    expect(isValidIban("GB82WEST1234569876543212345678901234")).toBe(false);
+  });
+
+  it("rejects the check digits 00, 01 and 99 that MOD-97 alone lets through", () => {
+    expect(isValidIban("GB99WEST12345698765432")).toBe(false);
+    expect(isValidIban("GB00WEST12345698765432")).toBe(false);
+    expect(isValidIban("GB01WEST12345698765432")).toBe(false);
+  });
+
+  it("checks the country when one is given", () => {
+    expect(isValidIban("GE29NB0000000101904917", "GE")).toBe(true);
+    expect(isValidIban("GE29NB0000000101904917", "ge")).toBe(true);
+    expect(isValidIban("GE29NB0000000101904917", "MD")).toBe(false);
+  });
+
+  it.each([null, undefined, ""])("rejects %s", value => {
+    expect(isValidIban(value as unknown as string)).toBe(false);
   });
 });
