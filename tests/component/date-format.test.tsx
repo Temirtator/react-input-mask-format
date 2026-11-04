@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useDateFormat } from "../../src/date/use-date-format";
@@ -79,6 +79,13 @@ function Controlled({ initial = "" }: { initial?: string }) {
 }
 
 describe("DateFormat", () => {
+  it("defaults to a numeric keypad and lets props override it", () => {
+    const { rerender } = render(<DateFormat data-testid="d" />);
+    expect(screen.getByTestId("d")).toHaveAttribute("inputmode", "numeric");
+    rerender(<DateFormat data-testid="d" inputMode="text" />);
+    expect(screen.getByTestId("d")).toHaveAttribute("inputmode", "text");
+  });
+
   it("formats and clamps a controlled input while typing", async () => {
     const user = userEvent.setup();
     render(<Controlled />);
@@ -352,5 +359,97 @@ describe("useDateFormat option changes read the shown date", () => {
     input.value = "01.01.2030";
     rerender(<HookField order="ymd" separator="-" />);
     expect(input).toHaveValue("2030-01-01");
+  });
+});
+
+describe("DateFormat uncontrolled and defaultValue", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("shows defaultValue formatted without reporting it and stays editable", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<DateFormat defaultValue="2024-05-12" onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    expect(input).toHaveValue("12.05.2024");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(input);
+    await user.keyboard("{Backspace}4");
+    expect(input).toHaveValue("12.05.2024");
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ formattedValue: "12.05.2024" });
+    expect(error).not.toHaveBeenCalled();
+  });
+
+  it("lets value win over defaultValue without a warning", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<DateFormat value="2023-01-02" defaultValue="2024-05-12" onValueChange={() => {}} data-testid="u" />);
+    expect(screen.getByTestId("u")).toHaveValue("02.01.2023");
+    expect(error).not.toHaveBeenCalled();
+  });
+});
+
+describe("DateFormat without value", () => {
+  it("keeps a complete date and reports its ISO value", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<DateFormat onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    await user.click(input);
+    await user.keyboard("12052024");
+    expect(input).toHaveValue("12.05.2024");
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ value: "2024-05-12" });
+  });
+
+  it("re-lays out defaultValue and reports once when order changes before any edit", () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(
+      <DateFormat defaultValue="2024-05-12" onValueChange={onValueChange} data-testid="u" />
+    );
+    expect(screen.getByTestId("u")).toHaveValue("12.05.2024");
+    rerender(
+      <DateFormat defaultValue="2024-05-12" order="mdy" onValueChange={onValueChange} data-testid="u" />
+    );
+    expect(screen.getByTestId("u")).toHaveValue("05.12.2024");
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange.mock.calls[0][0]).toMatchObject({
+      value: "2024-05-12",
+      formattedValue: "05.12.2024",
+    });
+  });
+
+  it("re-reads a typed date in the old order when order changes", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(<DateFormat onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    await user.click(input);
+    await user.keyboard("12052024");
+    onValueChange.mockClear();
+    rerender(<DateFormat order="mdy" onValueChange={onValueChange} data-testid="u" />);
+    expect(input).toHaveValue("05.12.2024");
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange.mock.calls[0][0]).toMatchObject({
+      value: "2024-05-12",
+      formattedValue: "05.12.2024",
+    });
+  });
+
+  it("keeps the typed date through two order changes in a row", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(<DateFormat order="mdy" onValueChange={onValueChange} data-testid="u" />);
+    const input = screen.getByTestId("u");
+    await user.click(input);
+    await user.keyboard("05122024");
+    rerender(<DateFormat order="ymd" onValueChange={onValueChange} data-testid="u" />);
+    expect(input).toHaveValue("2024.05.12");
+    expect(onValueChange.mock.calls.at(-1)?.[0]).toMatchObject({ value: "2024-05-12" });
+  });
+
+  it("keeps defaultValue through dmy to mdy to dmy before any edit", () => {
+    const { rerender } = render(<DateFormat defaultValue="2024-05-12" data-testid="u" />);
+    rerender(<DateFormat defaultValue="2024-05-12" order="mdy" data-testid="u" />);
+    rerender(<DateFormat defaultValue="2024-05-12" order="dmy" data-testid="u" />);
+    expect(screen.getByTestId("u")).toHaveValue("12.05.2024");
   });
 });

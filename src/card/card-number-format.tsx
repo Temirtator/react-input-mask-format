@@ -5,8 +5,9 @@ import { cardInput } from "./card-input";
 
 export interface CardNumberFormatProps
   extends CardNumberOptions,
-    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> {
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "defaultValue"> {
   value?: string;
+  defaultValue?: string;
   onValueChange?: (values: CardNumberValues) => void;
 }
 

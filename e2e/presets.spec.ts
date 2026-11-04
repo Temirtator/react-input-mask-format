@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { pasteInto } from "./helpers";
 
 test("kzIban uppercases typed account letters", async ({ page }) => {
   await page.goto("/");
@@ -87,6 +88,60 @@ test("kgPassport uppercases the ID card series", async ({ page }) => {
   await expect(input).toHaveValue("ID1234567");
 });
 
+test("byPhone skips a typed domestic 8 0 prefix", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-by").click();
+  const input = page.getByTestId("byPhone");
+  await input.click();
+  await input.pressSequentially("80291234567");
+  await expect(input).toHaveValue("+375 (29) 123-45-67");
+});
+
+test("byPersonalId turns typed Cyrillic into Latin", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-by").click();
+  const input = page.getByTestId("byPersonalId");
+  await input.click();
+  await input.pressSequentially("7000000а000рв1");
+  await expect(input).toHaveValue("7000000A000PB1");
+});
+
+test("tjPhone formats a typed national number", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-tj").click();
+  const input = page.getByTestId("tjPhone");
+  await input.click();
+  await input.pressSequentially("931234567");
+  await expect(input).toHaveValue("+992 (93) 123-45-67");
+});
+
+test("amPhone skips a typed domestic leading 0", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-am").click();
+  const input = page.getByTestId("amPhone");
+  await input.click();
+  await input.pressSequentially("077123456");
+  await expect(input).toHaveValue("+374 (77) 12-34-56");
+});
+
+test("azPhone skips a typed domestic leading 0", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-az").click();
+  const input = page.getByTestId("azPhone");
+  await input.click();
+  await input.pressSequentially("0501234567");
+  await expect(input).toHaveValue("+994 (50) 123-45-67");
+});
+
+test("azFin uppercases and turns a typed O into zero", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-az").click();
+  const input = page.getByTestId("azFin");
+  await input.click();
+  await input.pressSequentially("5vbkovr");
+  await expect(input).toHaveValue("5VBK0VR");
+});
+
 test("kzPhone select all + retype with the country code", async ({ page }) => {
   await page.goto("/");
   const input = page.getByTestId("kzPhone");
@@ -98,3 +153,62 @@ test("kzPhone select all + retype with the country code", async ({ page }) => {
   await input.pressSequentially("77779876543");
   await expect(input).toHaveValue("+7 (777) 987-65-43");
 });
+
+test("vin uppercases, maps O to 0 and Cyrillic to Latin", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("vin");
+  await input.click();
+  await input.pressSequentially("1hgcm8263oa004352");
+  await expect(input).toHaveValue("1HGCM82630A004352");
+  await expect(page.getByTestId("vin-state")).toHaveAttribute("data-value", "1HGCM82630A004352");
+});
+
+test("iban groups any country's IBAN and validates it", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByTestId("iban-any");
+  await input.click();
+  await input.pressSequentially("gb82west12345698765432");
+  await expect(input).toHaveValue("GB82 WEST 1234 5698 7654 32");
+  await expect(page.getByTestId("iban-any-state")).toContainText("✓");
+});
+
+for (const c of [
+  { tab: "ge", testid: "gePhone", typed: "0555123456", expected: "+995 (555) 12-34-56" },
+  { tab: "md", testid: "mdPhone", typed: "069123456", expected: "+373 (69) 123-456" },
+  { tab: "ua", testid: "uaPhone", typed: "0671234567", expected: "+380 (67) 123-45-67" },
+  { tab: "tm", testid: "tmPhone", typed: "65123456", expected: "+993 (65) 12-34-56" },
+  { tab: "md", testid: "mdPostal", typed: "2001", expected: "MD-2001" }
+]) {
+  test(`${c.testid} formats a typed number`, async ({ page }) => {
+    await page.goto("/");
+    await page.getByTestId(`country-${c.tab}`).click();
+    const input = page.getByTestId(c.testid);
+    await input.click();
+    await input.pressSequentially(c.typed);
+    await expect(input).toHaveValue(c.expected);
+  });
+}
+
+test("uaIban validates a Ukrainian IBAN", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("country-ua").click();
+  const input = page.getByTestId("uaIban");
+  await input.click();
+  await input.pressSequentially("UA213223130000026007233566001");
+  await expect(input).toHaveValue("UA21 3223 1300 0002 6007 2335 6600 1");
+  await expect(page.getByTestId("uaIban-state")).toContainText("✓");
+});
+
+for (const c of [
+  { pasted: "+998 90 123 45 67", country: "UZ", expected: "+998 (90) 123-45-67" },
+  { pasted: "+7 912 345-67-89", country: "RU", expected: "+7 (912) 345-67-89" },
+  { pasted: "+380 67 123 45 67", country: "UA", expected: "+380 (67) 123-45-67" }
+]) {
+  test(`a pasted ${c.country} number switches the phone country`, async ({ page }) => {
+    await page.goto("/");
+    const input = page.getByTestId("phone-any");
+    await pasteInto(page, input, c.pasted);
+    await expect(page.getByTestId("phone-country")).toHaveValue(c.country);
+    await expect(input).toHaveValue(c.expected);
+  });
+}
