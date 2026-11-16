@@ -1,4 +1,5 @@
 import { findLastIndex, repeat } from "../utils/helpers";
+import { toAsciiDigits } from "../utils/ascii-digits";
 import parseMask, { type ParsedMaskOptions } from "../utils/parse-mask";
 import {
   type PrefixHost,
@@ -15,6 +16,7 @@ import type { FormatChars, InputState, Selection } from "../types";
 export default class MaskUtils {
   maskOptions: ParsedMaskOptions;
   transform?: (char: string, position: number) => string;
+  asciiDigits: boolean;
   readonly prefixHost: Readonly<PrefixHost>;
 
   constructor(options: {
@@ -25,6 +27,10 @@ export default class MaskUtils {
   }) {
     this.maskOptions = parseMask(options);
     this.transform = options.transform;
+    const { mask, maskPlaceholder } = this.maskOptions;
+    this.asciiDigits =
+      toAsciiDigits(maskPlaceholder ?? "") === (maskPlaceholder ?? "") &&
+      !(mask ?? []).some(part => typeof part !== "string" && "٠۰０".split("").some(digit => part.test(digit)));
     const prefix = this.maskOptions.prefix ?? "";
     this.prefixHost = {
       prefix,
@@ -178,6 +184,7 @@ export default class MaskUtils {
   };
 
   formatValue = (value: string): string => {
+    if (this.asciiDigits) value = toAsciiDigits(value);
     const { maskPlaceholder, mask, prefix } = this.maskOptions;
     const unprefixed = normalizeUnprefixedValue(this.prefixHost, value);
     const start = unprefixed === null ? 0 : prefix!.length;
@@ -202,6 +209,7 @@ export default class MaskUtils {
   };
 
   formatControlledValue = (value: string, shownValue: string): string => {
+    if (this.asciiDigits) value = toAsciiDigits(value);
     if (
       value &&
       shownValue &&
@@ -333,7 +341,8 @@ export default class MaskUtils {
 
   processChange = (currentState: InputState, previousState: InputState): InputState & { enteredString: string } => {
     const { mask, prefix, lastEditablePosition, maskPlaceholder } = this.maskOptions;
-    const { value, selection } = currentState;
+    const { selection } = currentState;
+    const value = this.asciiDigits ? toAsciiDigits(currentState.value) : currentState.value;
     const previousValue = previousState.value;
     const previousSelection = previousState.selection;
     if (

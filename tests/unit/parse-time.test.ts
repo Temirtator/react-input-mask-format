@@ -11,6 +11,7 @@ describe("parseTime", () => {
     expect(parseTime("")).toEqual({
       value: "",
       formattedValue: "",
+      complete: false,
       hours: undefined,
       minutes: undefined,
     });
@@ -19,6 +20,7 @@ describe("parseTime", () => {
     expect(parseTime("22")).toEqual({
       value: "",
       formattedValue: "22:",
+      complete: false,
       hours: 22,
       minutes: undefined,
     });
@@ -27,6 +29,7 @@ describe("parseTime", () => {
     expect(parseTime("2230")).toEqual({
       value: "22:30",
       formattedValue: "22:30",
+      complete: true,
       hours: 22,
       minutes: 30,
     });
@@ -35,6 +38,7 @@ describe("parseTime", () => {
     expect(parseTime("2999")).toEqual({
       value: "23:59",
       formattedValue: "23:59",
+      complete: true,
       hours: 23,
       minutes: 59,
     });
@@ -43,6 +47,7 @@ describe("parseTime", () => {
     expect(parseTime("22.30", { separator: "." })).toEqual({
       value: "22:30",
       formattedValue: "22.30",
+      complete: true,
       hours: 22,
       minutes: 30,
     });

@@ -5,6 +5,7 @@ export interface TimeFormatOptions {
 export interface TimeFormatValues {
   value: string;
   formattedValue: string;
+  complete: boolean;
   hours: number | undefined;
   minutes: number | undefined;
 }

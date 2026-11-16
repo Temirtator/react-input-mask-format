@@ -1,4 +1,5 @@
 import type { NumberFormatOptions } from "./types";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export interface NumberParts {
   negative: boolean;
@@ -17,7 +18,30 @@ export function resolveSeparators(options: NumberFormatOptions): { thousand: str
 
 export function decimalSeparators(options: NumberFormatOptions): string[] {
   const { thousand, decimal } = resolveSeparators(options);
-  return [decimal, ...(options.allowedDecimalSeparators ?? ["."])].filter(c => c && c !== thousand);
+  return [decimal, ...(options.allowedDecimalSeparators ?? ["."]), "\u066b", "\uff0e"].filter(
+    c => c && c !== thousand
+  );
+}
+
+export function asciiOutsideAffixes(text: string, options: NumberFormatOptions): string {
+  const prefix = options.prefix ?? "";
+  const suffix = options.suffix ?? "";
+  const prefixAt = prefix ? text.indexOf(prefix) : -1;
+  const bodyStart = prefixAt === -1 ? 0 : prefixAt + prefix.length;
+  const suffixAt = suffix ? text.lastIndexOf(suffix) : -1;
+  const keep = (from: number, to: number): string => text.slice(from, to);
+  const read = (from: number, to: number): string => toAsciiDigits(text.slice(from, to));
+  if (suffixAt < bodyStart) {
+    return read(0, Math.max(prefixAt, 0)) + keep(Math.max(prefixAt, 0), bodyStart) + read(bodyStart, text.length);
+  }
+  const tail = suffixAt + suffix.length;
+  return (
+    read(0, Math.max(prefixAt, 0)) +
+    keep(Math.max(prefixAt, 0), bodyStart) +
+    read(bodyStart, suffixAt) +
+    keep(suffixAt, tail) +
+    read(tail, text.length)
+  );
 }
 
 function extract(raw: string, decimal: string, options: NumberFormatOptions): NumberParts {
@@ -29,8 +53,8 @@ function extract(raw: string, decimal: string, options: NumberFormatOptions): Nu
   const intRaw = hasSeparator ? raw.slice(0, sepIndex) : raw;
   const fracRaw = hasSeparator ? raw.slice(sepIndex + decimal.length) : "";
 
-  let int = intRaw.replace(/\D/g, "");
-  let frac = fracRaw.replace(/\D/g, "");
+  let int = toAsciiDigits(intRaw).replace(/\D/g, "");
+  let frac = toAsciiDigits(fracRaw).replace(/\D/g, "");
 
   if (!(options.allowLeadingZeros ?? false)) {
     int = int.replace(/^0+(?=\d)/, "");
@@ -54,7 +78,7 @@ export function tokenize(rawInput: string, options: NumberFormatOptions): Number
 }
 
 export function formatCanonical(value: string, options: NumberFormatOptions): string {
-  return buildFormatted(extract(value, ".", options), options);
+  return buildFormatted(extract(value.replace(/[\u066b\uff0e]/g, "."), ".", options), options);
 }
 
 // Tokenize a canonical numeric string (from a JS number): always "." decimal, no affixes.

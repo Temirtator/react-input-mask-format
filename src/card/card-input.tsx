@@ -1,14 +1,16 @@
 import * as React from "react";
-import { forwardRef } from "react";
+import { component } from "../utils/component";
 import { useDigitInput } from "../utils/digit-format";
 import type { DigitFormatKind, DigitValues } from "../utils/digit-format";
 
+/* @__NO_SIDE_EFFECTS__ */
 export function cardInput<O, V extends DigitValues, P>(
+  displayName: string,
   kind: DigitFormatKind<O, V>,
   option: keyof O & keyof P,
   autoComplete: string
 ): React.ForwardRefExoticComponent<React.PropsWithoutRef<P> & React.RefAttributes<HTMLInputElement>> {
-  return forwardRef<HTMLInputElement, P>(function CardInput(props, forwardedRef) {
+  return component<HTMLInputElement, P>(displayName, function CardInput(props, forwardedRef) {
     const {
       value,
       defaultValue,
@@ -29,7 +31,8 @@ export function cardInput<O, V extends DigitValues, P>(
       onValueChange,
       forwardedRef,
       defaultValue,
-      onChange
+      onChange,
+      domProps as React.InputHTMLAttributes<HTMLInputElement>
     );
     return <input inputMode="numeric" autoComplete={autoComplete} {...domProps} {...input} />;
   });

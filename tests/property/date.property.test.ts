@@ -200,7 +200,7 @@ describe("parseDate", () => {
     holds(
       fc.property(written, ({ date, o, input }) => {
         expect(formatDate(input, o)).toBe(render(date, o));
-        expect(parseDate(input, o)).toEqual({ value: isoOf(date), formattedValue: render(date, o), ...date });
+        expect(parseDate(input, o)).toEqual({ value: isoOf(date), formattedValue: render(date, o), complete: true, ...date });
       })
     );
   });

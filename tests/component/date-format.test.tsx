@@ -33,6 +33,7 @@ describe("useDateFormat", () => {
     expect(last).toEqual({
       value: "2024-05-12",
       formattedValue: "12.05.2024",
+      complete: true,
       day: 12,
       month: 5,
       year: 2024,

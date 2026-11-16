@@ -1,4 +1,5 @@
 import type { DateFormatOptions, DateOrder } from "./types";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export { isSingleKeystroke } from "../utils/digit-format";
 
@@ -51,7 +52,7 @@ export function tokenizeDate(
   keystrokeDigits?: number
 ): DateParts {
   const fields = FIELDS[options?.order ?? "dmy"];
-  const text = String(raw ?? "");
+  const text = toAsciiDigits(String(raw ?? ""));
   const digits = (
     (keystrokeDigits === undefined ? readFields(text, fields) : undefined) ??
     text.replace(/\D/g, "")

@@ -11,10 +11,10 @@ export interface CardCvcFormatProps
   onValueChange?: (values: CardCvcValues) => void;
 }
 
-export const CardCvcFormat = cardInput<CardCvcOptions, CardCvcValues, CardCvcFormatProps>(
+export const CardCvcFormat = /* @__PURE__ */ cardInput<CardCvcOptions, CardCvcValues, CardCvcFormatProps>(
+  "CardCvcFormat",
   cardCvcKind,
   "brand",
   "cc-csc"
 );
 
-CardCvcFormat.displayName = "CardCvcFormat";

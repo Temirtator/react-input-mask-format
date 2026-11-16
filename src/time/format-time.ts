@@ -1,4 +1,5 @@
 import type { TimeFormatOptions } from "./types";
+import { toAsciiDigits } from "../utils/ascii-digits";
 
 export interface TimeParts {
   hours: string;
@@ -6,7 +7,7 @@ export interface TimeParts {
 }
 
 export function tokenizeTime(raw: string | number): TimeParts {
-  const digits = String(raw ?? "").replace(/\D/g, "").slice(0, 4);
+  const digits = toAsciiDigits(String(raw ?? "")).replace(/\D/g, "").slice(0, 4);
   let hours = digits.slice(0, 2);
   let minutes = digits.slice(2, 4);
   if (hours.length === 2) {

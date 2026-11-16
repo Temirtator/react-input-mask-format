@@ -35,6 +35,7 @@ describe("parseCardExpiry", () => {
     expect(parseCardExpiry("12 / 26", { separator: " / " })).toEqual({
       value: "12/26",
       formattedValue: "12 / 26",
+      complete: true,
       month: 12,
       year: 2026,
     });
@@ -44,6 +45,7 @@ describe("parseCardExpiry", () => {
     expect(parseCardExpiry("12/2")).toEqual({
       value: "",
       formattedValue: "12/2",
+      complete: false,
       month: 12,
       year: undefined,
     });

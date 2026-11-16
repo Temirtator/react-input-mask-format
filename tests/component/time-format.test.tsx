@@ -33,6 +33,7 @@ describe("useTimeFormat", () => {
     expect(last).toEqual({
       value: "08:15",
       formattedValue: "08:15",
+      complete: true,
       hours: 8,
       minutes: 15,
     });
@@ -267,6 +268,7 @@ describe("option changes report the reformatted time", () => {
     expect(onValueChange.mock.calls.at(-1)?.[0]).toEqual({
       value: "12:30",
       formattedValue: "12.30",
+      complete: true,
       hours: 12,
       minutes: 30,
     });

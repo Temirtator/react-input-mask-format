@@ -271,6 +271,7 @@ describe("card expiry", () => {
           expect(parseCardExpiry(text, o)).toEqual({
             value: `${pad(month)}/${pad(year % 100)}`,
             formattedValue: `${pad(month)}${o?.separator ?? "/"}${pad(year % 100)}`,
+            complete: true,
             month,
             year
           });

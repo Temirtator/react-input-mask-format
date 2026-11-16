@@ -7,6 +7,7 @@ describe("parseDate", () => {
     expect(parseDate("")).toEqual({
       value: "",
       formattedValue: "",
+      complete: false,
       day: undefined,
       month: undefined,
       year: undefined,
@@ -17,6 +18,7 @@ describe("parseDate", () => {
     expect(parseDate("12.05.2024")).toEqual({
       value: "2024-05-12",
       formattedValue: "12.05.2024",
+      complete: true,
       day: 12,
       month: 5,
       year: 2024,
@@ -27,6 +29,7 @@ describe("parseDate", () => {
     expect(parseDate("12.05.")).toEqual({
       value: "",
       formattedValue: "12.05.",
+      complete: false,
       day: 12,
       month: 5,
       year: undefined,
@@ -34,6 +37,7 @@ describe("parseDate", () => {
     expect(parseDate("1")).toEqual({
       value: "",
       formattedValue: "1",
+      complete: false,
       day: undefined,
       month: undefined,
       year: undefined,
