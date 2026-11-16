@@ -20,12 +20,13 @@ fork of [react-input-mask](https://github.com/sanniassin/react-input-mask).
 npm install react-input-mask-format
 ```
 
-Requires React 17 or later and an ES2020 environment (Chrome 80, Firefox 72, Safari 13.1, Node 14 or newer).
+Requires React 17 or later and an ES2020 environment (Chrome 80, Firefox 74, Safari 13.1, Node 14 or newer).
 
 Works with server rendering and the Next.js App Router. Under the `react-server` export condition, which React Server
 Components bundlers use, the component entries (`react-input-mask-format`, `/number`, `/time`, `/date`, `/card`)
 resolve to a `"use client"` boundary, so a Server Component can render them; event handlers such as `onChange` still
-have to come from a Client Component. Other bundlers get the plain modules without the directive, so Vite and Rollup
+have to come from a Client Component, and the functions of those entries (`formatNumber`, `formatMask`, `parseDate`,
+…) can only be called in one. Other bundlers get the plain modules without the directive, so Vite and Rollup
 print no "module level directives" warning. `/presets` and `/validators` contain no React code and work on the server
 as they are.
 
@@ -568,7 +569,7 @@ formatNumber(1234.5, { thousandSeparator: ",", decimalScale: 2, fixedDecimalScal
 
 Options: `thousandSeparator` (`true` → `,`, or a string), `decimalSeparator` (`.`), `allowedDecimalSeparators`
 (characters also read as the decimal separator, default `["."]`; ignored when equal to `thousandSeparator`, and
-used only once in the text), `decimalScale`
+used only once in the text; `٫` and `．` are always read that way), `decimalScale`
 (truncates, no rounding; `0` ignores the decimal separator), `fixedDecimalScale`, `prefix`, `suffix`, `allowNegative` (`true`),
 `allowLeadingZeros`, `isAllowed(values) => boolean` (e.g. min/max). `parseNumber` is the inverse of
 `formatNumber`. A string `value` is read like typed text, in the `decimalSeparator` of the props; the `value`
@@ -1030,7 +1031,7 @@ Most apps need no code change. Check these:
 
 | Change | What to do |
 |---|---|
-| The published code is ES2020 (`??`, `?.`): Chrome 80, Firefox 72, Safari 13.1, Node 14 or newer | Nothing for current bundlers. A toolchain that cannot parse ES2020 (webpack 4 without Babel for `node_modules`) has to transpile the package. |
+| The published code is ES2020 (`??`, `?.`): Chrome 80, Firefox 74, Safari 13.1, Node 14 or newer | Nothing for current bundlers. A toolchain that cannot parse ES2020 (webpack 4 without Babel for `node_modules`) has to transpile the package. |
 | React 17 or newer is required | Upgrade React 16 apps first. |
 | `defaultFormatChars` and `extendedFormatChars` are frozen | Assigning a token to them throws in strict code (ES modules) and is ignored in sloppy-mode scripts. Spread them into your own map: `formatChars={{ ...defaultFormatChars, "#": /[0-9A-F]/ }}`. |
 | `detectPhoneCountry` returns `undefined` instead of `null` | Replace `=== null` checks with a falsy check. |
