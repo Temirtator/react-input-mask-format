@@ -1,13 +1,12 @@
 import * as React from "react";
 import { useEffect, useReducer, useRef } from "react";
 import type { NumberFormatOptions, NumberFormatValues } from "./types";
-import { formatNumber, formatCanonical } from "./format-number";
+import { formatNumber, formatCanonical, asciiOutsideAffixes } from "./format-number";
 import { parseNumber, digitsBeforeCaret, resolveCaret, readTyped } from "./parse-number";
 import { isInputFocused, setInputSelection } from "../utils/input";
 import { warnOnSeparatorCollision } from "./validate";
 import { useIsomorphicLayoutEffect } from "../utils/layout-effect";
 import { component } from "../utils/component";
-import { toAsciiNumber } from "../utils/ascii-digits";
 
 export interface NumberFormatProps
   extends NumberFormatOptions,
@@ -75,7 +74,7 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
   const composingRef = useRef(false);
   const composingTextRef = useRef<string | null>(null);
-  const composedRef = useRef(false);
+  const composedRef = useRef<Array<string | undefined> | null>(null);
 
   const controlledRef = useRef(false);
   if (valueProp !== undefined) controlledRef.current = true;
@@ -138,10 +137,9 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
     }
     composingRef.current = false;
     composingTextRef.current = null;
-    if (composedRef.current) {
-      composedRef.current = false;
-      if (el.value === lastFormattedRef.current) return;
-    }
+    const composed = composedRef.current;
+    composedRef.current = null;
+    if (composed && composed.includes(el.value)) return;
     const inputType = (event.nativeEvent as InputEvent).inputType;
     apply(event, inputType ? inputType.startsWith("insert") : el.value.length > lastFormattedRef.current.length);
   }
@@ -154,9 +152,11 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
   function endComposition(event: React.SyntheticEvent<HTMLInputElement>): void {
     composingRef.current = false;
     composingTextRef.current = null;
-    if (event.currentTarget.value !== lastFormattedRef.current) {
-      composedRef.current = true;
+    const el = event.currentTarget;
+    const raw = el.value;
+    if (raw !== lastFormattedRef.current) {
       apply(event, true);
+      composedRef.current = [raw, el.value, lastValuesRef.current?.formattedValue];
     }
     forceUpdate();
   }
@@ -173,7 +173,7 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
 
   function apply(event: React.SyntheticEvent<HTMLInputElement>, inserted: boolean): void {
     const el = event.currentTarget;
-    const typed = readTyped(toAsciiNumber(el.value), el.selectionStart ?? el.value.length, options, inserted);
+    const typed = readTyped(asciiOutsideAffixes(el.value, options), el.selectionStart ?? el.value.length, options, inserted);
     const digits = digitsBeforeCaret(typed.raw, typed.caret);
     const values = parseNumber(typed.raw, options);
 

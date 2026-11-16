@@ -9,19 +9,20 @@ One larger update. See "Upgrading from 2.x to 3.0" in the README for what to che
   pasted or passed as `value` to `InputMask` / `useMask`, the number, date, time and card fields, and in
   `formatNumber`, `parseNumber`, `formatDate`, `formatTime`, `formatCardNumber`, `detectCardBrand` and friends.
   Before, they were dropped (`formatNumber("١٢٣")` gave `""`). The number fields also read the Arabic decimal
-  separator `٫` and the full-width full stop `．` as `.` (`۱۲٫۵` → `12.5`). Masks whose own `formatChars` or
-  `maskPlaceholder` use such digits keep them as they are.
+  separator `٫` and the full-width full stop `．` as a decimal separator (`۱۲٫۵` → `12.5`, or `12,5` with
+  `decimalSeparator=","`), unless it is the `thousandSeparator`. Masks whose own `formatChars` or `maskPlaceholder`
+  use such digits keep them as they are, and so do a number's `prefix`, `suffix` and `decimalSeparator`.
 - `formatMask(value, preset)` returns the text a field with that mask shows (`""` when nothing fills a slot), for
   example to pass a formatted value to react-hook-form's `setValue`.
 - `isMaskComplete(value, preset)` (or `{ mask, maskPlaceholder, formatChars }`) tells whether every slot of the mask
-  is filled; it accepts formatted or raw text. Use it instead of checking for `_`, which breaks with a custom
+  is filled; it accepts formatted or raw text, and is `true` without a mask. Use it instead of checking for `_`, which breaks with a custom
   `maskPlaceholder` or `maskPlaceholder={null}`. For variable-length masks such as `iban`, use the validator.
 - `complete` in the values of `DateFormat`, `TimeFormat` and `CardExpiryFormat` (and their hooks and `parse*`
   functions), as the card number and CVC already had: `true` once every digit is typed. For a date, `complete`
   without a `value` means a day that does not exist (`31.02.2024`).
 
 ### Changed
-- **Breaking:** the published code targets ES2020 and keeps `??` and `?.`. Supported: Chrome 80, Firefox 72,
+- **Breaking:** the published code targets ES2020 and keeps `??` and `?.`. Supported: Chrome 80, Firefox 74,
   Safari 13.1, Node 14 and newer. A toolchain that cannot parse ES2020, such as webpack 4 without Babel for
   `node_modules`, has to transpile the package. Bundles get smaller: index −77 B, number −100 B, time, date and card
   −70 to −90 B.

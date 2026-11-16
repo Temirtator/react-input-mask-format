@@ -267,7 +267,7 @@ export function useDigitInput<O, V extends DigitValues>(
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
   const composingRef = useRef(false);
   const composingTextRef = useRef<string | null>(null);
-  const composedRef = useRef(false);
+  const composedRef = useRef<Array<string | undefined> | null>(null);
 
   useEffect(() => {
     const form = innerRef.current && innerRef.current.form;
@@ -306,10 +306,9 @@ export function useDigitInput<O, V extends DigitValues>(
     }
     composingRef.current = false;
     composingTextRef.current = null;
-    if (composedRef.current) {
-      composedRef.current = false;
-      if (el.value === formatted) return;
-    }
+    const composed = composedRef.current;
+    composedRef.current = null;
+    if (composed && composed.includes(el.value)) return;
     apply(event, (event.nativeEvent as InputEvent).inputType === "deleteContentForward");
   }
 
@@ -321,9 +320,11 @@ export function useDigitInput<O, V extends DigitValues>(
   function endComposition(event: React.SyntheticEvent<HTMLInputElement>): void {
     composingRef.current = false;
     composingTextRef.current = null;
-    if (event.currentTarget.value !== formatted) {
-      composedRef.current = true;
+    const el = event.currentTarget;
+    const raw = el.value;
+    if (raw !== formatted) {
       apply(event, false);
+      composedRef.current = [raw, el.value, lastValuesRef.current?.formattedValue];
     }
     forceUpdate();
   }

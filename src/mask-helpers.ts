@@ -19,12 +19,14 @@ function maskOf(options: MaskHelperOptions): MaskUtils {
 }
 
 export function formatMask(value: string, options: MaskHelperOptions): string {
+  if (!options.mask) return String(value ?? "");
   const mask = maskOf(options);
   const formatted = mask.formatValue(String(value ?? ""));
   return mask.isValueEmpty(formatted) ? "" : formatted;
 }
 
 export function isMaskComplete(value: string, options: MaskHelperOptions): boolean {
-  const mask = maskOf(options);
-  return mask.isValueFilled(mask.formatValue(String(value ?? "")));
+  if (!options.mask) return true;
+  const filled = (mask: MaskUtils): boolean => mask.isValueFilled(mask.formatValue(String(value ?? "")));
+  return filled(maskOf(options)) && filled(maskOf({ ...options, maskPlaceholder: null }));
 }

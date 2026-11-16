@@ -62,6 +62,10 @@ const InputMask = /* @__PURE__ */ component<HTMLInputElement, InputMaskProps>("I
   const composingTextRef = useRef<string | null>(null);
   const composedRef = useRef(false);
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
+  if (!isEditable) {
+    compositionRef.current = null;
+    composingTextRef.current = null;
+  }
 
   function endComposition(): boolean {
     const before = compositionRef.current;
