@@ -325,6 +325,9 @@ export function useDigitInput<O, V extends DigitValues>(
     if (raw !== formatted) {
       apply(event, false);
       composedRef.current = [raw, el.value, lastValuesRef.current?.formattedValue];
+      setTimeout(() => {
+        composedRef.current = null;
+      });
     }
     forceUpdate();
   }

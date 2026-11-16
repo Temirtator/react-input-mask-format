@@ -157,6 +157,9 @@ export const NumberFormat = /* @__PURE__ */ component<HTMLInputElement, NumberFo
     if (raw !== lastFormattedRef.current) {
       apply(event, true);
       composedRef.current = [raw, el.value, lastValuesRef.current?.formattedValue];
+      setTimeout(() => {
+        composedRef.current = null;
+      });
     }
     forceUpdate();
   }

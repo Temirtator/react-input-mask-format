@@ -77,3 +77,52 @@ describe("a controlled InputMask disabled while composing", () => {
     expect(el).toHaveValue("55-55");
   });
 });
+
+describe("the first edit after a commit that had no trailing input event", () => {
+  function commitChromeOrder(el: HTMLInputElement, text: string): void {
+    act(() => {
+      el.focus();
+      fireEvent.compositionStart(el, { data: "" });
+    });
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, text);
+      el.setSelectionRange(text.length, text.length);
+      fireEvent.input(el, { isComposing: true, inputType: "insertCompositionText", data: text });
+    });
+    act(() => {
+      fireEvent.compositionEnd(el, { data: text });
+    });
+  }
+
+  async function deleteSeparator(el: HTMLInputElement, raw: string, caret: number): Promise<void> {
+    await act(() => new Promise<void>(resolve => setTimeout(resolve, 0)));
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, raw);
+      el.setSelectionRange(caret, caret);
+      fireEvent.input(el, { isComposing: false, inputType: "deleteContentBackward" });
+    });
+  }
+
+  it("is read by NumberFormat when it recreates the committed text", async () => {
+    const spy = vi.fn();
+    render(<NumberFormat thousandSeparator onValueChange={spy} data-testid="field" />);
+    const el = field();
+    commitChromeOrder(el, "1234");
+    expect(el).toHaveValue("1,234");
+    await deleteSeparator(el, "1234", 1);
+    expect(el).toHaveValue("1,234");
+    expect(el.selectionStart).toBe(1);
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("is read by TimeFormat when it recreates the committed text", async () => {
+    const spy = vi.fn();
+    render(<TimeFormat onValueChange={spy} data-testid="field" />);
+    const el = field();
+    commitChromeOrder(el, "123");
+    expect(el).toHaveValue("12:3");
+    await deleteSeparator(el, "123", 2);
+    expect(el).toHaveValue("13:");
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+});
